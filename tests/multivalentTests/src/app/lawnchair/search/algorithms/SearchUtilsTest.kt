@@ -73,7 +73,7 @@ class SearchUtilsTest {
             .toList()
 
     private fun app(title: String, packageName: String) = AppInfo(
-        ComponentName(packageName, "$" + "{packageName}.MainActivity"),
+        ComponentName(packageName, "$packageName.MainActivity"),
         title,
         Process.myUserHandle(),
         Intent(),
