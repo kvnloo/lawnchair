@@ -70,6 +70,13 @@ class LawnchairLocalSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm
 
             currentJob?.cancel()
             currentJob = coroutineScope.launch {
+                // These depend only on the query. Non-app providers may emit multiple
+                // times; do not reparse calculations or rebuild action intents for
+                // every intermediate result.
+                val calculatorResults = CalculatorSearchProvider.search(context, query).firstOrNull() ?: emptyList()
+                val actionResults = generateActionResults(query)
+                val localResults = appResults + shortcutResults + calculatorResults
+
                 // Each provider flow starts by emitting an empty list so that combine() can
                 // produce a first value without waiting for the slowest provider (e.g. web
                 // suggestions blocked on a network roundtrip, or contacts/files with no
@@ -85,10 +92,9 @@ class LawnchairLocalSearchAlgorithm(context: Context) : LawnchairSearchAlgorithm
                 }
 
                 nonAppProvidersFlow.collect { nonAppResults ->
-                    val calcResult = CalculatorSearchProvider.search(context, query)
-                        .firstOrNull()
-
-                    val allResults = appResults + shortcutResults + (calcResult ?: emptyList()) + nonAppResults + generateActionResults(query)
+                    // Preserve the existing ordering: apps/shortcuts, calculator,
+                    // streaming providers, then query actions.
+                    val allResults = localResults + nonAppResults + actionResults
 
                     val searchTargets = translateToSearchTargets(allResults)
                     setFirstItemQuickLaunch(searchTargets)
