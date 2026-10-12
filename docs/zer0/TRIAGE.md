@@ -14,11 +14,11 @@
 
 ## P1 — Expose safe, opt-in voice navigation via existing QSB/gesture seams
 
-**Problem:** The bounded voice parser in this branch has no microphone/UI entry or native launcher executor.
+**Progress (October 11):** The bounded voice parser now has a long-press QSB menu action and a user-triggered Android speech intent. An explicit, unambiguous `OPEN_APP` can call `LauncherApps.startMainActivity` in the current profile. **Not built or Samsung-qualified**. Existing QSB mic/search semantics remain unchanged.
 
-**Smallest task:** Offer a user-invoked push-to-talk action using existing `QsbIconId.MIC` or an opt-in gesture. Use on-device STT only when available; else disclose backend behavior. Pass *final* transcripts to `VoiceCommand.parse`; resolve `OPEN_APP` only against installed app/shortcut matches, reject ambiguous targets, support `SHOW_HOME` and search. Unsupported intents produce no action. Do **not** implement cross-app accessibility, always-on recording, or cloud credentials in this issue.
+**Remaining smallest task:** Qualify the user-invoked entry on Samsung. Speech is delegated to an installed recognizer and **may use remote audio processing**, unlike guaranteed on-device STT. Pass *final* transcripts to `VoiceCommand.parse`; exact-match only `OPEN_APP`, reject ambiguous labels, unsupported intents have no action. After device proof, optionally add `SHOW_HOME` and search. Do **not** implement cross-app accessibility, always-on recording, or cloud credentials in this issue.
 
-**Acceptance:** 30 JVM grammar checks remain green; device tests for unknown/misheard intents, mic denied, unavailable recognizer, repeated utterance, app not installed, profile restrictions, TalkBack description; app opening visibly verified; no action from interim STT fragments; no messages sent or payments tapped.
+**Acceptance:** 45 JVM parser/matcher checks remain green; device tests for unknown/misheard intents, mic denied, unavailable recognizer, repeated utterance, app not installed, profile restrictions, TalkBack description; app opening visibly verified; no action from interim STT fragments; no messages sent or payments tapped.
 
 **Dependencies:** P0. **Upstream overlap:** [AI provider #6635](https://github.com/LawnchairLauncher/lawnchair/issues/6635), [installed-provider PR #7221](https://github.com/LawnchairLauncher/lawnchair/pull/7221), and legacy [mic target #3035](https://github.com/LawnchairLauncher/lawnchair/issues/3035) (closed). Seek maintainer input before a generic upstream patch.
 
