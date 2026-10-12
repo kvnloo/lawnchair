@@ -94,10 +94,15 @@ public final class VoiceCommandActivity extends Activity {
         } else if (index == AppNameMatcher.NOT_FOUND) {
             notifyUser(R.string.zer0_voice_no_match);
         } else {
+            LauncherActivityInfo activity = activities.get(index);
+            // Voice input must not bypass Lawnchair's hidden-app visibility setting.
+            if (!VoiceAppVisibility.isAllowed(this, activity, command.target)) {
+                notifyUser(R.string.zer0_voice_no_match);
+                return;
+            }
             try {
                 launcherApps.startMainActivity(
-                        activities.get(index).getComponentName(), Process.myUserHandle(),
-                        null, null);
+                        activity.getComponentName(), Process.myUserHandle(), null, null);
             } catch (RuntimeException error) {
                 notifyUser(R.string.zer0_voice_launch_failed);
             }
