@@ -32,6 +32,7 @@ import app.lawnchair.ui.preferences.navigation.Search
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
+import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.R
@@ -171,7 +172,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0VoiceOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -181,6 +182,16 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
         context.startActivity(PreferenceActivity.createIntent(context, Search()))
+        true
+    }
+
+    private fun getZer0VoiceOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.zer0_voice_command,
+        R.drawable.ic_mic_flat,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        context.startActivity(Intent(context, VoiceCommandActivity::class.java))
         true
     }
 

@@ -57,6 +57,14 @@
         tools:node="remove" />
 
     <application>
+        <!-- Downstream zer0: explicit user-initiated voice input, not exported or always listening. -->
+        <activity
+            android:name="app.lawnchair.zer0.voice.VoiceCommandActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/zer0_voice_command"
+            android:theme="@style/Theme.Transparent" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
