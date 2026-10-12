@@ -24,9 +24,10 @@ object VoiceAppVisibility {
         requestedLabel: String,
     ): Boolean = runCatching {
         val prefs = PreferenceManager2.getInstance(context)
+        val label = activity.label ?: return@runCatching false
         val app = AppInfo(
             activity.componentName,
-            activity.label,
+            label,
             activity.user,
             Intent(),
         )
