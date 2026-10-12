@@ -31,8 +31,8 @@ import app.lawnchair.ui.preferences.PreferenceActivity
 import app.lawnchair.ui.preferences.navigation.Search
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
-import app.lawnchair.zer0.voice.VoiceCommandActivity
 import app.lawnchair.util.repeatOnAttached
+import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.R
