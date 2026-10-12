@@ -38,6 +38,13 @@ Use Lawnchair 16 (`16-dev`) as the actual launcher. Preserve its widgets, search
 
 Lawnchair and Launcher3 code remain credited to their original contributors, AOSP authors, and maintainers. The parser adapts the zer0 standalone voice prototype built October 11, 2026; the project design draws on `kvnloo/z0intelligence`, `kvnloo/z0live`, `kvnloo/oh-my-pi#104` and CUA's upstream Android accessibility work (`trycua/cua#878`). Preserve individual authorship and trace code/test contributions to specific commits when porting. Do not characterize upstream community requests or the early parser test as verified full phone-control integration.
 
+## Coordination
+
+- [Wave 0 test/quality tracker #2](https://github.com/kvnloo/lawnchair/issues/2)
+- [Wave 1 voice/device qualification #5](https://github.com/kvnloo/lawnchair/issues/5)
+- [Wave 2 bounded Jev/z0int/z0live adapter #6](https://github.com/kvnloo/lawnchair/issues/6)
+- [Wave 3 Flow Spaces #7](https://github.com/kvnloo/lawnchair/issues/7)
+
 ## Device smoke (not yet performed)
 
 1. Build `./gradlew assembleLawnWithQuickstepGithubDebug` with the documented Android 37.2 toolchain and `./gradlew spotlessCheck` (ensure repo submodules present).
