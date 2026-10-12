@@ -1,8 +1,8 @@
 # zer0 Lawnchair fork — actionable issue queue
 
-2026-10-11. This file is the issue-ready queue because **GitHub Issues is disabled on `kvnloo/lawnchair`** (`has_issues=false`). Enable it in the fork's Settings → General → Features → Issues before filing; do not create duplicate issues in upstream Lawnchair.
+2026-10-11. **GitHub Issues is now enabled on the fork.** This remains the implementation/evidence map. Dedicated downstream issues: [#5 — Android voice qualification](https://github.com/kvnloo/lawnchair/issues/5), [#6 — Jev/z0int/z0live adapter](https://github.com/kvnloo/lawnchair/issues/6), [#7 — Flow Spaces](https://github.com/kvnloo/lawnchair/issues/7). Baseline/upstream testing ownership stays with [Wave 0 #2](https://github.com/kvnloo/lawnchair/issues/2). Do not cross-post duplicate issues upstream.
 
-## P0 — Qualify Lawnchair 16 as a Samsung daily-driver baseline
+## P0 — Qualify Lawnchair 16 as a Samsung daily-driver baseline (coordinate #2)
 
 **Problem:** Existing `16-dev` is not yet built or tested as zer0 on a Samsung One UI device; launcher, recents and third-party gesture limitations must be measured before feature changes.
 
@@ -12,7 +12,7 @@
 
 **Dependencies:** none. **Upstream:** forward a real reproducible bug, not the fork setup.
 
-## P1 — Expose safe, opt-in voice navigation via existing QSB/gesture seams
+## P1 — Expose safe, opt-in voice navigation via existing QSB/gesture seams (#5)
 
 **Progress (October 11):** The bounded voice parser now has a long-press QSB menu action and a user-triggered Android speech intent. An explicit, unambiguous `OPEN_APP` can call `LauncherApps.startMainActivity` in the current profile. **Not built or Samsung-qualified**. Existing QSB mic/search semantics remain unchanged.
 
@@ -22,7 +22,7 @@
 
 **Dependencies:** P0. **Upstream overlap:** [AI provider #6635](https://github.com/LawnchairLauncher/lawnchair/issues/6635), [installed-provider PR #7221](https://github.com/LawnchairLauncher/lawnchair/pull/7221), and legacy [mic target #3035](https://github.com/LawnchairLauncher/lawnchair/issues/3035) (closed). Seek maintainer input before a generic upstream patch.
 
-## P1 — Connect optional z0live/Jev decisions to a verified phone-action contract
+## P1 — Connect optional z0live/Jev decisions to a verified phone-action contract (#6)
 
 **Problem:** Speech transport, bounded local decisions and Android execution presently exist as separate projects; a phone-side authority/receipt boundary is missing.
 
@@ -32,7 +32,7 @@
 
 **Dependencies:** P0, native action part of P1. **Downstream only.** Donor interfaces: [z0intelligence](https://github.com/kvnloo/z0intelligence), [z0live](https://github.com/kvnloo/z0live), [OMP voice integration #104](https://github.com/kvnloo/oh-my-pi/issues/104), [CUA Android AX issue #878](https://github.com/trycua/cua/issues/878).
 
-## P2 — Prototype attention-first spaces on the existing Launcher3 workspace
+## P2 — Prototype attention-first spaces on the existing Launcher3 workspace (#7)
 
 **Problem:** Home pages are positional, not intentional; the requested Now/Build/Learn/Life workflows need persistent names and focused app discovery without replacing Launcher3.
 
