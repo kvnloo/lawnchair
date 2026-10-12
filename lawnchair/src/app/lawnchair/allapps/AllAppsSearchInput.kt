@@ -481,7 +481,7 @@ class AllAppsSearchInput(context: Context, attrs: AttributeSet?) :
     }
 
     override fun onSearchResult(query: String, items: ArrayList<AdapterItem>?) {
-        if (items != null) {
+        if (items != null && query == Utilities.trim(input.text)) {
             apps.setSearchResults(items)
             notifyResultChanged()
             appsView.setSearchResults(items)
