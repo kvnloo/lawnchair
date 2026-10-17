@@ -38,11 +38,22 @@ public final class VoiceCommand {
     /** Returns UNKNOWN for unsupported requests; never guesses at a destructive action. */
     public static VoiceCommand parse(String finalizedTranscript) {
         if (finalizedTranscript == null) return of(Kind.UNKNOWN);
-        String text = Normalizer.normalize(finalizedTranscript, Normalizer.Form.NFKC)
-                .toLowerCase(Locale.ROOT)
+        String normalized = Normalizer.normalize(finalizedTranscript, Normalizer.Form.NFKC);
+        if (normalized.length() > 240) return of(Kind.UNKNOWN);
+        // Never silently turn line breaks, control bytes or bidi-format overrides into
+        // a different executable sentence. Explicit one-shot speech stays one command.
+        for (int i = 0; i < normalized.length();) {
+            int codePoint = normalized.codePointAt(i);
+            if (Character.isISOControl(codePoint)
+                    || Character.getType(codePoint) == Character.FORMAT) {
+                return of(Kind.UNKNOWN);
+            }
+            i += Character.charCount(codePoint);
+        }
+        String text = normalized.toLowerCase(Locale.ROOT)
                 .trim()
                 .replaceAll("[.,!?]+$", "")
-                .replaceAll("\s+", " ")
+                .replaceAll("\\s+", " ")
                 .trim();
         if (text.isEmpty() || text.length() > 160) return of(Kind.UNKNOWN);
 
