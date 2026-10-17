@@ -79,17 +79,19 @@ public final class HyprSpacesActivity extends Activity {
         model = SpaceModel.restore(prefs.getString(KEY_NAMES, null),
                 prefs.getString(KEY_ACTIVE, null));
         String requested = getIntent().getStringExtra(EXTRA_ACTIVATE);
+        boolean activatedRequestedSpace = false;
         if (requested != null) {
             try {
                 model = model.activate(requested);
                 persist();
+                activatedRequestedSpace = true;
             } catch (IllegalArgumentException ignored) {
                 Toast.makeText(this, R.string.zer0_space_unknown, Toast.LENGTH_SHORT).show();
             }
         }
-        // A one-shot voice request can go directly home if the selected context is
-        // explicitly linked to an existing page. Otherwise show the Spaces editor.
-        if (requested != null && scheduleLinkedHomePageIfAny()) {
+        // Unknown space requests must not navigate to the previously active page.
+        // Schedule navigation only after successful activation of the requested space.
+        if (activatedRequestedSpace && scheduleLinkedHomePageIfAny()) {
             finish();
             return;
         }
