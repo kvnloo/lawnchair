@@ -17,6 +17,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import app.lawnchair.zer0.voice.VoiceAppVisibility;
 import com.android.launcher3.R;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -67,7 +68,15 @@ public final class HyprSpacesActivity extends Activity {
             try {
                 List<LauncherActivityInfo> installed =
                         launcherApps.getActivityList(null, Process.myUserHandle());
-                if (installed != null) result.addAll(installed);
+                if (installed != null) {
+                    // Picker must not reveal hidden apps merely by listing their full labels.
+                    // Empty query applies the shared drawer/search visibility policy.
+                    for (LauncherActivityInfo info : installed) {
+                        if (VoiceAppVisibility.isAllowed(this, info, "")) {
+                            result.add(info);
+                        }
+                    }
+                }
             } catch (RuntimeException ignored) {
                 // No permission escalation, work-profile enumeration, or guessed alternatives.
             }
