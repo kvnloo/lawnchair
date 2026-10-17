@@ -133,8 +133,14 @@ public final class SpaceModel {
 
     private static String clean(String value) {
         if (value == null) return "";
-        return Normalizer.normalize(value, Normalizer.Form.NFKC)
-                .trim().replaceAll(" +", " ");
+        String normalized = Normalizer.normalize(value, Normalizer.Form.NFKC);
+        // Reject controls *before* trim: trim would silently erase a trailing U+0001.
+        for (int i = 0; i < normalized.length();) {
+            int cp = normalized.codePointAt(i);
+            if (Character.isISOControl(cp)) return "";
+            i += Character.charCount(cp);
+        }
+        return normalized.trim().replaceAll(" +", " ");
     }
 
     private static String find(List<String> names, String requested) {
