@@ -9,7 +9,6 @@ import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.os.Bundle;
 import android.os.Process;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -196,7 +195,10 @@ public final class HyprSpacesActivity extends Activity {
                         String proposed = editor.getText().toString();
                         SpaceModel updated = oldName == null
                                 ? model.add(proposed) : model.rename(oldName, proposed);
-                        if (oldName != null) migratePair(oldName, updated.names(), proposed);
+                        if (oldName != null) {
+                            int index = model.names().indexOf(oldName);
+                            migratePair(oldName, updated.names().get(index));
+                        }
                         model = updated;
                         persist();
                         render();
@@ -227,13 +229,8 @@ public final class HyprSpacesActivity extends Activity {
         return "pair_" + slot + "_" + name.toLowerCase(Locale.ROOT);
     }
 
-    private void migratePair(String oldName, List<String> updatedNames, String requested) {
-        // Rename only changes labels. Preserve the old space's explicit app pair.
-        String newName = null;
-        for (String name : updatedNames) {
-            if (name.equalsIgnoreCase(requested.trim())) newName = name;
-        }
-        if (newName == null) return;
+    private void migratePair(String oldName, String newName) {
+        // Preserve the explicit app pair through NFKC/whitespace-normalizing renames.
         SharedPreferences.Editor editor = prefs.edit();
         for (int slot = 0; slot < 2; slot++) {
             String previous = prefs.getString(pairKey(oldName, slot), null);
