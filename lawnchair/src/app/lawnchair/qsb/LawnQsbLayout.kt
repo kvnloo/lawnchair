@@ -32,6 +32,7 @@ import app.lawnchair.ui.preferences.navigation.Search
 import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
+import app.lawnchair.zer0.spaces.HyprSpacesActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
@@ -172,7 +173,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0VoiceOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0VoiceOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -182,6 +183,16 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
         context.startActivity(PreferenceActivity.createIntent(context, Search()))
+        true
+    }
+
+    private fun getZer0SpacesOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.zer0_spaces,
+        R.drawable.ic_setting,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        context.startActivity(Intent(context, HyprSpacesActivity::class.java))
         true
     }
 
