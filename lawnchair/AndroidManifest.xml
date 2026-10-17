@@ -65,6 +65,14 @@
             android:label="@string/zer0_voice_command"
             android:theme="@style/Theme.Transparent" />
 
+        <!-- Downstream experiment: user-invoked named spaces and public split launch hints. -->
+        <activity
+            android:name="app.lawnchair.zer0.spaces.HyprSpacesActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/zer0_spaces"
+            android:theme="@style/Theme.Lawnchair" />
+
         <meta-data
             android:name="preloaded_fonts"
             android:resource="@array/preloaded_fonts" />
