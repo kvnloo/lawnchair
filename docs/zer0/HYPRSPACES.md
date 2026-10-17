@@ -36,6 +36,12 @@ The experiment now records the last *launch request* in private app settings, wi
 
 Run **adjacent-to-Spaces** and **two-app-pair** separately on the real Samsung phone. A successful `startActivity()` return means only a launch request was emitted, not that the compositor honored any intended layout. Save a user screenshot and ADB logs *only with explicit local consent*; no automatic uploads.
 
+## Reproducible ADB proof on Samsung
+
+Run `bash tools/zer0/samsung-spaces-check.sh preflight` with one USB/ADB-authorized device, optionally `ANDROID_SERIAL=...`. It prints OS/One UI properties and the HOME role holder without capturing private screen data.
+
+After a **user-initiated** split experiment, optionally run `bash tools/zer0/samsung-spaces-check.sh capture ./my-local-evidence` to save raw Android activity and window dumps. The files can contain private app/window metadata, stay local, and are **never auto-uploaded**; review and redact them before attaching or sharing. Pair a manual screenshot and the app's explicit redacted probe receipt for actual human-visible layout confirmation. A `dumpsys` line by itself is not a verified split layout without a matching window/task observation.
+
 ## Next evidence gates on Galaxy S25 Ultra
 
 1. Run bash tools/zer0/test-voice-commands.sh, ./gradlew spotlessCheck, and ./gradlew assembleLawnWithQuickstepGithubDebug with the repo submodules, and attach logs / SHA.
