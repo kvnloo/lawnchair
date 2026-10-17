@@ -47,13 +47,13 @@ import app.lawnchair.preferences2.firstCached
 import app.lawnchair.root.RootHelperManager
 import app.lawnchair.root.RootNotAvailableException
 import app.lawnchair.theme.ThemeProvider
-import app.lawnchair.zer0.spaces.HyprSpacesActivity
-import app.lawnchair.zer0.spaces.SpacePageBinding
 import app.lawnchair.ui.popup.LauncherOptionsPopup
 import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.getThemedIconPacksInstalled
 import app.lawnchair.util.unsafeLazy
 import app.lawnchair.views.LawnchairFloatingSurfaceView
+import app.lawnchair.zer0.spaces.HyprSpacesActivity
+import app.lawnchair.zer0.spaces.SpacePageBinding
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.BubbleTextView
