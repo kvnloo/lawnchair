@@ -1,11 +1,12 @@
 # HyprSpaces — experimental Android spaces/window control
 
-**Status (2026-10-17): code committed, build/device checks outstanding.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
+**Status (2026-10-17): previous head e8cde08 passed full hosted Android CI (three APK variants, Spotless) and JVM checks. Current pin changes need a fresh exact-head CI; physical Samsung testing has not run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
 
 ## Current scope
 
 - Dock QSB long-press → Spaces (experimental), alongside Customize and Voice. Standard home, app drawer, search, widgets and folders remain unchanged.
 - Local named contexts, initially Now / Build / Learn / Life, with create / rename / delete / activate. These are **context labels**, not separate OS task stacks or Android desktops.
+- Each named space has up to eight pinned personal-profile app shortcuts. Use the first-app picker to add pins; tap a shortcut to launch or × to unpin. Scratch pins stay in activity memory only. Pinned component IDs are serialized privately; labels are displayed only if the app currently passes Lawnchair's hidden-app policy. Launching rechecks the installed component and visibility; renamed/deleted spaces migrate or delete pin state. There is no background app scanning.
 - Scratch is transient: active status and selected app pair are not stored. Normal spaces persist their names, selection, and two personal-profile app components in private SharedPreferences.
 - An explicit button launches one app then requests an adjacent second app using Android public Intent flags FLAG_ACTIVITY_NEW_TASK and FLAG_ACTIVITY_LAUNCH_ADJACENT. This is a **best-effort placement request**, not verified split-screen or a fully capable tiling manager. A partial failure can leave one app open. No automatic retries.
 - Existing one-shot voice prototype now accepts SWITCH_SPACE only for an exact, locally configured name; an unrecognized space has no execution side effect. OPEN_APP remains exact-label only.
