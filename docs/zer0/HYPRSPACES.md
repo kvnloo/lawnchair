@@ -1,6 +1,6 @@
 # HyprSpaces — experimental Android spaces/window control
 
-**Status (2026-10-17): previous head e8cde08 passed full hosted Android CI (three APK variants, Spotless) and JVM checks. Current pin changes need a fresh exact-head CI; physical Samsung testing has not run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
+**Status (2026-10-17): current fork head dabb9da has hosted JVM voice and HyprSpaces checks PASS, Spotless PASS; three Android APK variants are still running. Previous earlier head 9f2c60b8 passed all Android APK variants. No physical Galaxy S25 Ultra tests or verified compositor layouts have run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
 
 ## Current scope
 
@@ -16,6 +16,14 @@
 ## Not yet built
 
 Arbitrary tiling layouts, window geometry inspection/verification, move/resizing tasks, One UI pop-up control, app drawer replacement, predictive spaces, Android Accessibility/TaskOrganizer adapter, and persistent GPT realtime voice are **not** implemented. Consumer ChatGPT Voice mode cannot be treated as a documented third-party app automation API.
+
+## Android 17 / Samsung native-window opportunities (research only)
+
+Official [Android 17 release notes](https://android-developers.googleblog.com/2026/06/Android-17.html) document new **App Bubbles** that a person opens by long-pressing launcher icons, plus a Bubble Bar on larger screens and interactive PiP in desktop environments. [Android's September 30 app-bubbles guide](https://www.android.com/articles/streamline-your-workspace-with-app-bubbles/) describes the user-facing floating-workspace behavior. Existing notification `BubbleMetadata` APIs are for the *originating app's own activity*, not an unrestricted ability to bubble arbitrary foreign apps. AOSP's window-shell `createAppBubble` is internal implementation, not a guaranteed public caller API.
+
+**Next capability experiment (NOT IMPLEMENTED):** verify the S25 Ultra build actually exposes universal app bubbles in its current One UI launcher; identify the public Launcher3/system interaction seam and confirm that the action can be offered from an unprivileged third-party launcher. If unsupported, present a guide to Samsung's native pop-up/Edge-panel behavior instead. Do not invoke internal WindowManager shell APIs, enable developer freeform flags, or claim to control other apps without a documented supported path.
+
+Android 16 QPR3 also made connected-display desktop windowing generally available for supported devices: [Google/Samsung Android desktop collaboration](https://android-developers.googleblog.com/2026/03/android-devices-extend-seamlessly-to.html). A phone-screen split, Samsung DeX external-display freeform, and universal app bubbles are **three distinct capability families**; do not use one success as proof of the others.
 
 ## Backend strategy
 
