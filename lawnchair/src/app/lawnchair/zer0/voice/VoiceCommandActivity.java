@@ -3,12 +3,15 @@ package app.lawnchair.zer0.voice;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.os.Bundle;
 import android.os.Process;
 import android.speech.RecognizerIntent;
 import android.widget.Toast;
+import app.lawnchair.zer0.spaces.HyprSpacesActivity;
+import app.lawnchair.zer0.spaces.SpaceModel;
 import com.android.launcher3.R;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +65,22 @@ public final class VoiceCommandActivity extends Activity {
 
     private void handleFinalTranscript(String spoken) {
         VoiceCommand command = VoiceCommand.parse(spoken);
+        if (command.kind == VoiceCommand.Kind.SWITCH_SPACE) {
+            // Final transcript supplies a *candidate*. Only locally configured exact
+            // names can be activated; no model-chosen arbitrary Android actions.
+            SharedPreferences prefs =
+                    getSharedPreferences(HyprSpacesActivity.PREFS_NAME, MODE_PRIVATE);
+            SpaceModel catalog = SpaceModel.restore(
+                    prefs.getString(HyprSpacesActivity.KEY_NAMES, null),
+                    prefs.getString(HyprSpacesActivity.KEY_ACTIVE, null));
+            if (!catalog.contains(command.target)) {
+                notifyUser(R.string.zer0_space_unknown);
+                return;
+            }
+            startActivity(new Intent(this, HyprSpacesActivity.class)
+                    .putExtra(HyprSpacesActivity.EXTRA_ACTIVATE, command.target));
+            return;
+        }
         if (command.kind != VoiceCommand.Kind.OPEN_APP) {
             notifyUser(R.string.zer0_voice_unsupported);
             return;
