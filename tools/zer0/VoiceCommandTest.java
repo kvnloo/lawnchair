@@ -19,7 +19,8 @@ public final class VoiceCommandTest {
         expect("Go to life.", Kind.SWITCH_SPACE, "life");
         expect("open learn space", Kind.SWITCH_SPACE, "learn");
         expect("now space", Kind.SWITCH_SPACE, "now");
-        expect("switch to finance", Kind.UNKNOWN, "");
+        expect("switch to finance", Kind.SWITCH_SPACE, "finance");
+        expect("switch to Science Lab", Kind.SWITCH_SPACE, "science lab");
         expect("start focus", Kind.START_FOCUS, "");
         expect("start focus timer", Kind.START_FOCUS, "");
         expect("focus for 25 minutes", Kind.START_FOCUS, "");
