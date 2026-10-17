@@ -134,7 +134,7 @@ public final class SpaceModel {
     private static String clean(String value) {
         if (value == null) return "";
         return Normalizer.normalize(value, Normalizer.Form.NFKC)
-                .trim().replaceAll("\\s+", " ");
+                .trim().replaceAll(" +", " ");
     }
 
     private static String find(List<String> names, String requested) {
