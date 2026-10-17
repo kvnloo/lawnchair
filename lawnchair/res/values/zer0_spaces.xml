@@ -8,6 +8,9 @@
     <string name="zer0_space_rename">Rename</string>
     <string name="zer0_space_scratch">Scratch (temporary, not saved)</string>
     <string name="zer0_space_unknown">Space not found</string>
+    <string name="zer0_accessible_activate">Switch to %1$s space</string>
+    <string name="zer0_accessible_delete_space">Delete %1$s space</string>
+    <string name="zer0_accessible_unpin">Unpin %1$s from space</string>
     <string name="zer0_page_binding_status">Linked home-screen ID: %1$s</string>
     <string name="zer0_page_binding_none">None</string>
     <string name="zer0_page_bind">Link this space to the home page I came from</string>

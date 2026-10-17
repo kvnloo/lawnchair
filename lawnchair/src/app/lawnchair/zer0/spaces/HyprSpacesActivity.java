@@ -12,10 +12,11 @@ import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.os.Process;
+import android.os.SystemClock;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -64,6 +65,8 @@ public final class HyprSpacesActivity extends Activity {
     private List<String> scratchPins = new ArrayList<>();
     private boolean firstResume = true;
     private String searchQuery = "";
+    private ScrollView activeScroll;
+    private EditText activeSearch;
     private int launcherSourceScreenId = SpacePageBinding.NO_SCREEN;
 
     @Override
@@ -168,6 +171,8 @@ public final class HyprSpacesActivity extends Activity {
     }
 
     private void render() {
+        final int previousScrollY = activeScroll == null ? 0 : activeScroll.getScrollY();
+        final boolean searchWasFocused = activeSearch != null && activeSearch.hasFocus();
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(16), dp(16), dp(16), dp(28));
@@ -199,12 +204,16 @@ public final class HyprSpacesActivity extends Activity {
 
         for (String space : model.names()) {
             LinearLayout line = row();
-            line.addView(button((model.activeName().equals(space) ? "● " : "  ") + space,
-                    () -> activate(space)), new LinearLayout.LayoutParams(0, dp(55), 1));
+            Button activate = button(
+                    (model.activeName().equals(space) ? "● " : "  ") + space,
+                    () -> activate(space));
+            activate.setContentDescription(getString(R.string.zer0_accessible_activate, space));
+            line.addView(activate, new LinearLayout.LayoutParams(0, dp(55), 1));
             line.addView(button(getString(R.string.zer0_space_rename),
                     () -> askForName(space)), new LinearLayout.LayoutParams(dp(84), dp(55)));
-            line.addView(button("×", () -> confirmRemove(space)),
-                    new LinearLayout.LayoutParams(dp(50), dp(55)));
+            Button remove = button("×", () -> confirmRemove(space));
+            remove.setContentDescription(getString(R.string.zer0_accessible_delete_space, space));
+            line.addView(remove, new LinearLayout.LayoutParams(dp(50), dp(55)));
             content.addView(line);
         }
         content.addView(button(getString(R.string.zer0_space_create),
@@ -215,6 +224,7 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(text(getString(R.string.zer0_search_title), 20));
         EditText search = new EditText(this);
         search.setSingleLine(true);
+        activeSearch = search;
         search.setHint(R.string.zer0_search_hint);
         search.setContentDescription(getString(R.string.zer0_search_title));
         search.setImeOptions(EditorInfo.IME_ACTION_GO);
@@ -236,7 +246,10 @@ public final class HyprSpacesActivity extends Activity {
             @Override public void afterTextChanged(Editable value) {}
         });
         search.setOnEditorActionListener((view, actionId, event) -> {
-            if (actionId != EditorInfo.IME_ACTION_GO) return false;
+            boolean hardwareEnter = event != null
+                    && event.getKeyCode() == KeyEvent.KEYCODE_ENTER
+                    && event.getAction() == KeyEvent.ACTION_DOWN;
+            if (actionId != EditorInfo.IME_ACTION_GO && !hardwareEnter) return false;
             SpaceAppSearch.Entry exact =
                     SpaceAppSearch.exactUnique(searchEntries(), searchQuery);
             if (exact == null) {
@@ -259,8 +272,10 @@ public final class HyprSpacesActivity extends Activity {
             LinearLayout shortcut = row();
             shortcut.addView(button(displayLabel(app), () -> launchPinned(component)),
                     new LinearLayout.LayoutParams(0, dp(55), 1));
-            shortcut.addView(button("×", () -> unpin(component)),
-                    new LinearLayout.LayoutParams(dp(50), dp(55)));
+            Button unpin = button("×", () -> unpin(component));
+            unpin.setContentDescription(
+                    getString(R.string.zer0_accessible_unpin, displayLabel(app)));
+            shortcut.addView(unpin, new LinearLayout.LayoutParams(dp(50), dp(55)));
             content.addView(shortcut);
         }
         if (visiblePins == 0) {
@@ -317,6 +332,14 @@ public final class HyprSpacesActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.addView(content);
         setContentView(scroll);
+        activeScroll = scroll;
+        scroll.post(() -> {
+            scroll.scrollTo(0, previousScrollY);
+            if (searchWasFocused) {
+                search.requestFocus();
+                search.setSelection(searchQuery.length());
+            }
+        });
     }
 
     private List<SpaceAppSearch.Entry> searchEntries() {
@@ -334,9 +357,16 @@ public final class HyprSpacesActivity extends Activity {
             LauncherActivityInfo visible = findVisibleApp(item.component, apps);
             if (visible == null) continue;
             String appLabel = displayLabel(visible);
+            int sameLabels = 0;
+            for (LauncherActivityInfo candidate : apps) {
+                if (displayLabel(candidate).equalsIgnoreCase(appLabel)) sameLabels++;
+            }
+            String visibleTitle = sameLabels > 1
+                    ? appLabel + " · " + visible.getComponentName().getPackageName()
+                    : appLabel;
             LinearLayout line = row();
-            Button open = button(appLabel, () -> launchPinned(item.component));
-            open.setContentDescription(getString(R.string.zer0_search_open, appLabel));
+            Button open = button(visibleTitle, () -> launchPinned(item.component));
+            open.setContentDescription(getString(R.string.zer0_search_open, visibleTitle));
             line.addView(open, new LinearLayout.LayoutParams(0, dp(52), 1));
             Button pin = button("+", () -> pinComponent(item.component));
             pin.setContentDescription(getString(R.string.zer0_search_pin, appLabel));
