@@ -41,6 +41,7 @@ public final class HyprSpacesActivity extends Activity {
     private Spinner secondary;
     private String scratchPrimary;
     private String scratchSecondary;
+    private List<String> scratchPins = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedState) {
@@ -146,6 +147,25 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(button(getString(R.string.zer0_space_scratch),
                 () -> activate(SpaceModel.SCRATCH)));
 
+        content.addView(text(getString(R.string.zer0_pins_title), 20));
+        content.addView(text(getString(R.string.zer0_pins_note), 13));
+        List<String> pins = currentPins();
+        int visiblePins = 0;
+        for (String component : pins) {
+            LauncherActivityInfo app = findVisibleApp(component, apps);
+            if (app == null) continue; // No hidden/uninstalled name or component exposure.
+            visiblePins++;
+            LinearLayout shortcut = row();
+            shortcut.addView(button(displayLabel(app), () -> launchPinned(component)),
+                    new LinearLayout.LayoutParams(0, dp(55), 1));
+            shortcut.addView(button("×", () -> unpin(component)),
+                    new LinearLayout.LayoutParams(dp(50), dp(55)));
+            content.addView(shortcut);
+        }
+        if (visiblePins == 0) {
+            content.addView(text(getString(R.string.zer0_pins_empty), 13));
+        }
+
         content.addView(text(getString(R.string.zer0_spaces_pair_title), 20));
         content.addView(text(getString(R.string.zer0_spaces_pair_note), 13));
 
@@ -166,6 +186,9 @@ public final class HyprSpacesActivity extends Activity {
         if (apps.size() > 1) secondary.setSelection(1);
         content.addView(text(getString(R.string.zer0_spaces_primary), 14));
         content.addView(primary);
+        Button pinButton = button(getString(R.string.zer0_pins_add), this::pinSelected);
+        pinButton.setEnabled(!apps.isEmpty());
+        content.addView(pinButton);
         content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
         content.addView(secondary);
 
@@ -229,7 +252,11 @@ public final class HyprSpacesActivity extends Activity {
                 .setPositiveButton(android.R.string.ok, (dialog, which) -> {
                     try {
                         SpaceModel updated = model.remove(name);
-                        prefs.edit().remove(pairKey(name, 0)).remove(pairKey(name, 1)).apply();
+                        prefs.edit()
+                                .remove(pairKey(name, 0))
+                                .remove(pairKey(name, 1))
+                                .remove(pinsKey(name))
+                                .apply();
                         model = updated;
                         persist();
                         render();
@@ -244,8 +271,11 @@ public final class HyprSpacesActivity extends Activity {
     }
 
     private void migratePair(String oldName, String newName) {
-        // Preserve the explicit app pair through NFKC/whitespace-normalizing renames.
+        // Preserve explicit app pairs and pins through normalized space renames.
         SharedPreferences.Editor editor = prefs.edit();
+        String previousPins = prefs.getString(pinsKey(oldName), null);
+        if (previousPins != null) editor.putString(pinsKey(newName), previousPins);
+        if (!pinsKey(oldName).equals(pinsKey(newName))) editor.remove(pinsKey(oldName));
         for (int slot = 0; slot < 2; slot++) {
             String previous = prefs.getString(pairKey(oldName, slot), null);
             if (previous != null) editor.putString(pairKey(newName, slot), previous);
@@ -254,6 +284,65 @@ public final class HyprSpacesActivity extends Activity {
             }
         }
         editor.apply();
+    }
+
+    private static String pinsKey(String name) {
+        return "pins_" + name.toLowerCase(Locale.ROOT);
+    }
+
+    private List<String> currentPins() {
+        if (model.isScratchActive()) return new ArrayList<>(scratchPins);
+        return SpacePins.decode(prefs.getString(pinsKey(model.activeName()), null));
+    }
+
+    private void storePins(List<String> pins) {
+        if (model.isScratchActive()) {
+            scratchPins = new ArrayList<>(pins); // Memory only; no persisted Scratch data.
+        } else {
+            prefs.edit().putString(pinsKey(model.activeName()), SpacePins.encode(pins)).apply();
+        }
+    }
+
+    private static LauncherActivityInfo findVisibleApp(
+            String component, List<LauncherActivityInfo> visible) {
+        for (LauncherActivityInfo app : visible) {
+            if (app.getComponentName().flattenToString().equals(component)) return app;
+        }
+        return null;
+    }
+
+    private void pinSelected() {
+        int index = primary.getSelectedItemPosition();
+        if (index < 0 || index >= apps.size()) return;
+        try {
+            String component = apps.get(index).getComponentName().flattenToString();
+            storePins(SpacePins.add(currentPins(), component));
+            render();
+        } catch (IllegalArgumentException error) {
+            Toast.makeText(this, R.string.zer0_pins_limit, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void unpin(String component) {
+        storePins(SpacePins.remove(currentPins(), component));
+        render();
+    }
+
+    private void launchPinned(String component) {
+        // The shortcut is not launch authority: resolve current installed personal-profile
+        // apps AND the current hidden-app preference again at the moment of invocation.
+        LauncherActivityInfo app = findVisibleApp(component, loadPersonalApps());
+        LauncherApps launcherApps = getSystemService(LauncherApps.class);
+        if (app == null || launcherApps == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            launcherApps.startMainActivity(
+                    app.getComponentName(), Process.myUserHandle(), null, null);
+        } catch (RuntimeException error) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+        }
     }
 
     private String getSaved(int slot) {
@@ -306,10 +395,18 @@ public final class HyprSpacesActivity extends Activity {
             Toast.makeText(this, R.string.zer0_spaces_pick_distinct, Toast.LENGTH_SHORT).show();
             return;
         }
-        // One UI chooses whether/how to honor these public Android launch hints.
-        // There is no claim that a split was verified; no retry after a partial launch.
+        // Resolve both targets again before either is launched. Apps can be removed or
+        // hidden between configuration and execution; reject without partial execution.
         ComponentName first = apps.get(primary.getSelectedItemPosition()).getComponentName();
         ComponentName second = apps.get(secondary.getSelectedItemPosition()).getComponentName();
+        List<LauncherActivityInfo> visible = loadPersonalApps();
+        if (findVisibleApp(first.flattenToString(), visible) == null
+                || findVisibleApp(second.flattenToString(), visible) == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // One UI decides whether it honors the public adjacent launch hint; result
+        // remains unverified until the user/device test observes two visible tasks.
         try {
             startActivity(mainIntent(first, false));
         } catch (RuntimeException error) {
