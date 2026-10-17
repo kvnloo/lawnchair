@@ -42,6 +42,7 @@ public final class HyprSpacesActivity extends Activity {
     private String scratchPrimary;
     private String scratchSecondary;
     private List<String> scratchPins = new ArrayList<>();
+    private boolean firstResume = true;
 
     @Override
     protected void onCreate(Bundle savedState) {
@@ -60,6 +61,19 @@ public final class HyprSpacesActivity extends Activity {
         }
         apps = loadPersonalApps();
         render();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (firstResume) {
+            firstResume = false;
+        } else {
+            // Re-check installed-app and hidden-app preferences after switching away.
+            // A previously visible app must not remain exposed in this picker.
+            apps = loadPersonalApps();
+            render();
+        }
     }
 
     private List<LauncherActivityInfo> loadPersonalApps() {
@@ -210,7 +224,14 @@ public final class HyprSpacesActivity extends Activity {
 
     private void activate(String space) {
         try {
-            model = model.activate(space);
+            SpaceModel next = model.activate(space);
+            if (model.isScratchActive() && !next.isScratchActive()) {
+                // Scratch is ephemeral even within a long-lived Spaces activity.
+                scratchPins.clear();
+                scratchPrimary = null;
+                scratchSecondary = null;
+            }
+            model = next;
             persist();
             render();
         } catch (IllegalArgumentException ignored) {
