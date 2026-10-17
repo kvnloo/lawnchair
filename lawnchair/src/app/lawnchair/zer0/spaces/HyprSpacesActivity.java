@@ -82,9 +82,13 @@ public final class HyprSpacesActivity extends Activity {
             }
         }
         result.sort(Comparator.comparing(
-                (LauncherActivityInfo app) -> app.getLabel().toString(),
-                String.CASE_INSENSITIVE_ORDER));
+                HyprSpacesActivity::displayLabel, String.CASE_INSENSITIVE_ORDER));
         return result;
+    }
+
+    private static String displayLabel(LauncherActivityInfo activity) {
+        CharSequence label = activity.getLabel();
+        return label == null ? activity.getComponentName().flattenToShortString() : label.toString();
     }
 
     private void persist() {
@@ -147,7 +151,7 @@ public final class HyprSpacesActivity extends Activity {
 
         ArrayList<String> labels = new ArrayList<>();
         for (LauncherActivityInfo info : apps) {
-            labels.add(info.getLabel() + " · " + info.getComponentName().getPackageName());
+            labels.add(displayLabel(info) + " · " + info.getComponentName().getPackageName());
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this, android.R.layout.simple_spinner_item, labels);
@@ -159,6 +163,7 @@ public final class HyprSpacesActivity extends Activity {
         secondary = new Spinner(this);
         secondary.setContentDescription(getString(R.string.zer0_spaces_secondary));
         secondary.setAdapter(adapter);
+        if (apps.size() > 1) secondary.setSelection(1);
         content.addView(text(getString(R.string.zer0_spaces_primary), 14));
         content.addView(primary);
         content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
