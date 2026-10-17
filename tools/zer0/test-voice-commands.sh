@@ -32,3 +32,7 @@ java -cp "$work" PhoneActionGateTest
 java -cp "$work" SpaceAppSearchTest
 java -cp "$work" SplitProbeTest
 java -cp "$work" SpacePageBindingTest
+
+# Static-only smoke for opt-in device proof collection; does not require adb or a phone.
+bash -n "$root/tools/zer0/samsung-spaces-check.sh"
+bash "$root/tools/zer0/samsung-spaces-check.sh" --help | grep -q "EXPLICIT OPT-IN"
