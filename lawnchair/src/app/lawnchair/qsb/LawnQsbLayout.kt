@@ -192,7 +192,12 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         R.drawable.ic_setting,
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
-        context.startActivity(Intent(context, HyprSpacesActivity::class.java))
+        val workspace = context.launcher.workspace
+        val screenId = workspace.getScreenIdForPageIndex(workspace.currentPage)
+        context.startActivity(
+            Intent(context, HyprSpacesActivity::class.java)
+                .putExtra(HyprSpacesActivity.EXTRA_SOURCE_SCREEN_ID, screenId),
+        )
         true
     }
 

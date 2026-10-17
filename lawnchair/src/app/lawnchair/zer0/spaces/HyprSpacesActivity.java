@@ -12,6 +12,7 @@ import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.os.Process;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -38,6 +39,10 @@ import java.util.UUID;
  */
 public final class HyprSpacesActivity extends Activity {
     public static final String EXTRA_ACTIVATE = "app.lawnchair.zer0.spaces.ACTIVATE";
+    public static final String EXTRA_SOURCE_SCREEN_ID =
+            "app.lawnchair.zer0.spaces.SOURCE_SCREEN_ID";
+    public static final String PENDING_SCREEN_ID = "pending_screen_id";
+    public static final String PENDING_SCREEN_REQUEST_TIME = "pending_screen_requested_at";
     public static final String PREFS_NAME = "zer0_hyprspaces";
     public static final String KEY_NAMES = "names";
     public static final String KEY_ACTIVE = "active";
@@ -59,11 +64,14 @@ public final class HyprSpacesActivity extends Activity {
     private List<String> scratchPins = new ArrayList<>();
     private boolean firstResume = true;
     private String searchQuery = "";
+    private int launcherSourceScreenId = SpacePageBinding.NO_SCREEN;
 
     @Override
     protected void onCreate(Bundle savedState) {
         super.onCreate(savedState);
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        launcherSourceScreenId = getIntent().getIntExtra(
+                EXTRA_SOURCE_SCREEN_ID, SpacePageBinding.NO_SCREEN);
         model = SpaceModel.restore(prefs.getString(KEY_NAMES, null),
                 prefs.getString(KEY_ACTIVE, null));
         String requested = getIntent().getStringExtra(EXTRA_ACTIVATE);
@@ -74,6 +82,12 @@ public final class HyprSpacesActivity extends Activity {
             } catch (IllegalArgumentException ignored) {
                 Toast.makeText(this, R.string.zer0_space_unknown, Toast.LENGTH_SHORT).show();
             }
+        }
+        // A one-shot voice request can go directly home if the selected context is
+        // explicitly linked to an existing page. Otherwise show the Spaces editor.
+        if (requested != null && scheduleLinkedHomePageIfAny()) {
+            finish();
+            return;
         }
         apps = loadPersonalApps();
         render();
@@ -161,6 +175,27 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(text(getString(R.string.zer0_spaces_title), 26));
         content.addView(text(getString(R.string.zer0_space_active, model.activeName()), 16));
         content.addView(text(getString(R.string.zer0_spaces_disclaimer), 13));
+        if (!model.isScratchActive()) {
+            int linkedScreenId = prefs.getInt(pageKey(model.activeName()),
+                    SpacePageBinding.NO_SCREEN);
+            content.addView(text(getString(R.string.zer0_page_binding_status,
+                    linkedScreenId < 0
+                            ? getString(R.string.zer0_page_binding_none)
+                            : String.valueOf(linkedScreenId)), 13));
+            Button bindCurrent = button(getString(R.string.zer0_page_bind), () -> {
+                if (launcherSourceScreenId < 0) return;
+                prefs.edit().putInt(pageKey(model.activeName()), launcherSourceScreenId).apply();
+                render();
+            });
+            bindCurrent.setEnabled(launcherSourceScreenId >= 0);
+            content.addView(bindCurrent);
+            if (linkedScreenId >= 0) {
+                content.addView(button(getString(R.string.zer0_page_unbind), () -> {
+                    prefs.edit().remove(pageKey(model.activeName())).apply();
+                    render();
+                }));
+            }
+        }
 
         for (String space : model.names()) {
             LinearLayout line = row();
@@ -321,7 +356,11 @@ public final class HyprSpacesActivity extends Activity {
             }
             model = next;
             persist();
-            render();
+            if (scheduleLinkedHomePageIfAny()) {
+                finish();
+            } else {
+                render();
+            }
         } catch (IllegalArgumentException ignored) {
             Toast.makeText(this, R.string.zer0_space_unknown, Toast.LENGTH_SHORT).show();
         }
@@ -365,6 +404,7 @@ public final class HyprSpacesActivity extends Activity {
                                 .remove(pairKey(name, 0))
                                 .remove(pairKey(name, 1))
                                 .remove(pinsKey(name))
+                                .remove(pageKey(name))
                                 .apply();
                         model = updated;
                         persist();
@@ -375,6 +415,19 @@ public final class HyprSpacesActivity extends Activity {
                 }).show();
     }
 
+    private static String pageKey(String name) {
+        return "home_page_" + name.toLowerCase(Locale.ROOT);
+    }
+
+    private boolean scheduleLinkedHomePageIfAny() {
+        if (model.isScratchActive()) return false;
+        int screenId = prefs.getInt(pageKey(model.activeName()), SpacePageBinding.NO_SCREEN);
+        if (screenId < 0) return false;
+        prefs.edit().putInt(PENDING_SCREEN_ID, screenId)
+                .putLong(PENDING_SCREEN_REQUEST_TIME, SystemClock.elapsedRealtime()).apply();
+        return true;
+    }
+
     private static String pairKey(String name, int slot) {
         return "pair_" + slot + "_" + name.toLowerCase(Locale.ROOT);
     }
@@ -382,6 +435,9 @@ public final class HyprSpacesActivity extends Activity {
     private void migratePair(String oldName, String newName) {
         // Preserve explicit app pairs and pins through normalized space renames.
         SharedPreferences.Editor editor = prefs.edit();
+        int previousPage = prefs.getInt(pageKey(oldName), SpacePageBinding.NO_SCREEN);
+        if (previousPage >= 0) editor.putInt(pageKey(newName), previousPage);
+        if (!pageKey(oldName).equals(pageKey(newName))) editor.remove(pageKey(oldName));
         String previousPins = prefs.getString(pinsKey(oldName), null);
         if (previousPins != null) editor.putString(pinsKey(newName), previousPins);
         if (!pinsKey(oldName).equals(pinsKey(newName))) editor.remove(pinsKey(oldName));
