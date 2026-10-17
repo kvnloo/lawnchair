@@ -9,6 +9,9 @@ import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.os.Bundle;
 import android.os.Process;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -43,6 +46,7 @@ public final class HyprSpacesActivity extends Activity {
     private String scratchSecondary;
     private List<String> scratchPins = new ArrayList<>();
     private boolean firstResume = true;
+    private String searchQuery = "";
 
     @Override
     protected void onCreate(Bundle savedState) {
@@ -161,6 +165,42 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(button(getString(R.string.zer0_space_scratch),
                 () -> activate(SpaceModel.SCRATCH)));
 
+        content.addView(text(getString(R.string.zer0_search_title), 20));
+        EditText search = new EditText(this);
+        search.setSingleLine(true);
+        search.setHint(R.string.zer0_search_hint);
+        search.setContentDescription(getString(R.string.zer0_search_title));
+        search.setImeOptions(EditorInfo.IME_ACTION_GO);
+        search.setText(searchQuery);
+        search.setSelection(searchQuery.length());
+        LinearLayout results = new LinearLayout(this);
+        results.setOrientation(LinearLayout.VERTICAL);
+        content.addView(search);
+        content.addView(results);
+        search.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence value, int start, int count, int after) {}
+
+            @Override public void onTextChanged(
+                    CharSequence value, int start, int before, int count) {
+                searchQuery = value.toString();
+                updateSearchResults(results);
+            }
+
+            @Override public void afterTextChanged(Editable value) {}
+        });
+        search.setOnEditorActionListener((view, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_GO) return false;
+            SpaceAppSearch.Entry exact =
+                    SpaceAppSearch.exactUnique(searchEntries(), searchQuery);
+            if (exact == null) {
+                Toast.makeText(this, R.string.zer0_search_select, Toast.LENGTH_SHORT).show();
+            } else {
+                launchPinned(exact.component);
+            }
+            return true;
+        });
+        updateSearchResults(results);
+
         content.addView(text(getString(R.string.zer0_pins_title), 20));
         content.addView(text(getString(R.string.zer0_pins_note), 13));
         List<String> pins = currentPins();
@@ -220,6 +260,32 @@ public final class HyprSpacesActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.addView(content);
         setContentView(scroll);
+    }
+
+    private List<SpaceAppSearch.Entry> searchEntries() {
+        ArrayList<SpaceAppSearch.Entry> candidates = new ArrayList<>(apps.size());
+        for (LauncherActivityInfo app : apps) {
+            candidates.add(new SpaceAppSearch.Entry(
+                    app.getComponentName().flattenToString(), displayLabel(app)));
+        }
+        return candidates;
+    }
+
+    private void updateSearchResults(LinearLayout resultRows) {
+        resultRows.removeAllViews();
+        for (SpaceAppSearch.Entry item : SpaceAppSearch.filter(searchEntries(), searchQuery)) {
+            LauncherActivityInfo visible = findVisibleApp(item.component, apps);
+            if (visible == null) continue;
+            String appLabel = displayLabel(visible);
+            LinearLayout line = row();
+            Button open = button(appLabel, () -> launchPinned(item.component));
+            open.setContentDescription(getString(R.string.zer0_search_open, appLabel));
+            line.addView(open, new LinearLayout.LayoutParams(0, dp(52), 1));
+            Button pin = button("+", () -> pinComponent(item.component));
+            pin.setContentDescription(getString(R.string.zer0_search_pin, appLabel));
+            line.addView(pin, new LinearLayout.LayoutParams(dp(52), dp(52)));
+            resultRows.addView(line);
+        }
     }
 
     private void activate(String space) {
@@ -335,8 +401,16 @@ public final class HyprSpacesActivity extends Activity {
     private void pinSelected() {
         int index = primary.getSelectedItemPosition();
         if (index < 0 || index >= apps.size()) return;
+        pinComponent(apps.get(index).getComponentName().flattenToString());
+    }
+
+    private void pinComponent(String component) {
+        // Any cached search row can become stale when visibility settings change.
+        if (findVisibleApp(component, loadPersonalApps()) == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
         try {
-            String component = apps.get(index).getComponentName().flattenToString();
             storePins(SpacePins.add(currentPins(), component));
             render();
         } catch (IllegalArgumentException error) {
