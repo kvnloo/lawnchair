@@ -9,6 +9,12 @@
     <string name="zer0_space_scratch">Scratch (temporary, not saved)</string>
     <string name="zer0_space_unknown">Space not found</string>
     <string name="zer0_space_delete_confirm">Delete %1$s? Your home icons and Android apps will not be removed.</string>
+    <string name="zer0_pins_title">Pinned apps</string>
+    <string name="zer0_pins_note">Shortcuts belong to this space. Pick an app below to pin it; Scratch pins vanish when you leave.</string>
+    <string name="zer0_pins_empty">No pinned apps in this space.</string>
+    <string name="zer0_pins_add">Pin first app to space</string>
+    <string name="zer0_pins_limit">Maximum eight apps per space</string>
+    <string name="zer0_pins_unavailable">App unavailable or hidden</string>
     <string name="zer0_spaces_pair_title">Split-screen app pair</string>
     <string name="zer0_spaces_pair_note">Choose two personal-profile apps. This requests a split through the standard Android API, without Samsung-only privileges.</string>
     <string name="zer0_spaces_primary">First app</string>
