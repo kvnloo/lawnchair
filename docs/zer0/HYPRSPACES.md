@@ -8,7 +8,7 @@
 - Local named contexts, initially Now / Build / Learn / Life, with create / rename / delete / activate. These are **context labels**, not separate OS task stacks or Android desktops.
 - Each named space has up to eight pinned personal-profile app shortcuts. Use the first-app picker to add pins; tap a shortcut to launch or × to unpin. Scratch pins stay in activity memory only. Pinned component IDs are serialized privately; labels are displayed only if the app currently passes Lawnchair's hidden-app policy. Launching rechecks the installed component and visibility; renamed/deleted spaces migrate or delete pin state. There is no background app scanning.
 - Scratch is transient: active status and selected app pair are not stored. Normal spaces persist their names, selection, and two personal-profile app components in private SharedPreferences.
-- An explicit button launches one app then requests an adjacent second app using Android public Intent flags FLAG_ACTIVITY_NEW_TASK and FLAG_ACTIVITY_LAUNCH_ADJACENT. This is a **best-effort placement request**, not verified split-screen or a fully capable tiling manager. A partial failure can leave one app open. No automatic retries.
+- A separate controlled baseline requests one app adjacent to the Spaces UI, while the existing explicit app-pair button launches one app then requests an adjacent second app using Android public Intent flags FLAG_ACTIVITY_NEW_TASK and FLAG_ACTIVITY_LAUNCH_ADJACENT. This is a **best-effort placement request**, not verified split-screen or a fully capable tiling manager. A partial failure can leave one app open. No automatic retries.
 - Existing one-shot voice prototype now accepts SWITCH_SPACE only for an exact, locally configured name; an unrecognized space has no execution side effect. OPEN_APP remains exact-label only.
 - Pure-JVM SpaceModel constraints cover custom name validation, case-insensitive uniqueness, 12-space cap, persistence, rename/delete active selection, corrupt preference recovery and Scratch isolation.
 
@@ -28,6 +28,12 @@ Arbitrary tiling layouts, window geometry inspection/verification, move/resizing
 | Voice bridge | Opt-in session, developer backend | z0live / OpenAI Realtime function calling → z0int/Jev bounded PhoneAction → local executor/receipt |
 
 A PhoneAction must carry utterance ID, action ID, expected foreground revision, profile, expiry and authority. Execution must be idempotent and return verified/unverified/unknown outcomes. Repeated commands or stale state do not silently retry, and no API key is stored inside the APK.
+
+## Permissionless on-device multiwindow probe
+
+The experiment now records the last *launch request* in private app settings, with Android API, advertised freeform feature, and whether the Spaces Activity was in multiwindow at request time. Returning to Spaces offers **explicit user report** controls for "two visible", "fullscreen only", "one visible", or "no change". Users can choose **Copy redacted test receipt**; it contains no installed-app package IDs, screen contents, audio, or device serial. The literal `os_verified=false` remains present even when a person reports a split. Clear the receipt from the same UI.
+
+Run **adjacent-to-Spaces** and **two-app-pair** separately on the real Samsung phone. A successful `startActivity()` return means only a launch request was emitted, not that the compositor honored any intended layout. Save a user screenshot and ADB logs *only with explicit local consent*; no automatic uploads.
 
 ## Next evidence gates on Galaxy S25 Ultra
 

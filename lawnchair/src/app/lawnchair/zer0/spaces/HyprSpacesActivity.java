@@ -2,11 +2,15 @@ package app.lawnchair.zer0.spaces;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.text.Editable;
@@ -26,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.UUID;
 
 /**
  * Opt-in, downstream-only window experiment. Android/Samsung own real window placement.
@@ -36,6 +41,13 @@ public final class HyprSpacesActivity extends Activity {
     public static final String PREFS_NAME = "zer0_hyprspaces";
     public static final String KEY_NAMES = "names";
     public static final String KEY_ACTIVE = "active";
+    private static final String PROBE_ID = "probe_id";
+    private static final String PROBE_MODE = "probe_mode";
+    private static final String PROBE_STAGE = "probe_stage";
+    private static final String PROBE_OBS = "probe_observation";
+    private static final String PROBE_API = "probe_api";
+    private static final String PROBE_FREEFORM = "probe_freeform";
+    private static final String PROBE_IN_MULTIWINDOW = "probe_in_multiwindow";
 
     private SharedPreferences prefs;
     private SpaceModel model;
@@ -254,7 +266,17 @@ public final class HyprSpacesActivity extends Activity {
         Button launch = button(getString(R.string.zer0_spaces_launch_pair), this::requestSplitPair);
         launch.setEnabled(apps.size() > 1);
         content.addView(launch);
+        Button adjacent = button(getString(R.string.zer0_probe_adjacent),
+                this::requestAdjacentToSpaces);
+        adjacent.setEnabled(!apps.isEmpty());
+        content.addView(adjacent);
+        content.addView(text(getString(R.string.zer0_probe_capabilities,
+                Build.VERSION.SDK_INT,
+                getPackageManager().hasSystemFeature(
+                        PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT),
+                isInMultiWindowMode()), 13));
         content.addView(text(getString(R.string.zer0_spaces_limitations), 13));
+        addProbeControls(content);
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -485,6 +507,89 @@ public final class HyprSpacesActivity extends Activity {
         Toast.makeText(this, R.string.zer0_spaces_pair_saved, Toast.LENGTH_SHORT).show();
     }
 
+    private void beginProbe(SplitProbe.Mode mode) {
+        prefs.edit()
+                .putString(PROBE_ID, UUID.randomUUID().toString())
+                .putString(PROBE_MODE, mode.name())
+                .putString(PROBE_STAGE, SplitProbe.Stage.NOT_SENT.name())
+                .putString(PROBE_OBS, SplitProbe.Observation.UNREPORTED.name())
+                .putInt(PROBE_API, Build.VERSION.SDK_INT)
+                .putBoolean(PROBE_FREEFORM, getPackageManager().hasSystemFeature(
+                        PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT))
+                .putBoolean(PROBE_IN_MULTIWINDOW, isInMultiWindowMode())
+                .apply();
+    }
+
+    private void updateProbeStage(SplitProbe.Stage stage) {
+        prefs.edit().putString(PROBE_STAGE, stage.name()).apply();
+    }
+
+    private String probeReceipt() {
+        SplitProbe.Mode mode = SplitProbe.modeOrNull(prefs.getString(PROBE_MODE, null));
+        if (mode == null) return null;
+        return SplitProbe.formatReceipt(
+                prefs.getString(PROBE_ID, null),
+                mode,
+                SplitProbe.stageOrDefault(prefs.getString(PROBE_STAGE, null)),
+                SplitProbe.observationOrDefault(prefs.getString(PROBE_OBS, null)),
+                prefs.getInt(PROBE_API, Build.VERSION.SDK_INT),
+                prefs.getBoolean(PROBE_FREEFORM, false),
+                prefs.getBoolean(PROBE_IN_MULTIWINDOW, false));
+    }
+
+    private void setObservation(SplitProbe.Observation observation) {
+        prefs.edit().putString(PROBE_OBS, observation.name()).apply();
+        render();
+    }
+
+    private void addProbeControls(LinearLayout content) {
+        String receipt = probeReceipt();
+        if (receipt == null) return;
+        content.addView(text(getString(R.string.zer0_probe_title), 20));
+        content.addView(text(receipt, 12));
+        content.addView(text(getString(R.string.zer0_probe_explanation), 13));
+        content.addView(button(getString(R.string.zer0_probe_two),
+                () -> setObservation(SplitProbe.Observation.TWO_VISIBLE)));
+        content.addView(button(getString(R.string.zer0_probe_fullscreen),
+                () -> setObservation(SplitProbe.Observation.FULLSCREEN_ONLY)));
+        content.addView(button(getString(R.string.zer0_probe_one),
+                () -> setObservation(SplitProbe.Observation.ONE_VISIBLE)));
+        content.addView(button(getString(R.string.zer0_probe_none),
+                () -> setObservation(SplitProbe.Observation.NO_CHANGE)));
+        content.addView(button(getString(R.string.zer0_probe_copy), () -> {
+            ClipboardManager clipboard = getSystemService(ClipboardManager.class);
+            if (clipboard == null) return;
+            clipboard.setPrimaryClip(ClipData.newPlainText(
+                    "HyprSpaces multiwindow probe", probeReceipt()));
+            Toast.makeText(this, R.string.zer0_probe_copied, Toast.LENGTH_SHORT).show();
+        }));
+        content.addView(button(getString(R.string.zer0_probe_clear), () -> {
+            prefs.edit().remove(PROBE_ID).remove(PROBE_MODE).remove(PROBE_STAGE)
+                    .remove(PROBE_OBS).remove(PROBE_API).remove(PROBE_FREEFORM)
+                    .remove(PROBE_IN_MULTIWINDOW).apply();
+            render();
+        }));
+    }
+
+    private void requestAdjacentToSpaces() {
+        int index = secondary.getSelectedItemPosition();
+        if (index < 0 || index >= apps.size()) return;
+        ComponentName target = apps.get(index).getComponentName();
+        if (findVisibleApp(target.flattenToString(), loadPersonalApps()) == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        beginProbe(SplitProbe.Mode.ADJACENT_TO_SPACES);
+        try {
+            startActivity(mainIntent(target, true));
+            updateProbeStage(SplitProbe.Stage.ADJACENT_SENT);
+            Toast.makeText(this, R.string.zer0_probe_request_sent, Toast.LENGTH_LONG).show();
+        } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_ADJACENT);
+            Toast.makeText(this, R.string.zer0_spaces_pair_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void requestSplitPair() {
         if (!validSelection()) {
             Toast.makeText(this, R.string.zer0_spaces_pick_distinct, Toast.LENGTH_SHORT).show();
@@ -502,16 +607,21 @@ public final class HyprSpacesActivity extends Activity {
         }
         // One UI decides whether it honors the public adjacent launch hint; result
         // remains unverified until the user/device test observes two visible tasks.
+        beginProbe(SplitProbe.Mode.PAIR);
         try {
             startActivity(mainIntent(first, false));
+            updateProbeStage(SplitProbe.Stage.FIRST_SENT);
         } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_FIRST);
             Toast.makeText(this, R.string.zer0_spaces_pair_failed, Toast.LENGTH_SHORT).show();
             return;
         }
         try {
             startActivity(mainIntent(second, true));
+            updateProbeStage(SplitProbe.Stage.BOTH_SENT);
             Toast.makeText(this, R.string.zer0_spaces_pair_requested, Toast.LENGTH_LONG).show();
         } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_SECOND);
             Toast.makeText(this, R.string.zer0_spaces_second_failed, Toast.LENGTH_LONG).show();
         }
     }
