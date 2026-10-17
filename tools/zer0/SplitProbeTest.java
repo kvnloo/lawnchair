@@ -38,6 +38,11 @@ public final class SplitProbeTest {
         check(adjacent.contains("id=redacted") && !adjacent.contains("private"),
                 "untrusted ID sanitized");
         check(adjacent.contains("mode=adjacent_to_spaces"), "adjacent mode");
+        String accessibility = SplitProbe.formatReceipt(id, Mode.ACCESSIBILITY_ACTION,
+                Stage.ACCESSIBILITY_SENT, Observation.UNREPORTED, 37, false, true);
+        check(accessibility.contains("mode=accessibility_action"), "explicit AX mode");
+        check(accessibility.contains("launch_calls=accessibility_sent"), "only accepted by system");
+        check(accessibility.contains("os_verified=false"), "AX accepted does not verify layout");
         check(adjacent.contains("spaces_in_multiwindow_at_request=true"),
                 "source window state included");
         rejected(() -> SplitProbe.formatReceipt(id, null, Stage.NOT_SENT,

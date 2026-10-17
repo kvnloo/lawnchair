@@ -39,6 +39,9 @@
     <string name="zer0_spaces_second_failed">First app launched; second app could not be opened</string>
     <string name="zer0_spaces_pair_requested">Split requested; verify the resulting layout</string>
     <string name="zer0_probe_adjacent">Request second app adjacent to Spaces</string>
+    <string name="zer0_probe_system_split">Try Android system split action (opt-in)</string>
+    <string name="zer0_probe_system_split_note">Only available if Lawnchair accessibility was separately enabled and Android lists the split action. No service enablement or permission prompt is triggered here.</string>
+    <string name="zer0_probe_system_unavailable">Android system split action is not currently available</string>
     <string name="zer0_probe_capabilities">Android API: %1$d. Freeform feature advertised: %2$b. Spaces currently in multi-window: %3$b. These are signals, not proof that arbitrary window placement is permitted.</string>
     <string name="zer0_probe_title">Last multi-window experiment</string>
     <string name="zer0_probe_explanation">Report what you actually saw after returning here. The launcher cannot independently verify the layout, even when an activity launch returns successfully.</string>

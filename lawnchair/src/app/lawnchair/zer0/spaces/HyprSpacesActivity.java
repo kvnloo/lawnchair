@@ -26,6 +26,7 @@ import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import app.lawnchair.LawnchairApp;
 import app.lawnchair.zer0.voice.VoiceAppVisibility;
 import com.android.launcher3.R;
 import java.util.ArrayList;
@@ -320,6 +321,11 @@ public final class HyprSpacesActivity extends Activity {
                 this::requestAdjacentToSpaces);
         adjacent.setEnabled(!apps.isEmpty());
         content.addView(adjacent);
+        Button systemSplit = button(getString(R.string.zer0_probe_system_split),
+                this::requestOptInSystemSplit);
+        systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
+        content.addView(systemSplit);
+        content.addView(text(getString(R.string.zer0_probe_system_split_note), 13));
         content.addView(text(getString(R.string.zer0_probe_capabilities,
                 Build.VERSION.SDK_INT,
                 getPackageManager().hasSystemFeature(
@@ -655,6 +661,24 @@ public final class HyprSpacesActivity extends Activity {
                     .remove(PROBE_IN_MULTIWINDOW).apply();
             render();
         }));
+    }
+
+    private void requestOptInSystemSplit() {
+        // A direct click and an ALREADY-bound Lawnchair AccessibilityService are required.
+        // Availability is checked again immediately before execution; no Settings prompt.
+        LawnchairApp launcherApp = LawnchairApp.getInstance();
+        if (!launcherApp.isOptInSplitActionAvailable()) {
+            Toast.makeText(this, R.string.zer0_probe_system_unavailable, Toast.LENGTH_LONG).show();
+            return;
+        }
+        beginProbe(SplitProbe.Mode.ACCESSIBILITY_ACTION);
+        if (launcherApp.tryOptInSplitAction()) {
+            updateProbeStage(SplitProbe.Stage.ACCESSIBILITY_SENT);
+            Toast.makeText(this, R.string.zer0_probe_request_sent, Toast.LENGTH_LONG).show();
+        } else {
+            updateProbeStage(SplitProbe.Stage.FAILED_ACCESSIBILITY);
+            Toast.makeText(this, R.string.zer0_probe_system_unavailable, Toast.LENGTH_LONG).show();
+        }
     }
 
     private void requestAdjacentToSpaces() {

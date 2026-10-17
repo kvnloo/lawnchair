@@ -30,6 +30,10 @@ Arbitrary tiling layouts, window geometry inspection/verification, move/resizing
 
 A PhoneAction must carry utterance ID, action ID, expected foreground revision, profile, expiry and authority. Execution must be idempotent and return verified/unverified/unknown outcomes. Repeated commands or stale state do not silently retry, and no API key is stored inside the APK.
 
+## Optional existing AccessibilityService experiment
+
+Android exposes `GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN` only while the system lists that action in the active AccessibilityService's `getSystemActions()`. Lawnchair already has an AccessibilityService; this branch **does not** request, enable or broaden its permission. If a person has independently enabled that service and the system currently exposes split action 7, a separate **direct user-tap** button becomes available. The button rechecks before calling `performGlobalAction`; denied or unavailable actions perform no alternate accessibility gesture, never open Settings automatically, and never grant remote-model authority. A true return from `performGlobalAction` means only that the system accepted the request, not that split layout was verified. This is downstream testing; Google Play AccessibilityService policy must be re-evaluated before any distributed release. No always-on accessibility observation was added.
+
 ## Permissionless on-device multiwindow probe
 
 The experiment now records the last *launch request* in private app settings, with Android API, advertised freeform feature, and whether the Spaces Activity was in multiwindow at request time. Returning to Spaces offers **explicit user report** controls for "two visible", "fullscreen only", "one visible", or "no change". Users can choose **Copy redacted test receipt**; it contains no installed-app package IDs, screen contents, audio, or device serial. The literal `os_verified=false` remains present even when a person reports a split. Clear the receipt from the same UI.

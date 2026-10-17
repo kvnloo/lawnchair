@@ -11,7 +11,8 @@ import java.util.Locale;
 public final class SplitProbe {
     public enum Mode {
         PAIR,
-        ADJACENT_TO_SPACES
+        ADJACENT_TO_SPACES,
+        ACCESSIBILITY_ACTION
     }
 
     public enum Stage {
@@ -21,7 +22,9 @@ public final class SplitProbe {
         FAILED_FIRST,
         FAILED_SECOND,
         ADJACENT_SENT,
-        FAILED_ADJACENT
+        FAILED_ADJACENT,
+        ACCESSIBILITY_SENT,
+        FAILED_ACCESSIBILITY
     }
 
     public enum Observation {
