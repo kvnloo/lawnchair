@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zer0_spaces_title">zer0 spaces · experimental</string>
+    <string name="zer0_spaces">Spaces (experimental)</string>
+    <string name="zer0_space_active">Active space: %1$s</string>
+    <string name="zer0_spaces_disclaimer">Named contexts, not separate Android desktops. The standard Lawnchair home and app drawer remain unchanged.</string>
+    <string name="zer0_space_create">New space</string>
+    <string name="zer0_space_rename">Rename</string>
+    <string name="zer0_space_scratch">Scratch (temporary, not saved)</string>
+    <string name="zer0_space_unknown">Space not found</string>
+    <string name="zer0_space_delete_confirm">Delete %1$s? Your home icons and Android apps will not be removed.</string>
+    <string name="zer0_spaces_pair_title">Split-screen app pair</string>
+    <string name="zer0_spaces_pair_note">Choose two personal-profile apps. This requests a split through the standard Android API, without Samsung-only privileges.</string>
+    <string name="zer0_spaces_primary">First app</string>
+    <string name="zer0_spaces_secondary">Second app</string>
+    <string name="zer0_spaces_save_pair">Save pair to this space</string>
+    <string name="zer0_spaces_launch_pair">Request split-screen pair</string>
+    <string name="zer0_spaces_pick_distinct">Select two different apps</string>
+    <string name="zer0_spaces_pair_saved">App pair saved</string>
+    <string name="zer0_spaces_pair_failed">Could not launch the first app</string>
+    <string name="zer0_spaces_second_failed">First app launched; second app could not be opened</string>
+    <string name="zer0_spaces_pair_requested">Split requested; verify the resulting layout</string>
+    <string name="zer0_spaces_limitations">Pop-up placement, resizing, task moves and true tiling need a separately tested backend. No root or Accessibility permission is requested.</string>
+</resources>
