@@ -77,6 +77,10 @@ public final class VoiceCommand {
                 return new VoiceCommand(Kind.SWITCH_SPACE, space);
             }
         }
+        // Candidate only: the local space catalog must still exact-match this name.
+        if (text.startsWith("switch to ") && text.length() > "switch to ".length()) {
+            return new VoiceCommand(Kind.SWITCH_SPACE, text.substring("switch to ".length()));
+        }
         if (text.equals("open app") || text.equals("find app")) return of(Kind.UNKNOWN);
         for (String prefix : new String[] {"open app ", "open ", "launch "}) {
             if (text.startsWith(prefix)) {
