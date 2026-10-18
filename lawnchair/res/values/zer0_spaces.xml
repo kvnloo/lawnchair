@@ -7,6 +7,10 @@
     <string name="zer0_space_create">New space</string>
     <string name="zer0_space_rename">Rename</string>
     <string name="zer0_space_scratch">Scratch (temporary, not saved)</string>
+    <string name="zer0_spaces_controls_show">Manage spaces and window controls</string>
+    <string name="zer0_spaces_controls_hide">Hide advanced controls</string>
+    <string name="zer0_spaces_manage_title">Manage spaces</string>
+    <string name="zer0_space_open_saved_pair">Request saved split-screen pair</string>
     <string name="zer0_space_unknown">Space not found</string>
     <string name="zer0_accessible_activate">Switch to %1$s space</string>
     <string name="zer0_accessible_delete_space">Delete %1$s space</string>

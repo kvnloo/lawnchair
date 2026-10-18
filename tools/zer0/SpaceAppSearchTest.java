@@ -32,6 +32,13 @@ public final class SpaceAppSearchTest {
         check(SpaceAppSearch.filter(apps, "TENNIS").get(0).label.equals("Tennis Scores"), "casefold");
         check(SpaceAppSearch.filter(apps, "thirdparty").size() == 1, "component fallback");
         check(SpaceAppSearch.filter(apps, "").isEmpty(), "no zero-query app reveal");
+        check(SpaceAppSearch.isSafeQuery("Maps"), "safe voice search prefill");
+        check(SpaceAppSearch.isSafeQuery(" CAFÉ "), "normalized Unicode prefill");
+        check(!SpaceAppSearch.isSafeQuery(null), "null prefill denied");
+        check(!SpaceAppSearch.isSafeQuery("   "), "empty prefill denied");
+        check(!SpaceAppSearch.isSafeQuery("maps\nopen camera"), "newline prefill denied");
+        check(!SpaceAppSearch.isSafeQuery("maps\u202e"), "bidi prefill denied");
+        check(!SpaceAppSearch.isSafeQuery("m".repeat(161)), "unbounded prefill denied");
         check(SpaceAppSearch.filter(apps, null).isEmpty(), "null query");
         check(SpaceAppSearch.filter(apps, "camera\nopen").isEmpty(), "multiline invalid");
         check(SpaceAppSearch.filter(apps, "Ca\u202emera").isEmpty(), "bidi override invalid");

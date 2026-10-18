@@ -45,6 +45,10 @@ public final class HyprSpacesActivity extends Activity {
     public static final String EXTRA_ACTIVATE = "app.lawnchair.zer0.spaces.ACTIVATE";
     public static final String EXTRA_SOURCE_SCREEN_ID =
             "app.lawnchair.zer0.spaces.SOURCE_SCREEN_ID";
+    public static final String EXTRA_SEARCH_QUERY =
+            "app.lawnchair.zer0.spaces.SEARCH_QUERY";
+    private static final String STATE_ADVANCED = "zer0_advanced_controls";
+    private static final String STATE_SEARCH_QUERY = "zer0_search_query";
     public static final String PENDING_SCREEN_ID = "pending_screen_id";
     public static final String PENDING_SCREEN_REQUEST_TIME = "pending_screen_requested_at";
     public static final String PREFS_NAME = "zer0_hyprspaces";
@@ -68,6 +72,7 @@ public final class HyprSpacesActivity extends Activity {
     private String scratchSecondary;
     private List<String> scratchPins = new ArrayList<>();
     private boolean firstResume = true;
+    private boolean showAdvanced;
     private String searchQuery = "";
     private ScrollView activeScroll;
     private EditText activeSearch;
@@ -77,6 +82,11 @@ public final class HyprSpacesActivity extends Activity {
     protected void onCreate(Bundle savedState) {
         super.onCreate(savedState);
         prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        String initialQuery = savedState == null
+                ? getIntent().getStringExtra(EXTRA_SEARCH_QUERY)
+                : savedState.getString(STATE_SEARCH_QUERY);
+        if (SpaceAppSearch.isSafeQuery(initialQuery)) searchQuery = initialQuery;
+        showAdvanced = savedState != null && savedState.getBoolean(STATE_ADVANCED, false);
         launcherSourceScreenId = getIntent().getIntExtra(
                 EXTRA_SOURCE_SCREEN_ID, SpacePageBinding.NO_SCREEN);
         model = SpaceModel.restore(prefs.getString(KEY_NAMES, null),
@@ -113,6 +123,13 @@ public final class HyprSpacesActivity extends Activity {
             apps = loadPersonalApps();
             render();
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(STATE_ADVANCED, showAdvanced);
+        outState.putString(STATE_SEARCH_QUERY, searchQuery);
+        super.onSaveInstanceState(outState);
     }
 
     private List<LauncherActivityInfo> loadPersonalApps() {
@@ -179,48 +196,25 @@ public final class HyprSpacesActivity extends Activity {
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(16), dp(16), dp(16), dp(28));
 
-        content.addView(text(getString(R.string.zer0_spaces_title), 26));
-        content.addView(text(getString(R.string.zer0_space_active, model.activeName()), 16));
-        content.addView(text(getString(R.string.zer0_spaces_disclaimer), 13));
-        if (!model.isScratchActive()) {
-            int linkedScreenId = prefs.getInt(pageKey(model.activeName()),
-                    SpacePageBinding.NO_SCREEN);
-            content.addView(text(getString(R.string.zer0_page_binding_status,
-                    linkedScreenId < 0
-                            ? getString(R.string.zer0_page_binding_none)
-                            : String.valueOf(linkedScreenId)), 13));
-            Button bindCurrent = button(getString(R.string.zer0_page_bind), () -> {
-                if (launcherSourceScreenId < 0) return;
-                prefs.edit().putInt(pageKey(model.activeName()), launcherSourceScreenId).apply();
-                render();
-            });
-            bindCurrent.setEnabled(launcherSourceScreenId >= 0);
-            content.addView(bindCurrent);
-            if (linkedScreenId >= 0) {
-                content.addView(button(getString(R.string.zer0_page_unbind), () -> {
-                    prefs.edit().remove(pageKey(model.activeName())).apply();
-                    render();
-                }));
-            }
-        }
-
+        content.addView(text(getString(R.string.zer0_spaces_title), 22));
+        content.addView(text(getString(R.string.zer0_space_active, model.activeName()), 15));
+        // Context first: switch locally configured spaces without showing edit/diagnostic UI.
+        LinearLayout strip = null;
+        int count = 0;
         for (String space : model.names()) {
-            LinearLayout line = row();
+            if (count % 3 == 0) {
+                strip = row();
+                content.addView(strip);
+            }
             Button activate = button(
-                    (model.activeName().equals(space) ? "● " : "  ") + space,
+                    (model.activeName().equals(space) ? "● " : "") + space,
                     () -> activate(space));
             activate.setContentDescription(getString(R.string.zer0_accessible_activate, space));
-            line.addView(activate, new LinearLayout.LayoutParams(0, dp(55), 1));
-            line.addView(button(getString(R.string.zer0_space_rename),
-                    () -> askForName(space)), new LinearLayout.LayoutParams(dp(84), dp(55)));
-            Button remove = button("×", () -> confirmRemove(space));
-            remove.setContentDescription(getString(R.string.zer0_accessible_delete_space, space));
-            line.addView(remove, new LinearLayout.LayoutParams(dp(50), dp(55)));
-            content.addView(line);
+            strip.addView(activate, new LinearLayout.LayoutParams(0, dp(48), 1));
+            count++;
         }
-        content.addView(button(getString(R.string.zer0_space_create),
-                () -> askForName(null)));
-        content.addView(button(getString(R.string.zer0_space_scratch),
+        content.addView(button((model.isScratchActive() ? "● " : "")
+                + getString(R.string.zer0_space_scratch),
                 () -> activate(SpaceModel.SCRATCH)));
 
         content.addView(text(getString(R.string.zer0_search_title), 20));
@@ -264,7 +258,7 @@ public final class HyprSpacesActivity extends Activity {
         updateSearchResults(results);
 
         content.addView(text(getString(R.string.zer0_pins_title), 20));
-        content.addView(text(getString(R.string.zer0_pins_note), 13));
+        if (showAdvanced) content.addView(text(getString(R.string.zer0_pins_note), 13));
         List<String> pins = currentPins();
         int visiblePins = 0;
         for (String component : pins) {
@@ -280,65 +274,117 @@ public final class HyprSpacesActivity extends Activity {
             shortcut.addView(unpin, new LinearLayout.LayoutParams(dp(50), dp(55)));
             content.addView(shortcut);
         }
-        if (visiblePins == 0) {
+        if (visiblePins == 0 && showAdvanced) {
             content.addView(text(getString(R.string.zer0_pins_empty), 13));
         }
-
-        content.addView(text(getString(R.string.zer0_spaces_pair_title), 20));
-        content.addView(text(getString(R.string.zer0_spaces_pair_note), 13));
-
-        ArrayList<String> labels = new ArrayList<>();
-        for (LauncherActivityInfo info : apps) {
-            labels.add(displayLabel(info) + " · " + info.getComponentName().getPackageName());
+        if (hasSavedPair()) {
+            content.addView(button(getString(R.string.zer0_space_open_saved_pair),
+                    this::requestSavedPair));
         }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        content.addView(button(getString(showAdvanced
+                ? R.string.zer0_spaces_controls_hide : R.string.zer0_spaces_controls_show),
+                () -> {
+                    showAdvanced = !showAdvanced;
+                    activeScroll = null; // Opening/closing controls always returns to the palette.
+                    activeSearch = null;
+                    render();
+                }));
 
-        primary = new Spinner(this);
-        primary.setContentDescription(getString(R.string.zer0_spaces_primary));
-        primary.setAdapter(adapter);
-        secondary = new Spinner(this);
-        secondary.setContentDescription(getString(R.string.zer0_spaces_secondary));
-        secondary.setAdapter(adapter);
-        if (apps.size() > 1) secondary.setSelection(1);
-        content.addView(text(getString(R.string.zer0_spaces_primary), 14));
-        content.addView(primary);
-        Button pinButton = button(getString(R.string.zer0_pins_add), this::pinSelected);
-        pinButton.setEnabled(!apps.isEmpty());
-        content.addView(pinButton);
-        content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
-        content.addView(secondary);
+        if (showAdvanced) {
+            content.addView(text(getString(R.string.zer0_spaces_disclaimer), 13));
+            if (!model.isScratchActive()) {
+                int linkedScreenId = prefs.getInt(pageKey(model.activeName()),
+                        SpacePageBinding.NO_SCREEN);
+                content.addView(text(getString(R.string.zer0_page_binding_status,
+                        linkedScreenId < 0
+                                ? getString(R.string.zer0_page_binding_none)
+                                : String.valueOf(linkedScreenId)), 13));
+                Button bindCurrent = button(getString(R.string.zer0_page_bind), () -> {
+                    if (launcherSourceScreenId < 0) return;
+                    prefs.edit().putInt(pageKey(model.activeName()), launcherSourceScreenId)
+                            .apply();
+                    render();
+                });
+                bindCurrent.setEnabled(launcherSourceScreenId >= 0);
+                content.addView(bindCurrent);
+                if (linkedScreenId >= 0) {
+                    content.addView(button(getString(R.string.zer0_page_unbind), () -> {
+                        prefs.edit().remove(pageKey(model.activeName())).apply();
+                        render();
+                    }));
+                }
+            }
+            content.addView(text(getString(R.string.zer0_spaces_manage_title), 20));
+            for (String space : model.names()) {
+                LinearLayout line = row();
+                line.addView(text(space, 16), new LinearLayout.LayoutParams(0, dp(55), 1));
+                line.addView(button(getString(R.string.zer0_space_rename),
+                        () -> askForName(space)), new LinearLayout.LayoutParams(dp(84), dp(55)));
+                Button remove = button("×", () -> confirmRemove(space));
+                remove.setContentDescription(
+                        getString(R.string.zer0_accessible_delete_space, space));
+                line.addView(remove, new LinearLayout.LayoutParams(dp(50), dp(55)));
+                content.addView(line);
+            }
+            content.addView(button(getString(R.string.zer0_space_create),
+                    () -> askForName(null)));
 
-        selectSavedPair();
-        Button save = button(getString(R.string.zer0_spaces_save_pair), this::savePair);
-        save.setEnabled(apps.size() > 1);
-        content.addView(save);
+            content.addView(text(getString(R.string.zer0_spaces_pair_title), 20));
+            content.addView(text(getString(R.string.zer0_spaces_pair_note), 13));
 
-        Button launch = button(getString(R.string.zer0_spaces_launch_pair), this::requestSplitPair);
-        launch.setEnabled(apps.size() > 1);
-        content.addView(launch);
-        Button adjacent = button(getString(R.string.zer0_probe_adjacent),
-                this::requestAdjacentToSpaces);
-        adjacent.setEnabled(!apps.isEmpty());
-        content.addView(adjacent);
-        Button boundsRequest = button(getString(R.string.zer0_probe_bounds),
-                this::requestFloatingBounds);
-        boundsRequest.setEnabled(isBoundsProbeAvailable());
-        content.addView(boundsRequest);
-        content.addView(text(getString(R.string.zer0_probe_bounds_note), 13));
-        Button systemSplit = button(getString(R.string.zer0_probe_system_split),
-                this::requestOptInSystemSplit);
-        systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
-        content.addView(systemSplit);
-        content.addView(text(getString(R.string.zer0_probe_system_split_note), 13));
-        content.addView(text(getString(R.string.zer0_probe_capabilities,
-                Build.VERSION.SDK_INT,
-                getPackageManager().hasSystemFeature(
-                        PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT),
-                isInMultiWindowMode()), 13));
-        content.addView(text(getString(R.string.zer0_spaces_limitations), 13));
-        addProbeControls(content);
+            ArrayList<String> labels = new ArrayList<>();
+            for (LauncherActivityInfo info : apps) {
+                labels.add(displayLabel(info) + " · " + info.getComponentName().getPackageName());
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this, android.R.layout.simple_spinner_item, labels);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+            primary = new Spinner(this);
+            primary.setContentDescription(getString(R.string.zer0_spaces_primary));
+            primary.setAdapter(adapter);
+            secondary = new Spinner(this);
+            secondary.setContentDescription(getString(R.string.zer0_spaces_secondary));
+            secondary.setAdapter(adapter);
+            if (apps.size() > 1) secondary.setSelection(1);
+            content.addView(text(getString(R.string.zer0_spaces_primary), 14));
+            content.addView(primary);
+            Button pinButton = button(getString(R.string.zer0_pins_add), this::pinSelected);
+            pinButton.setEnabled(!apps.isEmpty());
+            content.addView(pinButton);
+            content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
+            content.addView(secondary);
+
+            selectSavedPair();
+            Button save = button(getString(R.string.zer0_spaces_save_pair), this::savePair);
+            save.setEnabled(apps.size() > 1);
+            content.addView(save);
+
+            Button launch = button(getString(R.string.zer0_spaces_launch_pair), this::requestSplitPair);
+            launch.setEnabled(apps.size() > 1);
+            content.addView(launch);
+            Button adjacent = button(getString(R.string.zer0_probe_adjacent),
+                    this::requestAdjacentToSpaces);
+            adjacent.setEnabled(!apps.isEmpty());
+            content.addView(adjacent);
+            Button boundsRequest = button(getString(R.string.zer0_probe_bounds),
+                    this::requestFloatingBounds);
+            boundsRequest.setEnabled(isBoundsProbeAvailable());
+            content.addView(boundsRequest);
+            content.addView(text(getString(R.string.zer0_probe_bounds_note), 13));
+            Button systemSplit = button(getString(R.string.zer0_probe_system_split),
+                    this::requestOptInSystemSplit);
+            systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
+            content.addView(systemSplit);
+            content.addView(text(getString(R.string.zer0_probe_system_split_note), 13));
+            content.addView(text(getString(R.string.zer0_probe_capabilities,
+                    Build.VERSION.SDK_INT,
+                    getPackageManager().hasSystemFeature(
+                            PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT),
+                    isInMultiWindowMode()), 13));
+            content.addView(text(getString(R.string.zer0_spaces_limitations), 13));
+            addProbeControls(content);
+        }
 
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(true);
@@ -560,6 +606,21 @@ public final class HyprSpacesActivity extends Activity {
         }
     }
 
+    private boolean hasSavedPair() {
+        String first = getSaved(0);
+        String second = getSaved(1);
+        return first != null && second != null && !first.equals(second)
+                && findVisibleApp(first, apps) != null
+                && findVisibleApp(second, apps) != null;
+    }
+
+    private void requestSavedPair() {
+        String first = getSaved(0);
+        String second = getSaved(1);
+        requestSplitTargets(first == null ? null : ComponentName.unflattenFromString(first),
+                second == null ? null : ComponentName.unflattenFromString(second));
+    }
+
     private String getSaved(int slot) {
         if (model.isScratchActive()) return slot == 0 ? scratchPrimary : scratchSecondary;
         return prefs.getString(pairKey(model.activeName(), slot), null);
@@ -603,6 +664,7 @@ public final class HyprSpacesActivity extends Activity {
                     .putString(pairKey(model.activeName(), 1), second).apply();
         }
         Toast.makeText(this, R.string.zer0_spaces_pair_saved, Toast.LENGTH_SHORT).show();
+        render(); // Refresh the compact saved-pair shortcut after an explicit save.
     }
 
     private void beginProbe(SplitProbe.Mode mode) {
@@ -762,6 +824,14 @@ public final class HyprSpacesActivity extends Activity {
         // hidden between configuration and execution; reject without partial execution.
         ComponentName first = apps.get(primary.getSelectedItemPosition()).getComponentName();
         ComponentName second = apps.get(secondary.getSelectedItemPosition()).getComponentName();
+        requestSplitTargets(first, second);
+    }
+
+    private void requestSplitTargets(ComponentName first, ComponentName second) {
+        if (first == null || second == null || first.equals(second)) {
+            Toast.makeText(this, R.string.zer0_spaces_pick_distinct, Toast.LENGTH_SHORT).show();
+            return;
+        }
         List<LauncherActivityInfo> visible = loadPersonalApps();
         if (findVisibleApp(first.flattenToString(), visible) == null
                 || findVisibleApp(second.flattenToString(), visible) == null) {
