@@ -16,6 +16,13 @@
 
 - The dock QSB now offers **Assistants (experimental)** for the configured Gemini/Google/other Android assistant, the visible ChatGPT app (no Voice deep link), one-shot speech with a mere offline *hint*, and a separate **user-started Android on-device SpeechRecognizer** (API 31+ with a system on-device model). This last path requires microphone permission at Start, forwards only a finalized navigation command, cancels on background/timeout and does not fall back to cloud speech. It is not continuous Realtime voice, Jev integration, or a ChatGPT sign-in. See [ASSISTANTS.md](ASSISTANTS.md).
 
+## Compact contextual palette (wave 1, fork-only)
+
+- **Default Spaces view is a compact, session-local palette:** space buttons, transient Scratch, visible-app search and current space pins. A single **Manage spaces and window controls** button reveals rename/delete, existing-home-page linking, app-pair pickers, split/freeform probes and receipt reporting. The advanced toggle is not saved in launcher settings; it resets on a new entry. Core Lawnchair home/app drawer are untouched.
+- Saved personal-profile app pairs have a visible **Request saved split-screen pair** shortcut when *both* apps remain visible under Lawnchair hidden-app policy. It revalidates both current launcher activities immediately before any launch; success is **only a placement request**, never verified Samsung tiling.
+- A finalized one-shot transcript such as **“search for Maps”** or **“find app Camera”** opens the compact palette with a validated query. Results are **visible personal-profile apps only**; no immediate launch, no remote/microphone/session state retained in the palette. Existing “open Camera” and “switch to Build” remain independent.
+- The quick palette has not undergone Android UI, TalkBack, rotation, keyboard/insets or Galaxy S25 Ultra verification; JVM matcher/admission checks are not device integration proof.
+
 ## Not yet built
 
 Arbitrary tiling layouts, window geometry inspection/verification, move/resizing tasks, One UI pop-up control, app drawer replacement, predictive spaces, Android Accessibility/TaskOrganizer adapter, and persistent GPT realtime voice are **not** implemented. Consumer ChatGPT Voice mode cannot be treated as a documented third-party app automation API.
