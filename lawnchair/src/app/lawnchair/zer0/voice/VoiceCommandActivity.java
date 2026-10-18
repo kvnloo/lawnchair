@@ -111,9 +111,11 @@ public final class VoiceCommandActivity extends Activity {
 
     private void handleFinalTranscript(String spoken) {
         VoiceCommand command = VoiceCommand.parse(spoken);
-        if (command.kind != VoiceCommand.Kind.OPEN_APP
-                && command.kind != VoiceCommand.Kind.SWITCH_SPACE
-                && command.kind != VoiceCommand.Kind.SEARCH_APPS) {
+        // Deterministic exact-language fast path, Jev-style typed model admission
+        // intentionally unavailable until a real observed-state adapter exists.
+        JevFastDecisionPolicy.Candidate candidate =
+                JevFastDecisionPolicy.compileExact(command);
+        if (candidate == null) {
             if (getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)) {
                 routeToAssistant(spoken, command);
             } else {
@@ -124,18 +126,7 @@ public final class VoiceCommandActivity extends Activity {
         // This guards session replay and typed action authority. The 0 revision is
         // only this one-shot Activity's local context, NOT a measured Android
         // foreground/window revision. A future remote executor needs real UI state.
-        PhoneActionGate.Kind kind;
-        switch (command.kind) {
-            case OPEN_APP:
-                kind = PhoneActionGate.Kind.OPEN_APP;
-                break;
-            case SEARCH_APPS:
-                kind = PhoneActionGate.Kind.SEARCH_APPS;
-                break;
-            default:
-                kind = PhoneActionGate.Kind.SWITCH_SPACE;
-                break;
-        }
+        PhoneActionGate.Kind kind = candidate.kind;
         long now = SystemClock.elapsedRealtime();
         PhoneActionGate.Request action = new PhoneActionGate.Request(
                 utteranceId + ":" + kind.name(), utteranceId, kind,

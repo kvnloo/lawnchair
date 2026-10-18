@@ -8,6 +8,7 @@ trap 'rm -rf "$work"' EXIT
 javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/VoiceCommand.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/SmartVoiceRouter.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/JevFastDecisionPolicy.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/OnDeviceVoiceSession.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/PhoneActionGate.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/AssistantLaunchPolicy.java" \
@@ -20,6 +21,8 @@ javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/WindowBoundsRequest.java" \
   "$root/tools/zer0/VoiceCommandTest.java" \
   "$root/tools/zer0/SmartVoiceRouterTest.java" \
+  "$root/tools/zer0/JevFastDecisionPolicyTest.java" \
+  "$root/tools/zer0/FastDecisionBenchmark.java" \
   "$root/tools/zer0/OnDeviceVoiceSessionTest.java" \
   "$root/tools/zer0/PhoneActionGateTest.java" \
   "$root/tools/zer0/AssistantLaunchPolicyTest.java" \
@@ -33,6 +36,8 @@ javac -encoding UTF-8 -d "$work" \
 
 java -cp "$work" VoiceCommandTest
 java -cp "$work" SmartVoiceRouterTest
+java -cp "$work" JevFastDecisionPolicyTest
+java -cp "$work" FastDecisionBenchmark
 java -cp "$work" OnDeviceVoiceSessionTest
 java -cp "$work" AppNameMatcherTest
 
