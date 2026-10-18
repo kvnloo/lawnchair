@@ -38,6 +38,7 @@ object VoiceAppVisibility {
                 prefs.hiddenAppsInSearch.firstCached(),
             ).any()
     }.getOrDefault(false)
+
     /**
      * Visible personal-profile launcher activities for a zero-query picker. Reuses
      * Lawnchair's shared search policy without reading preference flows once per app.
@@ -65,5 +66,4 @@ object VoiceAppVisibility {
             sequenceOf(app).filterHiddenApps("", hidden, policy).any()
         }
     }.getOrDefault(emptyList())
-
 }
