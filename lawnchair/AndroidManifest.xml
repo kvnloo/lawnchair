@@ -65,6 +65,14 @@
             android:label="@string/zer0_voice_command"
             android:theme="@style/Theme.Transparent" />
 
+        <!-- Downstream zer0: explicit system-assistant and installed-app handoff UI. -->
+        <activity
+            android:name="app.lawnchair.zer0.voice.AssistantHubActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/zer0_assistant_hub"
+            android:theme="@style/Theme.Lawnchair" />
+
         <!-- Downstream experiment: user-invoked named spaces and public split launch hints. -->
         <activity
             android:name="app.lawnchair.zer0.spaces.HyprSpacesActivity"

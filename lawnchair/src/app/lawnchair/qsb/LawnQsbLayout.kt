@@ -33,6 +33,7 @@ import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
 import app.lawnchair.zer0.spaces.HyprSpacesActivity
+import app.lawnchair.zer0.voice.AssistantHubActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
@@ -173,7 +174,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0VoiceOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0AssistantsOption(), getZer0VoiceOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -198,6 +199,16 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
             Intent(context, HyprSpacesActivity::class.java)
                 .putExtra(HyprSpacesActivity.EXTRA_SOURCE_SCREEN_ID, screenId),
         )
+        true
+    }
+
+    private fun getZer0AssistantsOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.zer0_assistant_hub,
+        R.drawable.ic_mic_flat,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        context.startActivity(Intent(context, AssistantHubActivity::class.java))
         true
     }
 

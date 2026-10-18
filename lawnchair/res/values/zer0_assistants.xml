@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zer0_assistant_hub">Assistants (experimental)</string>
+    <string name="zer0_assistant_hub_title">Assistant handoff</string>
+    <string name="zer0_assistant_hub_note">Choose your Android assistant or open the ChatGPT app. These are separate apps; Lawnchair does not share your ChatGPT sign-in, microphone, or actions with them.</string>
+    <string name="zer0_assistant_default">Open the default Android assistant</string>
+    <string name="zer0_assistant_choose">Choose a default digital assistant in Settings</string>
+    <string name="zer0_assistant_chatgpt">Open ChatGPT app (start Voice there)</string>
+    <string name="zer0_assistant_chatgpt_unavailable">ChatGPT is not available as one visible personal-profile app. Open the installed app yourself or install it from the official Play Store.</string>
+    <string name="zer0_assistant_no_default">Android did not expose a default assistant activity. Configure an assistant in Settings.</string>
+    <string name="zer0_assistant_no_settings">Default-app settings are unavailable on this device.</string>
+    <string name="zer0_assistant_local_title">Local navigation voice</string>
+    <string name="zer0_assistant_nav">One-shot voice: open app or switch space</string>
+    <string name="zer0_assistant_offline_hint">One-shot voice (request offline transcription)</string>
+    <string name="zer0_assistant_offline_note">Offline is only a preference hint to the installed recognizer. Android can ignore it; this is not a guaranteed offline or continuous assistant.</string>
+    <string name="zer0_assistant_offline_service_available">Android reports an on-device speech recognizer, but this experimental launcher does not yet use that API.</string>
+    <string name="zer0_assistant_offline_service_unavailable">No on-device speech recognizer was detected, or support could not be checked.</string>
+    <string name="zer0_assistant_limitations">Gemini/Google and ChatGPT conversations stay in their own apps. This menu cannot make another assistant control arbitrary apps, grant accessibility permissions, or enable Jev or OpenAI Realtime automatically.</string>
+</resources>

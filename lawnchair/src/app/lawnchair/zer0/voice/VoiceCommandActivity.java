@@ -26,6 +26,8 @@ import java.util.UUID;
  * launchable activity in the current personal profile. No accessibility actions.
  */
 public final class VoiceCommandActivity extends Activity {
+    public static final String EXTRA_PREFER_OFFLINE_HINT =
+            "app.lawnchair.zer0.voice.PREFER_OFFLINE_HINT";
     private static final int SPEECH_REQUEST = 41;
     private static final String STATE_UTTERANCE = "zer0_utterance_id";
     private static final String STATE_HANDLED = "zer0_handled";
@@ -49,6 +51,10 @@ public final class VoiceCommandActivity extends Activity {
                         RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
                 .putExtra(RecognizerIntent.EXTRA_PROMPT, getString(R.string.zer0_voice_prompt))
                 .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
+        // Only a preference hint; recognizer apps are allowed to ignore this request.
+        if (getIntent().getBooleanExtra(EXTRA_PREFER_OFFLINE_HINT, false)) {
+            speech.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true);
+        }
         try {
             startActivityForResult(speech, SPEECH_REQUEST);
         } catch (ActivityNotFoundException | SecurityException error) {

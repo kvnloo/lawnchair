@@ -14,6 +14,8 @@
 - Existing one-shot voice prototype now accepts SWITCH_SPACE only for an exact, locally configured name; an unrecognized space has no execution side effect. OPEN_APP remains exact-label only.
 - Pure-JVM SpaceModel constraints cover custom name validation, case-insensitive uniqueness, 12-space cap, persistence, rename/delete active selection, corrupt preference recovery and Scratch isolation.
 
+- The dock QSB now offers **Assistants (experimental)** as a first-class user-driven handoff to Android's chosen Gemini/Google/other default via ACTION_ASSIST, an installed ChatGPT app (no voice deep link), system default-assistant Settings, and a one-shot navigation voice button with an optional *unverified* offline-preference hint. See [ASSISTANTS.md](ASSISTANTS.md). This does not integrate Jev or ChatGPT sign-in with the launcher.
+
 ## Not yet built
 
 Arbitrary tiling layouts, window geometry inspection/verification, move/resizing tasks, One UI pop-up control, app drawer replacement, predictive spaces, Android Accessibility/TaskOrganizer adapter, and persistent GPT realtime voice are **not** implemented. Consumer ChatGPT Voice mode cannot be treated as a documented third-party app automation API.
