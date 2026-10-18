@@ -32,7 +32,9 @@ jobs:
           distribution: zulu
           java-version: '21'
       - name: Verify voice, spaces, and safety contracts
-        run: bash tools/zer0/test-voice-commands.sh
+        run: |
+          bash tools/zer0/test-voice-commands.sh
+          bash -n tools/zer0/install-phone-harness.sh
 
   android:
     needs: contracts
@@ -48,6 +50,31 @@ jobs:
           distribution: zulu
           java-version: '21'
       - uses: gradle/actions/setup-gradle@v6
+      - name: Load optional persistent fork signing identity
+        shell: bash
+        env:
+          ZER0_KEYSTORE_BASE64: ${{ secrets.ZER0_KEYSTORE_BASE64 }}
+          ZER0_STORE_PASSWORD: ${{ secrets.ZER0_STORE_PASSWORD }}
+          ZER0_KEY_ALIAS: ${{ secrets.ZER0_KEY_ALIAS }}
+          ZER0_KEY_PASSWORD: ${{ secrets.ZER0_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$ZER0_KEYSTORE_BASE64" ]]; then
+            echo '::warning::No persistent fork signing key configured; debug APK may not update an existing installation.'
+            exit 0
+          fi
+          if [[ -z "$ZER0_STORE_PASSWORD" || -z "$ZER0_KEY_ALIAS" || -z "$ZER0_KEY_PASSWORD" ]]; then
+            echo '::error::Persistent signer secrets incomplete; refusing inconsistent signing.'
+            exit 1
+          fi
+          umask 077
+          key_path="$RUNNER_TEMP/zer0-lawnchair-signing.jks"
+          printf '%s' "$ZER0_KEYSTORE_BASE64" | base64 --decode > "$key_path"
+          chmod 600 "$key_path"
+          printf 'storeFile=%s\nstorePassword=%s\nkeyAlias=%s\nkeyPassword=%s\n' \
+            "$key_path" "$ZER0_STORE_PASSWORD" "$ZER0_KEY_ALIAS" "$ZER0_KEY_PASSWORD" > keystore.properties
+          chmod 600 keystore.properties
+          echo 'Private fork signing identity configured; certificate fingerprint printed during APK inspection.'
       - name: Check Lawnchair formatting
         run: ./gradlew spotlessCheck
       - name: Build side-by-side phone-harness APK

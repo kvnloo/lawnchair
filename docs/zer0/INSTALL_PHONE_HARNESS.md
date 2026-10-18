@@ -25,7 +25,7 @@ Download the **artifact ZIP from a passing exact-head CI run**, extract the sing
 4. Install without clearing data:
 
    ```bash
-   adb install -r ./Lawnchair.apk
+   bash tools/zer0/install-phone-harness.sh ./Lawnchair.apk
    ```
 
 5. If installation fails, share the exact `INSTALL_FAILED_...` code (e.g. `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, `INSTALL_FAILED_VERSION_DOWNGRADE`, `INSTALL_FAILED_OLDER_SDK`); never assume the failure is from Kotlin code or immediately uninstall the working app.
@@ -48,3 +48,14 @@ Never commit a `.jks`, private key, key password, exported ChatGPT consumer cook
 - Test app drawer, widgets, return Home, hidden apps, TalkBack and source/branch SHA. Do not grant unrequested permissions or infer real split-screen from an Intent return.
 
 Source: `docs/zer0/ASSISTANTS.md`, `docs/zer0/HYPRSPACES.md`, `tools/zer0/tern-voice-check.sh`.
+
+## Configure repeatable signing for experimental CI
+
+The [fork-specific workflow](../../.github/workflows/zer0-phone-harness.yml) supports an optional private signer. Configure these exact **GitHub Actions repository secrets** before generating an upgrade-safe series of APKs:
+
+- `ZER0_KEYSTORE_BASE64`: base64 representation of the complete, privately held Android .jks keystore
+- `ZER0_STORE_PASSWORD`
+- `ZER0_KEY_ALIAS`
+- `ZER0_KEY_PASSWORD`
+
+Use GitHub Settings → Secrets and variables → Actions. Keep the original signing keystore and credentials backed up privately. The workflow reads these secrets only on its fork-owned branch and writes a temporary `keystore.properties` into the runner; it uploads only the APK. **Without these secrets, the workflow still builds but uses ephemeral debug signing**, which may fail to update a previous installation. The first new permanently signed build **cannot** update an existing app signed with an unrelated old certificate. Configure secrets and verify the certificate fingerprint once before relying on upgrades.
