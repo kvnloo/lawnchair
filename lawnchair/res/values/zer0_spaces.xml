@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="zer0_assistant_tern_voice">Hybrid voice · Tern (local)</string>
+    <string name="zer0_assistant_tern_setup">Choose z0live voice engine</string>
+    <string name="zer0_assistant_tern_note">Opens the local Tern voice UI in a browser. Start z0live in Tern first. Wi-Fi ADB and Hermes phone-harness approvals remain unchanged.</string>
+    <string name="zer0_assistant_tern_unavailable">No browser available for the local Tern voice UI</string>
     <string name="zer0_spaces_title">zer0 spaces · experimental</string>
     <string name="zer0_spaces">Spaces (experimental)</string>
     <string name="zer0_space_active">Active space: %1$s</string>
