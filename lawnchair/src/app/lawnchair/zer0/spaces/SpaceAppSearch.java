@@ -39,6 +39,11 @@ public final class SpaceAppSearch {
 
     private SpaceAppSearch() {}
 
+    /** Reject unbounded, empty, multiline or bidi-unsafe voice prefill before displaying it. */
+    public static boolean isSafeQuery(String query) {
+        return normalizedQuery(query) != null;
+    }
+
     public static List<Entry> filter(List<Entry> visible, String query) {
         String needle = normalizedQuery(query);
         if (visible == null || needle == null) return List.of();
