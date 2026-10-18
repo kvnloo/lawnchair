@@ -23,6 +23,7 @@ import android.content.Intent
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
 import android.os.Bundle
+import android.os.SystemClock
 import android.util.Pair
 import android.view.Display
 import android.view.View
@@ -51,6 +52,8 @@ import app.lawnchair.ui.popup.LawnchairShortcut
 import app.lawnchair.util.getThemedIconPacksInstalled
 import app.lawnchair.util.unsafeLazy
 import app.lawnchair.views.LawnchairFloatingSurfaceView
+import app.lawnchair.zer0.spaces.HyprSpacesActivity
+import app.lawnchair.zer0.spaces.SpacePageBinding
 import com.android.launcher3.AbstractFloatingView
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.BubbleTextView
@@ -471,6 +474,7 @@ class LawnchairLauncher : QuickstepLauncher() {
         super.onResume()
         restartIfPending()
         refreshPredictionContainersFromModel()
+        consumePendingSpacePageNavigation()
 
         dragLayer.viewTreeObserver.addOnDrawListener(
             object : ViewTreeObserver.OnDrawListener {
@@ -490,6 +494,32 @@ class LawnchairLauncher : QuickstepLauncher() {
                 }
             },
         )
+    }
+
+    /**
+     * A non-exported Spaces activity writes one short-lived private request.
+     * Validate against the current workspace IDs after resume and consume once.
+     * Never mutate Launcher3's model, pages, icons, folders or widgets.
+     */
+    private fun consumePendingSpacePageNavigation() {
+        val stored = getSharedPreferences(HyprSpacesActivity.PREFS_NAME, Context.MODE_PRIVATE)
+        val screenId = stored.getInt(HyprSpacesActivity.PENDING_SCREEN_ID, SpacePageBinding.NO_SCREEN)
+        val requestTime = stored.getLong(HyprSpacesActivity.PENDING_SCREEN_REQUEST_TIME, 0L)
+        if (screenId == SpacePageBinding.NO_SCREEN) return
+        stored.edit()
+            .remove(HyprSpacesActivity.PENDING_SCREEN_ID)
+            .remove(HyprSpacesActivity.PENDING_SCREEN_REQUEST_TIME)
+            .apply()
+        if (!SpacePageBinding.canNavigate(screenId, requestTime, SystemClock.elapsedRealtime())) {
+            return
+        }
+        workspace.post {
+            if (isFinishing || isDestroyed) return@post
+            val pageIndex = workspace.getPageIndexForScreenId(screenId)
+            if (pageIndex >= 0 && pageIndex < workspace.pageCount) {
+                workspace.snapToPage(pageIndex)
+            }
+        }
     }
 
     override fun onStateSetEnd(state: LauncherState) {

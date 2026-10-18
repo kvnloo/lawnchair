@@ -1,0 +1,22 @@
+name: HyprSpaces isolated JVM checks
+
+on:
+  push:
+    branches:
+      - experiment/zer0-hyprspaces
+  pull_request:
+    branches:
+      - preview/zer0-integrated
+  workflow_dispatch:
+
+jobs:
+  java-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - name: Test voice and space contracts
+        run: bash tools/zer0/test-voice-commands.sh

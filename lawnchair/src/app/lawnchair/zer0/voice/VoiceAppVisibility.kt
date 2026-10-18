@@ -11,8 +11,8 @@ import java.util.Locale
 
 /**
  * Apply the same app-visibility policy as launcher search before a voice command
- * opens an app. Only called after exact unique-label matching, so we don't need
- * to create AppInfo records for the entire installed-app list.
+ * opens an app. The exact-label voice path checks one target. The separate
+ * spaces picker evaluates installed apps in one preference snapshot per scan.
  *
  * A preference lookup failure must never bypass a hidden-app restriction.
  */
@@ -38,4 +38,39 @@ object VoiceAppVisibility {
                 prefs.hiddenAppsInSearch.firstCached(),
             ).any()
     }.getOrDefault(false)
+
+    /**
+     * Visible personal-profile launcher activities for a zero-query picker. Reuses
+     * Lawnchair's shared search policy without reading preference flows once per app.
+     *
+     * The caller must supply ONLY the current personal profile, re-evaluate before
+     * execution, and not show any app labels on preference read failure.
+     */
+    @JvmStatic
+    fun visibleApps(
+        context: Context,
+        activities: List<LauncherActivityInfo>,
+    ): List<LauncherActivityInfo> = runCatching {
+        val prefs = PreferenceManager2.getInstance(context)
+        val hidden = prefs.hiddenApps.firstCached()
+        val policy = prefs.hiddenAppsInSearch.firstCached()
+        activities.filter { activity ->
+            // Preserve per-app failure isolation. One stale/broken package label must
+            // not blank the entire picker, while missing preferences still fail closed.
+            runCatching {
+                val label = activity.label
+                if (label == null || label.isEmpty()) {
+                    false
+                } else {
+                    val app = AppInfo(
+                        activity.componentName,
+                        label,
+                        activity.user,
+                        Intent(),
+                    )
+                    sequenceOf(app).filterHiddenApps("", hidden, policy).any()
+                }
+            }.getOrDefault(false)
+        }
+    }.getOrDefault(emptyList())
 }

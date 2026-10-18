@@ -19,7 +19,8 @@ public final class VoiceCommandTest {
         expect("Go to life.", Kind.SWITCH_SPACE, "life");
         expect("open learn space", Kind.SWITCH_SPACE, "learn");
         expect("now space", Kind.SWITCH_SPACE, "now");
-        expect("switch to finance", Kind.UNKNOWN, "");
+        expect("switch to finance", Kind.SWITCH_SPACE, "finance");
+        expect("switch to Science Lab", Kind.SWITCH_SPACE, "science lab");
         expect("start focus", Kind.START_FOCUS, "");
         expect("start focus timer", Kind.START_FOCUS, "");
         expect("focus for 25 minutes", Kind.START_FOCUS, "");
@@ -42,6 +43,14 @@ public final class VoiceCommandTest {
         expect("start five minute timer", Kind.UNKNOWN, "");
         expect("tap confirm payment", Kind.UNKNOWN, "");
         expect("go home and delete photos", Kind.UNKNOWN, "");
+        expect("switch to Build\nlaunch camera", Kind.UNKNOWN, "");
+        expect("open\tCamera", Kind.UNKNOWN, "");
+        expect("open\u0000camera", Kind.UNKNOWN, "");
+        expect("switch to \u202eBuild", Kind.UNKNOWN, "");
+        expect("open \u200eMaps", Kind.UNKNOWN, "");
+        expect("Open   Maps", Kind.OPEN_APP, "maps");
+        expect("switch to      science lab", Kind.SWITCH_SPACE, "science lab");
+        expect("open foo\tbar", Kind.UNKNOWN, "");
         expect("", Kind.UNKNOWN, "");
         expect(null, Kind.UNKNOWN, "");
         expect("x".repeat(161), Kind.UNKNOWN, "");

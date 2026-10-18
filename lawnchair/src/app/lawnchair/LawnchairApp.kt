@@ -16,6 +16,7 @@
 
 package app.lawnchair
 
+import android.accessibilityservice.AccessibilityService
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ComponentName
@@ -214,6 +215,28 @@ class LawnchairApp : LauncherApplication() {
     }
 
     fun isAccessibilityServiceBound(): Boolean = accessibilityService != null
+
+    /** No permission flow, background invocation or UI-tree inspection is initiated here. */
+    fun isOptInSplitActionAvailable(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+        val enabled = accessibilityService ?: return false
+        return enabled.systemActions.any {
+            it.id == AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN
+        }
+    }
+
+    /**
+     * Only call from a direct user click in this downstream experiment.
+     * Never call performGlobalAction(action) fallback: that opens Accessibility Settings
+     * when disabled and is not an authorized implicit permission request.
+     */
+    fun tryOptInSplitAction(): Boolean {
+        val enabled = accessibilityService ?: return false
+        if (!isOptInSplitActionAvailable()) return false
+        return enabled.performGlobalAction(
+            AccessibilityService.GLOBAL_ACTION_TOGGLE_SPLIT_SCREEN,
+        )
+    }
 
     fun performGlobalAction(action: Int): Boolean {
         return accessibilityService?.performGlobalAction(action) ?: run {
