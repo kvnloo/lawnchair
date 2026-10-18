@@ -32,6 +32,11 @@ public final class PhoneActionGateTest {
                 "camera", 7, 10100), 10001, 7), Decision.DUPLICATE, "same action new utterance");
         expect(gate.admit(req("b", "v", Kind.SWITCH_SPACE, Authority.ONE_SHOT_VOICE,
                 "Build", 7, 11000), 10002, 7), Decision.ADMITTED, "space switch");
+        expect(gate.admit(req("qa", "qw", Kind.SEARCH_APPS, Authority.ONE_SHOT_VOICE,
+                "maps", 7, 11000), 10002, 7), Decision.ADMITTED, "voice palette search");
+        expect(gate.admit(req("qb", "qx", Kind.SEARCH_APPS, Authority.REMOTE_MODEL,
+                "maps", 7, 11000), 10002, 7), Decision.REQUIRES_CONFIRMATION,
+                "remote model cannot open palette without confirmation");
         expect(gate.admit(req("c", "w", Kind.REQUEST_SPLIT, Authority.ONE_SHOT_VOICE,
                 "A|B", 7, 11000), 10002, 7), Decision.NOT_ALLOWED, "no voice split");
         expect(gate.admit(req("d", "x", Kind.REQUEST_SPLIT, Authority.USER_TAP,
