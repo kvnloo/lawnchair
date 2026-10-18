@@ -123,13 +123,9 @@ public final class HyprSpacesActivity extends Activity {
                 List<LauncherActivityInfo> installed =
                         launcherApps.getActivityList(null, Process.myUserHandle());
                 if (installed != null) {
-                    // Picker must not reveal hidden apps merely by listing their full labels.
-                    // Empty query applies the shared drawer/search visibility policy.
-                    for (LauncherActivityInfo info : installed) {
-                        if (VoiceAppVisibility.isAllowed(this, info, "")) {
-                            result.add(info);
-                        }
-                    }
+                    // Batch one visibility-policy snapshot, fail closed if preferences cannot
+                    // be read. Re-run for every new picker and each launch attempt.
+                    result.addAll(VoiceAppVisibility.visibleApps(this, installed));
                 }
             } catch (RuntimeException ignored) {
                 // No permission escalation, work-profile enumeration, or guessed alternatives.
