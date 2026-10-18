@@ -2,6 +2,16 @@
 
 **Status (2026-10-17): current fork head dabb9da has hosted JVM voice and HyprSpaces checks PASS, Spotless PASS; three Android APK variants are still running. Previous earlier head 9f2c60b8 passed all Android APK variants. No physical Galaxy S25 Ultra tests or verified compositor layouts have run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
 
+## Next local voice experiment
+
+Fork-only `experiment/hyprspaces-phone-harness` adds a first-class **Hybrid voice · Tern (local)** button. The Android launcher opens a hardcoded loopback browser URL on explicit tap. z0live runs inside Tern on this phone and optionally dispatches commands to the separately authorized OMP harness. Hermes phone-harness uses the existing Wi-Fi ADB pairing and its own per-call approval. No root, privileged app control, always-on listener or new launcher permission is required. The handoff is **not** a completed end-to-end voice/phone-control certification; test the device before promotion.
+
+```bash
+bash tools/zer0/tern-voice-check.sh check
+```
+
+[Hybrid z0live implementation](https://github.com/kvnloo/z0live/pull/7) · [HyprSpaces UI handoff](https://github.com/kvnloo/lawnchair/pull/12)
+
 ## Current scope
 
 - Dock QSB long-press → Spaces (experimental), alongside Customize and Voice. Standard home, app drawer, search, widgets and folders remain unchanged.
