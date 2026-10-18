@@ -7,9 +7,11 @@ trap 'rm -rf "$work"' EXIT
 
 javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/VoiceCommand.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/SmartVoiceRouter.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/JevFastDecisionPolicy.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/OnDeviceVoiceSession.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/PhoneActionGate.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/AssistantLaunchPolicy.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/OnDeviceVoiceSession.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/AppNameMatcher.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpaceModel.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpacePins.java" \
@@ -18,9 +20,12 @@ javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpacePageBinding.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/WindowBoundsRequest.java" \
   "$root/tools/zer0/VoiceCommandTest.java" \
+  "$root/tools/zer0/SmartVoiceRouterTest.java" \
+  "$root/tools/zer0/JevFastDecisionPolicyTest.java" \
+  "$root/tools/zer0/FastDecisionBenchmark.java" \
+  "$root/tools/zer0/OnDeviceVoiceSessionTest.java" \
   "$root/tools/zer0/PhoneActionGateTest.java" \
   "$root/tools/zer0/AssistantLaunchPolicyTest.java" \
-  "$root/tools/zer0/OnDeviceVoiceSessionTest.java" \
   "$root/tools/zer0/AppNameMatcherTest.java" \
   "$root/tools/zer0/SpaceModelTest.java" \
   "$root/tools/zer0/SpacePinsTest.java" \
@@ -30,6 +35,10 @@ javac -encoding UTF-8 -d "$work" \
   "$root/tools/zer0/WindowBoundsRequestTest.java"
 
 java -cp "$work" VoiceCommandTest
+java -cp "$work" SmartVoiceRouterTest
+java -cp "$work" JevFastDecisionPolicyTest
+java -cp "$work" FastDecisionBenchmark
+java -cp "$work" OnDeviceVoiceSessionTest
 java -cp "$work" AppNameMatcherTest
 
 java -cp "$work" SpaceModelTest
@@ -46,4 +55,3 @@ bash "$root/tools/zer0/samsung-spaces-check.sh" --help | grep -q "EXPLICIT OPT-I
 java -cp "$work" WindowBoundsRequestTest
 
 java -cp "$work" AssistantLaunchPolicyTest
-java -cp "$work" OnDeviceVoiceSessionTest

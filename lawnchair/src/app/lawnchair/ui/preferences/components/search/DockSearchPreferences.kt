@@ -1,5 +1,7 @@
 package app.lawnchair.ui.preferences.components.search
 
+import android.content.Intent
+import android.provider.Settings
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -43,6 +45,7 @@ import app.lawnchair.theme.color.ColorOption
 import app.lawnchair.theme.color.tokens.ColorTokens
 import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.colorpreference.ColorPreference
+import app.lawnchair.ui.preferences.components.controls.ClickablePreference
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
 import app.lawnchair.ui.preferences.components.controls.SliderPreference
@@ -61,6 +64,7 @@ fun DockSearchPreference(
 ) {
     val prefs = preferenceManager()
     val prefs2 = preferenceManager2()
+    val context = LocalContext.current
 
     val isHotseatEnabled = prefs2.isHotseatEnabled.getAdapter()
     val hotseatModeAdapter = prefs2.hotseatMode.getAdapter()
@@ -106,6 +110,23 @@ fun DockSearchPreference(
                                         .name,
                                 ),
                             )
+                            SwitchPreference(
+                                adapter = prefs2.zer0GeminiQuickLaunch.getAdapter(),
+                                label = stringResource(R.string.zer0_gemini_quick_launch),
+                                description = stringResource(R.string.zer0_gemini_quick_launch_desc),
+                            )
+                            SwitchPreference(
+                                adapter = prefs2.zer0SmartVoiceRouting.getAdapter(),
+                                label = stringResource(R.string.zer0_fast_voice_title),
+                                description = stringResource(R.string.zer0_fast_voice_description),
+                            )
+                            ClickablePreference(
+                                label = stringResource(R.string.zer0_gemini_setup),
+                            ) {
+                                runCatching {
+                                    context.startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
+                                }
+                            }
                         }
                         PreferenceGroup(
                             heading = stringResource(R.string.style),
@@ -183,6 +204,8 @@ private fun DockSearchBarPreview(
     val voiceIntent = remember(searchProvider, context) {
         LawnQsbLayout.getVoiceIntent(searchProvider, context)
     }
+    val smartVoiceEnabled = preferenceManager2().zer0SmartVoiceRouting.getAdapter().state.value
+    val geminiQuickLaunch = preferenceManager2().zer0GeminiQuickLaunch.getAdapter().state.value
     val lensIntent = remember(supportsLens, context) {
         if (supportsLens) LawnQsbLayout.getLensIntent(context) else null
     }
@@ -203,7 +226,7 @@ private fun DockSearchBarPreview(
                 state = rememberHotseatQsbState(
                     searchProvider,
                     themed,
-                    showMic = voiceIntent != null,
+                    showMic = geminiQuickLaunch || smartVoiceEnabled || voiceIntent != null,
                     showLens = lensIntent != null,
                 ),
                 style = buildQsbStyle(

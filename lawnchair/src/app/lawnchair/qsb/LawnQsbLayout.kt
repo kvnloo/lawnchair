@@ -8,6 +8,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 import android.widget.FrameLayout
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
@@ -33,7 +34,8 @@ import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
 import app.lawnchair.zer0.spaces.HyprSpacesActivity
-import app.lawnchair.zer0.voice.AssistantHubActivity
+import app.lawnchair.zer0.voice.AssistantHandoff
+import app.lawnchair.zer0.voice.OnDeviceVoiceActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
@@ -77,6 +79,8 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             getSearchProvider(context, searchProviderPref)
                         }
                         val themed by prefs2.themedHotseatQsb.asState()
+                        val smartVoiceEnabled by prefs2.zer0SmartVoiceRouting.asState()
+                        val geminiQuickLaunch by prefs2.zer0GeminiQuickLaunch.asState()
 
                         val supportsLens = searchProvider == Google || searchProvider == PixelSearch
                         val voiceIntent = remember(searchProvider, context) {
@@ -86,12 +90,39 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             if (supportsLens) getLensIntent(context) else null
                         }
 
-                        val state = rememberHotseatQsbState(
+                        val baseState = rememberHotseatQsbState(
                             searchProvider = searchProvider,
                             themed = themed,
-                            showMic = voiceIntent != null,
+                            showMic = geminiQuickLaunch || smartVoiceEnabled || voiceIntent != null,
                             showLens = lensIntent != null,
                         )
+                        val state = if (geminiQuickLaunch) {
+                            baseState.copy(
+                                contentDescription = context.getString(R.string.zer0_gemini_bar_a11y),
+                                hintText = context.getString(R.string.zer0_gemini_hint),
+                                endIcons = baseState.endIcons.map { icon ->
+                                    if (icon.id == QsbIconId.MIC) {
+                                        icon.copy(contentDescription = context.getString(R.string.zer0_gemini_mic_a11y))
+                                    } else {
+                                        icon
+                                    }
+                                } + if (smartVoiceEnabled) {
+                                    listOf(
+                                        QsbIconState(
+                                            id = QsbIconId.FAST,
+                                            resId = R.drawable.ic_zer0_fast,
+                                            themed = true,
+                                            contentDescription = context.getString(R.string.zer0_fast_voice_a11y),
+                                            method = ThemingMethod.TINT,
+                                        ),
+                                    )
+                                } else {
+                                    emptyList()
+                                },
+                            )
+                        } else {
+                            baseState
+                        }
 
                         val style = buildQsbStyle(
                             context = LocalContext.current,
@@ -106,25 +137,27 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
 
                         val actions = QsbActions(
                             onQsbClick = {
-                                val launcher = context.launcher
-                                launcher.lifecycleScope.launch {
-                                    if (prefs2.matchHotseatQsbStyle.firstCached()) {
-                                        val searchUiManager = launcher.appsView.searchUiManager
-                                        searchUiManager.setDirectFocus(true)
-                                        searchUiManager.editText?.showKeyboard()
-                                        launcher.animateToAllApps()
-                                    } else {
-                                        searchProvider.launch(launcher)
-                                    }
-                                }
+                                if (geminiQuickLaunch) openGemini() else openSearch()
                             },
                             onQsbLongClick = ::openOptions,
-                            onStartIconClick = null,
+                            onStartIconClick = if (geminiQuickLaunch) ::openSearch else null,
                             onEndIconClick = { id ->
                                 runCatching {
                                     when (id) {
-                                        QsbIconId.MIC -> voiceIntent?.let { context.startActivity(it) }
+                                        QsbIconId.MIC -> {
+                                            if (geminiQuickLaunch) {
+                                                openGemini()
+                                            } else if (smartVoiceEnabled) {
+                                                launchFastAction()
+                                            } else {
+                                                voiceIntent?.let { context.startActivity(it) }
+                                            }
+                                        }
+
+                                        QsbIconId.FAST -> launchFastAction()
+
                                         QsbIconId.LENS -> lensIntent?.let { context.startActivity(it) }
+
                                         else -> null
                                     }
                                 }
@@ -174,7 +207,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0AssistantsOption(), getZer0VoiceOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -202,24 +235,37 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         true
     }
 
-    private fun getZer0AssistantsOption() = OptionsPopupView.OptionItem(
-        context,
-        R.string.zer0_assistant_hub,
-        R.drawable.ic_mic_flat,
-        StatsLogManager.LauncherEvent.IGNORE,
-    ) {
-        context.startActivity(Intent(context, AssistantHubActivity::class.java))
-        true
+    private fun openSearch() {
+        val launcher = context.launcher
+        launcher.lifecycleScope.launch {
+            if (preferenceManager2.matchHotseatQsbStyle.firstCached()) {
+                val searchUiManager = launcher.appsView.searchUiManager
+                searchUiManager.setDirectFocus(true)
+                searchUiManager.editText?.showKeyboard()
+                launcher.animateToAllApps()
+            } else {
+                getSearchProvider(context, preferenceManager2).launch(launcher)
+            }
+        }
     }
 
-    private fun getZer0VoiceOption() = OptionsPopupView.OptionItem(
-        context,
-        R.string.zer0_voice_command,
-        R.drawable.ic_mic_flat,
-        StatsLogManager.LauncherEvent.IGNORE,
-    ) {
-        context.startActivity(Intent(context, VoiceCommandActivity::class.java))
-        true
+    private fun openGemini() {
+        if (!AssistantHandoff.openPreferredGemini(context.launcher)) {
+            Toast.makeText(context, R.string.zer0_gemini_unavailable, Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun launchFastAction() {
+        if (!OnDeviceVoiceActivity.isAvailable(context)) {
+            // No legacy recognition dialog or online TTS/STT: Gemini is the fallback.
+            openGemini()
+            return
+        }
+        context.startActivity(
+            Intent(context, OnDeviceVoiceActivity::class.java)
+                .putExtra(OnDeviceVoiceActivity.EXTRA_START_NOW, true)
+                .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, true),
+        )
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {

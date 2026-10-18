@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -44,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.lawnchair.qsb.providers.Google
 import app.lawnchair.qsb.providers.GoogleGo
@@ -61,6 +63,7 @@ import com.android.launcher3.util.Themes
 enum class QsbIconId {
     SEARCH,
     MIC,
+    FAST,
     LENS,
     CLEAR,
 }
@@ -117,6 +120,7 @@ data class QsbState(
     val contentDescription: String,
     val startIcon: QsbIconState,
     val endIcons: List<QsbIconState>,
+    val hintText: String? = null,
 )
 
 /**
@@ -393,7 +397,20 @@ fun LawnQsbUi(
             )
         }
 
-        Spacer(Modifier.weight(1f))
+        if (state.hintText != null) {
+            Text(
+                text = state.hintText,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        } else {
+            Spacer(Modifier.weight(1f))
+        }
 
         val visibleIcons = state.endIcons.filter { it.visible }
         AnimatedContent(

@@ -1,7 +1,8 @@
 package app.lawnchair.zer0.voice;
 
 import android.Manifest;
-import android.app.Activity;
+import android.content.Context;
+import androidx.activity.ComponentActivity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -11,9 +12,6 @@ import android.os.Looper;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
-import android.widget.Button;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 import com.android.launcher3.R;
 import java.util.ArrayList;
 
@@ -23,16 +21,18 @@ import java.util.ArrayList;
  * <p>No always-on microphone, audio persistence, cloud STT fallback, model session
  * or accessibility control. The user presses Start and Android grants microphone access.
  */
-public final class OnDeviceVoiceActivity extends Activity implements RecognitionListener {
+public final class OnDeviceVoiceActivity extends ComponentActivity implements RecognitionListener {
+    public static final String EXTRA_START_NOW = "app.lawnchair.zer0.voice.START_ON_DEVICE";
+
     private static final int MIC_PERMISSION_REQUEST = 52;
     private static final long MAX_LISTEN_MS = 30_000;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final OnDeviceVoiceSession session = new OnDeviceVoiceSession();
     private SpeechRecognizer recognizer;
     private Runnable timeout;
-    private TextView status;
-    private Button startButton;
+    private OnDeviceVoiceUi.UiState ui;
     private boolean foregroundStarted;
+    private boolean autoStart;
 
     @Override
     protected void onCreate(Bundle savedState) {
@@ -42,39 +42,12 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
             finish();
             return;
         }
-        LinearLayout layout = new LinearLayout(this);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        int dp = (int) (20 * getResources().getDisplayMetrics().density);
-        layout.setPadding(dp, dp, dp, dp);
-
-        TextView title = new TextView(this);
-        title.setText(R.string.zer0_assistant_on_device_title);
-        title.setTextSize(24);
-        layout.addView(title);
-
-        status = new TextView(this);
-        status.setText(R.string.zer0_assistant_on_device_info);
-        status.setTextSize(15);
-        layout.addView(status);
-
-        startButton = new Button(this);
-        startButton.setText(R.string.zer0_assistant_on_device_start);
-        startButton.setOnClickListener(view -> requestMicrophoneAndListen());
-        layout.addView(startButton);
-
-        Button cancel = new Button(this);
-        cancel.setText(R.string.zer0_assistant_on_device_cancel);
-        cancel.setOnClickListener(view -> {
-            session.cancel();
-            releaseRecognizer();
-            finish();
-        });
-        layout.addView(cancel);
-        setContentView(layout);
-
-        if (!isAvailable()) {
-            startButton.setEnabled(false);
-            status.setText(R.string.zer0_assistant_on_device_unavailable);
+        ui = OnDeviceVoiceUi.show(this);
+        autoStart = getIntent().getBooleanExtra(EXTRA_START_NOW, false);
+        if (!isAvailable(this)) {
+            ui.setStartEnabled(false);
+            ui.setStatusResource(R.string.zer0_assistant_on_device_unavailable);
+            autoStart = false;
         }
     }
 
@@ -82,20 +55,36 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     protected void onStart() {
         super.onStart();
         foregroundStarted = true;
+        // The launcher mic click is already a user action. Do not ask for a second
+        // Start click, and never auto-resume after leaving the foreground.
+        if (autoStart) {
+            autoStart = false;
+            requestMicrophoneAndListen();
+        }
     }
 
-    private boolean isAvailable() {
+    public static boolean isAvailable(Context context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false;
         try {
-            return SpeechRecognizer.isOnDeviceRecognitionAvailable(this);
+            return SpeechRecognizer.isOnDeviceRecognitionAvailable(context);
         } catch (RuntimeException error) {
             return false;
         }
     }
 
+    public void startFromUserTap() {
+        requestMicrophoneAndListen();
+    }
+
+    public void cancelAndClose() {
+        session.cancel();
+        releaseRecognizer();
+        finish();
+    }
+
     private void requestMicrophoneAndListen() {
-        if (!foregroundStarted || session.isTerminal() || !isAvailable()) {
-            status.setText(R.string.zer0_assistant_on_device_unavailable);
+        if (!foregroundStarted || session.isTerminal() || !isAvailable(this)) {
+            ui.setStatusResource(R.string.zer0_assistant_on_device_unavailable);
             return;
         }
         if (checkSelfPermission(Manifest.permission.RECORD_AUDIO)
@@ -118,14 +107,14 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
         if (grants.length == 1 && grants[0] == PackageManager.PERMISSION_GRANTED) {
             listenOnce();
         } else {
-            status.setText(R.string.zer0_assistant_on_device_permission_denied);
+            ui.setStatusResource(R.string.zer0_assistant_on_device_permission_denied);
         }
     }
 
     private void listenOnce() {
-        if (!foregroundStarted || !isAvailable() || !session.begin()) return;
-        startButton.setEnabled(false);
-        status.setText(R.string.zer0_assistant_on_device_listening);
+        if (!foregroundStarted || !isAvailable(this) || !session.begin()) return;
+        ui.setStartEnabled(false);
+        ui.setStatusResource(R.string.zer0_assistant_on_device_listening);
         try {
             recognizer = SpeechRecognizer.createOnDeviceSpeechRecognizer(this);
             recognizer.setRecognitionListener(this);
@@ -138,11 +127,11 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
             timeout = () -> {
                 if (!session.complete()) return;
                 releaseRecognizer();
-                status.setText(R.string.zer0_assistant_on_device_timeout);
+                ui.setStatusResource(R.string.zer0_assistant_on_device_timeout);
             };
             handler.postDelayed(timeout, MAX_LISTEN_MS);
         } catch (RuntimeException error) {
-            if (session.complete()) status.setText(R.string.zer0_assistant_on_device_failed);
+            if (session.complete()) ui.setStatusResource(R.string.zer0_assistant_on_device_failed);
             releaseRecognizer();
         }
     }
@@ -161,7 +150,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     @Override
     public void onReadyForSpeech(Bundle params) {
         if (!session.isTerminal()) {
-            status.setText(R.string.zer0_assistant_on_device_listening);
+            ui.setStatusResource(R.string.zer0_assistant_on_device_listening);
         }
     }
 
@@ -172,7 +161,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     @Override
     public void onEndOfSpeech() {
         if (!session.isTerminal()) {
-            status.setText(R.string.zer0_assistant_on_device_processing);
+            ui.setStatusResource(R.string.zer0_assistant_on_device_processing);
         }
     }
 
@@ -180,7 +169,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     public void onError(int error) {
         if (!session.complete()) return;
         releaseRecognizer();
-        status.setText(R.string.zer0_assistant_on_device_failed);
+        ui.setStatusResource(R.string.zer0_assistant_on_device_failed);
     }
 
     @Override
@@ -192,12 +181,14 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
                 ? null : transcripts.get(0);
         releaseRecognizer();
         if (transcript == null || transcript.isEmpty()) {
-            status.setText(R.string.zer0_assistant_on_device_no_match);
+            ui.setStatusResource(R.string.zer0_assistant_on_device_no_match);
             return;
         }
         // Both activities are non-exported; no transcript is persisted or uploaded.
         startActivity(new Intent(this, VoiceCommandActivity.class)
-                .putExtra(VoiceCommandActivity.EXTRA_FINAL_TRANSCRIPT, transcript));
+                .putExtra(VoiceCommandActivity.EXTRA_FINAL_TRANSCRIPT, transcript)
+                .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE,
+                        getIntent().getBooleanExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, false)));
         finish();
     }
 

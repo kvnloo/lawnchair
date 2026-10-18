@@ -64,6 +64,11 @@ public final class SpaceAppSearch {
         return matches;
     }
 
+    /** Accept only bounded search text, never control characters or bidirectional overrides. */
+    public static boolean acceptsQuery(String query) {
+        return normalizedQuery(query) != null;
+    }
+
     /** Enter opens only a unique, exact visible app label; ambiguity never guesses. */
     public static Entry exactUnique(List<Entry> visible, String query) {
         String needle = normalizedQuery(query);

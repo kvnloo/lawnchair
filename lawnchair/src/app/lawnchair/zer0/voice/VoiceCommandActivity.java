@@ -12,6 +12,7 @@ import android.os.SystemClock;
 import android.speech.RecognizerIntent;
 import android.widget.Toast;
 import app.lawnchair.zer0.spaces.HyprSpacesActivity;
+import app.lawnchair.zer0.spaces.SpaceAppSearch;
 import app.lawnchair.zer0.spaces.SpaceModel;
 import com.android.launcher3.R;
 import java.util.ArrayList;
@@ -28,6 +29,8 @@ import java.util.UUID;
 public final class VoiceCommandActivity extends Activity {
     public static final String EXTRA_PREFER_OFFLINE_HINT =
             "app.lawnchair.zer0.voice.PREFER_OFFLINE_HINT";
+    public static final String EXTRA_AUTO_ROUTE =
+            "app.lawnchair.zer0.voice.AUTO_ROUTE";
     public static final String EXTRA_FINAL_TRANSCRIPT =
             "app.lawnchair.zer0.voice.FINAL_ON_DEVICE_TRANSCRIPT";
     private static final int SPEECH_REQUEST = 41;
@@ -47,8 +50,7 @@ public final class VoiceCommandActivity extends Activity {
             return;
         }
         utteranceId = UUID.randomUUID().toString();
-        // A finalized transcript can only be sent by an in-package recognizer.
-        // Both receiver and sender are non-exported, no external intent-filter.
+        // Only the in-package, non-exported on-device recognizer can send this.
         String finalized = getIntent().getStringExtra(EXTRA_FINAL_TRANSCRIPT);
         if (finalized != null) {
             handledFinal = true;
@@ -72,7 +74,10 @@ public final class VoiceCommandActivity extends Activity {
         try {
             startActivityForResult(speech, SPEECH_REQUEST);
         } catch (ActivityNotFoundException | SecurityException error) {
-            notifyUser(R.string.zer0_voice_unavailable);
+            if (!getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)
+                    || !AssistantHandoff.openAndroidAssistant(this)) {
+                notifyUser(R.string.zer0_voice_unavailable);
+            }
             finish();
         }
     }
@@ -106,16 +111,22 @@ public final class VoiceCommandActivity extends Activity {
 
     private void handleFinalTranscript(String spoken) {
         VoiceCommand command = VoiceCommand.parse(spoken);
-        if (command.kind != VoiceCommand.Kind.OPEN_APP
-                && command.kind != VoiceCommand.Kind.SWITCH_SPACE) {
-            notifyUser(R.string.zer0_voice_unsupported);
+        // Deterministic exact-language fast path, Jev-style typed model admission
+        // intentionally unavailable until a real observed-state adapter exists.
+        JevFastDecisionPolicy.Candidate candidate =
+                JevFastDecisionPolicy.compileExact(command);
+        if (candidate == null) {
+            if (getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)) {
+                routeToAssistant(spoken, command);
+            } else {
+                notifyUser(R.string.zer0_voice_unsupported);
+            }
             return;
         }
         // This guards session replay and typed action authority. The 0 revision is
         // only this one-shot Activity's local context, NOT a measured Android
         // foreground/window revision. A future remote executor needs real UI state.
-        PhoneActionGate.Kind kind = command.kind == VoiceCommand.Kind.OPEN_APP
-                ? PhoneActionGate.Kind.OPEN_APP : PhoneActionGate.Kind.SWITCH_SPACE;
+        PhoneActionGate.Kind kind = candidate.kind;
         long now = SystemClock.elapsedRealtime();
         PhoneActionGate.Request action = new PhoneActionGate.Request(
                 utteranceId + ":" + kind.name(), utteranceId, kind,
@@ -123,6 +134,16 @@ public final class VoiceCommandActivity extends Activity {
                 0, now + 15_000);
         if (ACTION_GATE.admit(action, now, 0) != PhoneActionGate.Decision.ADMITTED) {
             notifyUser(R.string.zer0_voice_unsupported);
+            return;
+        }
+
+        if (command.kind == VoiceCommand.Kind.SEARCH_APPS) {
+            if (!SpaceAppSearch.acceptsQuery(command.target)) {
+                notifyUser(R.string.zer0_voice_unsupported);
+                return;
+            }
+            startActivity(new Intent(this, HyprSpacesActivity.class)
+                    .putExtra(HyprSpacesActivity.EXTRA_SEARCH_QUERY, command.target));
             return;
         }
 
@@ -187,6 +208,26 @@ public final class VoiceCommandActivity extends Activity {
                 notifyUser(R.string.zer0_voice_launch_failed);
             }
         }
+    }
+
+    private void routeToAssistant(String transcript, VoiceCommand command) {
+        SmartVoiceRouter.Destination destination = SmartVoiceRouter.select(
+                transcript,
+                command.kind,
+                AssistantHandoff.isChatGptAvailable(this),
+                AssistantHandoff.isPreferredGeminiAvailable(this));
+        boolean opened = false;
+        if (destination == SmartVoiceRouter.Destination.CHATGPT_APP) {
+            opened = AssistantHandoff.openChatGpt(this);
+            // A removed/hidden app must not silently send the text elsewhere.
+        } else if (destination == SmartVoiceRouter.Destination.ANDROID_ASSISTANT) {
+            opened = AssistantHandoff.openPreferredGemini(this);
+        }
+        // Android apps do not expose a supported API to forward this recognizer
+        // result into their voice sessions. Never pretend the command was executed.
+        notifyUser(opened
+                ? R.string.zer0_smart_voice_handoff
+                : R.string.zer0_smart_voice_unavailable);
     }
 
     private void notifyUser(int message) {

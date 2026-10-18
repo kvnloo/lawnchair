@@ -1,6 +1,20 @@
+## Native Lawnchair UI update (2026-10-18)
+
+Experimental phone-harness branch now opens a compact Compose screen using **LawnchairTheme**, **PreferenceLayout**, **PreferenceGroup**, **ClickablePreference** and **PreferenceTemplate**, instead of exposing the entire custom Button/Spinner diagnostic page. Default view: switch named space, Scratch, current-space pins, bounded app search, create space and request an explicitly saved pair. Existing advanced window probes, editor and receipts remain available behind **Manage spaces and window controls**. A phone APK/device pass is still required. Current Compose screen never claims true independent OS workspaces or verified tiling. Existing experiment [PR #11](https://github.com/kvnloo/lawnchair/pull/11) inspired the compact-first priority; preserve contributor history and do not duplicate upstream.
+
 # HyprSpaces — experimental Android spaces/window control
 
 **Status (2026-10-17): current fork head dabb9da has hosted JVM voice and HyprSpaces checks PASS, Spotless PASS; three Android APK variants are still running. Previous earlier head 9f2c60b8 passed all Android APK variants. No physical Galaxy S25 Ultra tests or verified compositor layouts have run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
+
+## Next local voice experiment
+
+Fork-only `experiment/hyprspaces-phone-harness` adds a first-class **Hybrid voice · Tern (local)** button. The Android launcher opens a hardcoded loopback browser URL on explicit tap. z0live runs inside Tern on this phone and optionally dispatches commands to the separately authorized OMP harness. Hermes phone-harness uses the existing Wi-Fi ADB pairing and its own per-call approval. No root, privileged app control, always-on listener or new launcher permission is required. The handoff is **not** a completed end-to-end voice/phone-control certification; test the device before promotion.
+
+```bash
+bash tools/zer0/tern-voice-check.sh check
+```
+
+[Hybrid z0live implementation](https://github.com/kvnloo/z0live/pull/7) · [HyprSpaces UI handoff](https://github.com/kvnloo/lawnchair/pull/12)
 
 ## Current scope
 
@@ -14,7 +28,7 @@
 - Existing one-shot voice prototype now accepts SWITCH_SPACE only for an exact, locally configured name; an unrecognized space has no execution side effect. OPEN_APP remains exact-label only.
 - Pure-JVM SpaceModel constraints cover custom name validation, case-insensitive uniqueness, 12-space cap, persistence, rename/delete active selection, corrupt preference recovery and Scratch isolation.
 
-- The dock QSB now offers **Assistants (experimental)** for the configured Gemini/Google/other Android assistant, the visible ChatGPT app (no Voice deep link), one-shot speech with a mere offline *hint*, and a separate **user-started Android on-device SpeechRecognizer** (API 31+ with a system on-device model). This last path requires microphone permission at Start, forwards only a finalized navigation command, cancels on background/timeout and does not fall back to cloud speech. It is not continuous Realtime voice, Jev integration, or a ChatGPT sign-in. See [ASSISTANTS.md](ASSISTANTS.md).
+- The dock QSB now offers **Assistants (experimental)** as a first-class user-driven handoff to Android's chosen Gemini/Google/other default via ACTION_ASSIST, an installed ChatGPT app (no voice deep link), system default-assistant Settings, and a one-shot navigation voice button with an optional *unverified* offline-preference hint. See [ASSISTANTS.md](ASSISTANTS.md). This does not integrate Jev or ChatGPT sign-in with the launcher.
 
 ## Not yet built
 
