@@ -12,7 +12,8 @@ public final class SplitProbe {
     public enum Mode {
         PAIR,
         ADJACENT_TO_SPACES,
-        ACCESSIBILITY_ACTION
+        ACCESSIBILITY_ACTION,
+        FREEFORM_BOUNDS
     }
 
     public enum Stage {
@@ -24,7 +25,9 @@ public final class SplitProbe {
         ADJACENT_SENT,
         FAILED_ADJACENT,
         ACCESSIBILITY_SENT,
-        FAILED_ACCESSIBILITY
+        FAILED_ACCESSIBILITY,
+        BOUNDS_SENT,
+        FAILED_BOUNDS
     }
 
     public enum Observation {

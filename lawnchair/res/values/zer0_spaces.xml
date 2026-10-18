@@ -39,6 +39,10 @@
     <string name="zer0_spaces_second_failed">First app launched; second app could not be opened</string>
     <string name="zer0_spaces_pair_requested">Split requested; verify the resulting layout</string>
     <string name="zer0_probe_adjacent">Request second app adjacent to Spaces</string>
+    <string name="zer0_probe_bounds">Try public floating-window bounds (experimental)</string>
+    <string name="zer0_probe_bounds_note">Only tests ActivityOptions.setLaunchBounds on displays advertising freeform support. Android/One UI may ignore the bounds or open the app full-screen; no private Samsung API is used.</string>
+    <string name="zer0_probe_bounds_sent">Window bounds requested; report what actually appeared</string>
+    <string name="zer0_probe_bounds_unavailable">Floating bounds experiment is unsupported or launch failed</string>
     <string name="zer0_probe_system_split">Try Android system split action (opt-in)</string>
     <string name="zer0_probe_system_split_note">Only available if Lawnchair accessibility was separately enabled and Android lists the split action. No service enablement or permission prompt is triggered here.</string>
     <string name="zer0_probe_system_unavailable">Android system split action is not currently available</string>

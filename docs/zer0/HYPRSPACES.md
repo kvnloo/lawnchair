@@ -25,6 +25,10 @@ Official [Android 17 release notes](https://android-developers.googleblog.com/20
 
 Android 16 QPR3 also made connected-display desktop windowing generally available for supported devices: [Google/Samsung Android desktop collaboration](https://android-developers.googleblog.com/2026/03/android-devices-extend-seamlessly-to.html). A phone-screen split, Samsung DeX external-display freeform, and universal app bubbles are **three distinct capability families**; do not use one success as proof of the others.
 
+## Experimental public launch-bounds request
+
+On Android API 30+ with advertised `FEATURE_FREEFORM_WINDOW_MANAGEMENT`, a separate direct-click experiment calculates a centered 72%-wide, 65%-tall rectangle from `getMaximumWindowMetrics()` and calls public `ActivityOptions.setLaunchBounds()` for one freshly validated visible personal-profile app. It adds the requested pixel rectangle to an explicitly copied redacted probe receipt. **It cannot force Samsung One UI pop-up mode**: Android may ignore these bounds unless the display/task is already in a compatible freeform/PiP environment. No `setLaunchWindowingMode()`, root, shell privileges, Shizuku, overlay or new manifest permission is used. A successful API return is only an unverified request. Android reference: https://developer.android.com/reference/android/app/ActivityOptions#setLaunchBounds(android.graphics.Rect). Samsung DeX reference: https://developer.samsung.com/samsung-dex/modify-optional.html.
+
 ## Backend strategy
 
 | Tier | Authorization | Capabilities |

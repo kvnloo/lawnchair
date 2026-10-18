@@ -2,6 +2,7 @@ package app.lawnchair.zer0.spaces;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ActivityOptions;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
@@ -10,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
@@ -55,6 +57,7 @@ public final class HyprSpacesActivity extends Activity {
     private static final String PROBE_API = "probe_api";
     private static final String PROBE_FREEFORM = "probe_freeform";
     private static final String PROBE_IN_MULTIWINDOW = "probe_in_multiwindow";
+    private static final String PROBE_BOUNDS = "probe_bounds_px";
 
     private SharedPreferences prefs;
     private SpaceModel model;
@@ -323,6 +326,11 @@ public final class HyprSpacesActivity extends Activity {
                 this::requestAdjacentToSpaces);
         adjacent.setEnabled(!apps.isEmpty());
         content.addView(adjacent);
+        Button boundsRequest = button(getString(R.string.zer0_probe_bounds),
+                this::requestFloatingBounds);
+        boundsRequest.setEnabled(isBoundsProbeAvailable());
+        content.addView(boundsRequest);
+        content.addView(text(getString(R.string.zer0_probe_bounds_note), 13));
         Button systemSplit = button(getString(R.string.zer0_probe_system_split),
                 this::requestOptInSystemSplit);
         systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
@@ -611,6 +619,7 @@ public final class HyprSpacesActivity extends Activity {
                 .putBoolean(PROBE_FREEFORM, getPackageManager().hasSystemFeature(
                         PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT))
                 .putBoolean(PROBE_IN_MULTIWINDOW, isInMultiWindowMode())
+                .remove(PROBE_BOUNDS)
                 .apply();
     }
 
@@ -621,7 +630,7 @@ public final class HyprSpacesActivity extends Activity {
     private String probeReceipt() {
         SplitProbe.Mode mode = SplitProbe.modeOrNull(prefs.getString(PROBE_MODE, null));
         if (mode == null) return null;
-        return SplitProbe.formatReceipt(
+        String receipt = SplitProbe.formatReceipt(
                 prefs.getString(PROBE_ID, null),
                 mode,
                 SplitProbe.stageOrDefault(prefs.getString(PROBE_STAGE, null)),
@@ -629,6 +638,12 @@ public final class HyprSpacesActivity extends Activity {
                 prefs.getInt(PROBE_API, Build.VERSION.SDK_INT),
                 prefs.getBoolean(PROBE_FREEFORM, false),
                 prefs.getBoolean(PROBE_IN_MULTIWINDOW, false));
+        String bounds = prefs.getString(PROBE_BOUNDS, null);
+        if (mode == SplitProbe.Mode.FREEFORM_BOUNDS && bounds != null
+                && bounds.matches("[0-9]+,[0-9]+,[0-9]+,[0-9]+")) {
+            return receipt + "\nrequested_bounds_px=" + bounds;
+        }
+        return receipt;
     }
 
     private void setObservation(SplitProbe.Observation observation) {
@@ -660,7 +675,7 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(button(getString(R.string.zer0_probe_clear), () -> {
             prefs.edit().remove(PROBE_ID).remove(PROBE_MODE).remove(PROBE_STAGE)
                     .remove(PROBE_OBS).remove(PROBE_API).remove(PROBE_FREEFORM)
-                    .remove(PROBE_IN_MULTIWINDOW).apply();
+                    .remove(PROBE_IN_MULTIWINDOW).remove(PROBE_BOUNDS).apply();
             render();
         }));
     }
@@ -680,6 +695,46 @@ public final class HyprSpacesActivity extends Activity {
         } else {
             updateProbeStage(SplitProbe.Stage.FAILED_ACCESSIBILITY);
             Toast.makeText(this, R.string.zer0_probe_system_unavailable, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private boolean isBoundsProbeAvailable() {
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
+                && getPackageManager().hasSystemFeature(
+                        PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT);
+    }
+
+    private void requestFloatingBounds() {
+        // This is a public setLaunchBounds() request, NOT a way to force a foreign
+        // application's task into Samsung's proprietary pop-up/freeform mode.
+        int index = secondary.getSelectedItemPosition();
+        if (index < 0 || index >= apps.size() || !isBoundsProbeAvailable()) {
+            Toast.makeText(this, R.string.zer0_probe_bounds_unavailable, Toast.LENGTH_LONG).show();
+            return;
+        }
+        ComponentName target = apps.get(index).getComponentName();
+        if (findVisibleApp(target.flattenToString(), loadPersonalApps()) == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        Rect display = getWindowManager().getMaximumWindowMetrics().getBounds();
+        int[] coords = WindowBoundsRequest.centered(
+                display.left, display.top, display.right, display.bottom);
+        if (!WindowBoundsRequest.eligible(Build.VERSION.SDK_INT, true, coords)) {
+            Toast.makeText(this, R.string.zer0_probe_bounds_unavailable, Toast.LENGTH_LONG).show();
+            return;
+        }
+        beginProbe(SplitProbe.Mode.FREEFORM_BOUNDS);
+        prefs.edit().putString(PROBE_BOUNDS, WindowBoundsRequest.boundsCsv(coords)).apply();
+        try {
+            Rect requested = new Rect(coords[0], coords[1], coords[2], coords[3]);
+            ActivityOptions options = ActivityOptions.makeBasic().setLaunchBounds(requested);
+            startActivity(mainIntent(target, false), options.toBundle());
+            updateProbeStage(SplitProbe.Stage.BOUNDS_SENT);
+            Toast.makeText(this, R.string.zer0_probe_bounds_sent, Toast.LENGTH_LONG).show();
+        } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_BOUNDS);
+            Toast.makeText(this, R.string.zer0_probe_bounds_unavailable, Toast.LENGTH_LONG).show();
         }
     }
 

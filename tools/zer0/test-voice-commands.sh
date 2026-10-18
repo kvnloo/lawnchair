@@ -14,6 +14,7 @@ javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpaceAppSearch.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SplitProbe.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpacePageBinding.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/spaces/WindowBoundsRequest.java" \
   "$root/tools/zer0/VoiceCommandTest.java" \
   "$root/tools/zer0/PhoneActionGateTest.java" \
   "$root/tools/zer0/AppNameMatcherTest.java" \
@@ -21,7 +22,8 @@ javac -encoding UTF-8 -d "$work" \
   "$root/tools/zer0/SpacePinsTest.java" \
   "$root/tools/zer0/SpaceAppSearchTest.java" \
   "$root/tools/zer0/SplitProbeTest.java" \
-  "$root/tools/zer0/SpacePageBindingTest.java"
+  "$root/tools/zer0/SpacePageBindingTest.java" \
+  "$root/tools/zer0/WindowBoundsRequestTest.java"
 
 java -cp "$work" VoiceCommandTest
 java -cp "$work" AppNameMatcherTest
@@ -36,3 +38,5 @@ java -cp "$work" SpacePageBindingTest
 # Static-only smoke for opt-in device proof collection; does not require adb or a phone.
 bash -n "$root/tools/zer0/samsung-spaces-check.sh"
 bash "$root/tools/zer0/samsung-spaces-check.sh" --help | grep -q "EXPLICIT OPT-IN"
+
+java -cp "$work" WindowBoundsRequestTest

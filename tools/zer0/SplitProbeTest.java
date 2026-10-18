@@ -43,6 +43,11 @@ public final class SplitProbeTest {
         check(accessibility.contains("mode=accessibility_action"), "explicit AX mode");
         check(accessibility.contains("launch_calls=accessibility_sent"), "only accepted by system");
         check(accessibility.contains("os_verified=false"), "AX accepted does not verify layout");
+        String bounds = SplitProbe.formatReceipt(id, Mode.FREEFORM_BOUNDS,
+                Stage.BOUNDS_SENT, Observation.FULLSCREEN_ONLY, 37, true, false);
+        check(bounds.contains("mode=freeform_bounds"), "public bounds request mode");
+        check(bounds.contains("launch_calls=bounds_sent"), "bounds sent without popup promise");
+        check(bounds.contains("os_verified=false"), "bounds is not observed freeform state");
         check(adjacent.contains("spaces_in_multiwindow_at_request=true"),
                 "source window state included");
         rejected(() -> SplitProbe.formatReceipt(id, null, Stage.NOT_SENT,
