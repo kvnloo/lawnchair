@@ -14,6 +14,7 @@ public final class PhoneActionGate {
     public enum Kind {
         OPEN_APP,
         SWITCH_SPACE,
+        SEARCH_APPS,
         REQUEST_SPLIT
     }
 
