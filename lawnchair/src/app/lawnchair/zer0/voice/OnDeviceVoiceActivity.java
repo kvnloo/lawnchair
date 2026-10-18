@@ -44,7 +44,7 @@ public final class OnDeviceVoiceActivity extends ComponentActivity implements Re
         }
         ui = OnDeviceVoiceUi.show(this);
         autoStart = getIntent().getBooleanExtra(EXTRA_START_NOW, false);
-        if (!isAvailable()) {
+        if (!isAvailable(this)) {
             ui.setStartEnabled(false);
             ui.setStatusResource(R.string.zer0_assistant_on_device_unavailable);
             autoStart = false;
@@ -83,7 +83,7 @@ public final class OnDeviceVoiceActivity extends ComponentActivity implements Re
     }
 
     private void requestMicrophoneAndListen() {
-        if (!foregroundStarted || session.isTerminal() || !isAvailable()) {
+        if (!foregroundStarted || session.isTerminal() || !isAvailable(this)) {
             ui.setStatusResource(R.string.zer0_assistant_on_device_unavailable);
             return;
         }
@@ -112,7 +112,7 @@ public final class OnDeviceVoiceActivity extends ComponentActivity implements Re
     }
 
     private void listenOnce() {
-        if (!foregroundStarted || !isAvailable() || !session.begin()) return;
+        if (!foregroundStarted || !isAvailable(this) || !session.begin()) return;
         ui.setStartEnabled(false);
         ui.setStatusResource(R.string.zer0_assistant_on_device_listening);
         try {
