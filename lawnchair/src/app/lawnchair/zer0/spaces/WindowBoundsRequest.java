@@ -34,7 +34,8 @@ public final class WindowBoundsRequest {
      */
     public static boolean eligible(int apiLevel, boolean freeformAdvertised, int[] bounds) {
         return apiLevel >= 30 && freeformAdvertised && bounds != null
-                && bounds.length == 4 && bounds[2] > bounds[0] && bounds[3] > bounds[1];
+                && bounds.length == 4 && bounds[0] >= 0 && bounds[1] >= 0
+                && bounds[2] > bounds[0] && bounds[3] > bounds[1];
     }
 
     public static String boundsCsv(int[] bounds) {

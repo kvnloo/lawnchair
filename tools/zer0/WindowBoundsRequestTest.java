@@ -35,6 +35,8 @@ public final class WindowBoundsRequestTest {
         check(!WindowBoundsRequest.eligible(37, false, phone), "feature gate");
         check(!WindowBoundsRequest.eligible(37, true, null), "bounds gate");
         check(WindowBoundsRequest.eligible(37, true, phone), "best effort admitted");
+        check(!WindowBoundsRequest.eligible(37, true, new int[] {-10, 20, 500, 600}),
+                "negative origin cannot be serialized safely");
         rejects(() -> WindowBoundsRequest.boundsCsv(null), "null");
         rejects(() -> WindowBoundsRequest.boundsCsv(new int[] {-1, 0, 500, 500}), "negative");
         rejects(() -> WindowBoundsRequest.boundsCsv(new int[] {0, 0, 0, 500}), "zero width");
