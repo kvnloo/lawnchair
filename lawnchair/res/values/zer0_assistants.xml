@@ -16,7 +16,7 @@
     <string name="zer0_assistant_offline_service_available">Android reports an on-device speech recognizer. Try one command with the dedicated offline option; the installed language model still needs device qualification.</string>
     <string name="zer0_assistant_on_device_entry">On-device voice: one navigation command</string>
     <string name="zer0_assistant_on_device_title">On-device navigation voice</string>
-    <string name="zer0_assistant_on_device_info">This microphone starts only after you tap Start and grant Android permission. It uses Android's dedicated on-device recognizer for one navigation command, then releases the microphone. Lawnchair does not save audio or your transcript.</string>
+    <string name="zer0_assistant_on_device_info">This microphone starts only after you tap Start and grant Android permission. It uses a dedicated Android on-device recognizer for one navigation command, then releases the microphone. Lawnchair does not save audio or your transcript.</string>
     <string name="zer0_assistant_on_device_start">Start on-device listening</string>
     <string name="zer0_assistant_on_device_cancel">Cancel and close</string>
     <string name="zer0_assistant_on_device_unavailable">Dedicated on-device speech recognition is unavailable on this phone or for this installed configuration. No online fallback runs.</string>
