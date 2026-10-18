@@ -330,59 +330,59 @@ public final class HyprSpacesActivity extends Activity {
                     () -> askForName(null)));
 
             content.addView(text(getString(R.string.zer0_spaces_pair_title), 20));
-        content.addView(text(getString(R.string.zer0_spaces_pair_note), 13));
+            content.addView(text(getString(R.string.zer0_spaces_pair_note), 13));
 
-        ArrayList<String> labels = new ArrayList<>();
-        for (LauncherActivityInfo info : apps) {
-            labels.add(displayLabel(info) + " · " + info.getComponentName().getPackageName());
-        }
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, labels);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayList<String> labels = new ArrayList<>();
+            for (LauncherActivityInfo info : apps) {
+                labels.add(displayLabel(info) + " · " + info.getComponentName().getPackageName());
+            }
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this, android.R.layout.simple_spinner_item, labels);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
-        primary = new Spinner(this);
-        primary.setContentDescription(getString(R.string.zer0_spaces_primary));
-        primary.setAdapter(adapter);
-        secondary = new Spinner(this);
-        secondary.setContentDescription(getString(R.string.zer0_spaces_secondary));
-        secondary.setAdapter(adapter);
-        if (apps.size() > 1) secondary.setSelection(1);
-        content.addView(text(getString(R.string.zer0_spaces_primary), 14));
-        content.addView(primary);
-        Button pinButton = button(getString(R.string.zer0_pins_add), this::pinSelected);
-        pinButton.setEnabled(!apps.isEmpty());
-        content.addView(pinButton);
-        content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
-        content.addView(secondary);
+            primary = new Spinner(this);
+            primary.setContentDescription(getString(R.string.zer0_spaces_primary));
+            primary.setAdapter(adapter);
+            secondary = new Spinner(this);
+            secondary.setContentDescription(getString(R.string.zer0_spaces_secondary));
+            secondary.setAdapter(adapter);
+            if (apps.size() > 1) secondary.setSelection(1);
+            content.addView(text(getString(R.string.zer0_spaces_primary), 14));
+            content.addView(primary);
+            Button pinButton = button(getString(R.string.zer0_pins_add), this::pinSelected);
+            pinButton.setEnabled(!apps.isEmpty());
+            content.addView(pinButton);
+            content.addView(text(getString(R.string.zer0_spaces_secondary), 14));
+            content.addView(secondary);
 
-        selectSavedPair();
-        Button save = button(getString(R.string.zer0_spaces_save_pair), this::savePair);
-        save.setEnabled(apps.size() > 1);
-        content.addView(save);
+            selectSavedPair();
+            Button save = button(getString(R.string.zer0_spaces_save_pair), this::savePair);
+            save.setEnabled(apps.size() > 1);
+            content.addView(save);
 
-        Button launch = button(getString(R.string.zer0_spaces_launch_pair), this::requestSplitPair);
-        launch.setEnabled(apps.size() > 1);
-        content.addView(launch);
-        Button adjacent = button(getString(R.string.zer0_probe_adjacent),
-                this::requestAdjacentToSpaces);
-        adjacent.setEnabled(!apps.isEmpty());
-        content.addView(adjacent);
-        Button boundsRequest = button(getString(R.string.zer0_probe_bounds),
-                this::requestFloatingBounds);
-        boundsRequest.setEnabled(isBoundsProbeAvailable());
-        content.addView(boundsRequest);
-        content.addView(text(getString(R.string.zer0_probe_bounds_note), 13));
-        Button systemSplit = button(getString(R.string.zer0_probe_system_split),
-                this::requestOptInSystemSplit);
-        systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
-        content.addView(systemSplit);
-        content.addView(text(getString(R.string.zer0_probe_system_split_note), 13));
-        content.addView(text(getString(R.string.zer0_probe_capabilities,
-                Build.VERSION.SDK_INT,
-                getPackageManager().hasSystemFeature(
-                        PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT),
-                isInMultiWindowMode()), 13));
-        content.addView(text(getString(R.string.zer0_spaces_limitations), 13));
+            Button launch = button(getString(R.string.zer0_spaces_launch_pair), this::requestSplitPair);
+            launch.setEnabled(apps.size() > 1);
+            content.addView(launch);
+            Button adjacent = button(getString(R.string.zer0_probe_adjacent),
+                    this::requestAdjacentToSpaces);
+            adjacent.setEnabled(!apps.isEmpty());
+            content.addView(adjacent);
+            Button boundsRequest = button(getString(R.string.zer0_probe_bounds),
+                    this::requestFloatingBounds);
+            boundsRequest.setEnabled(isBoundsProbeAvailable());
+            content.addView(boundsRequest);
+            content.addView(text(getString(R.string.zer0_probe_bounds_note), 13));
+            Button systemSplit = button(getString(R.string.zer0_probe_system_split),
+                    this::requestOptInSystemSplit);
+            systemSplit.setEnabled(LawnchairApp.getInstance().isOptInSplitActionAvailable());
+            content.addView(systemSplit);
+            content.addView(text(getString(R.string.zer0_probe_system_split_note), 13));
+            content.addView(text(getString(R.string.zer0_probe_capabilities,
+                    Build.VERSION.SDK_INT,
+                    getPackageManager().hasSystemFeature(
+                            PackageManager.FEATURE_FREEFORM_WINDOW_MANAGEMENT),
+                    isInMultiWindowMode()), 13));
+            content.addView(text(getString(R.string.zer0_spaces_limitations), 13));
             addProbeControls(content);
         }
 
@@ -664,6 +664,7 @@ public final class HyprSpacesActivity extends Activity {
                     .putString(pairKey(model.activeName(), 1), second).apply();
         }
         Toast.makeText(this, R.string.zer0_spaces_pair_saved, Toast.LENGTH_SHORT).show();
+        render(); // Refresh the compact saved-pair shortcut after an explicit save.
     }
 
     private void beginProbe(SplitProbe.Mode mode) {
