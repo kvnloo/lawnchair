@@ -62,4 +62,14 @@
     <string name="zer0_probe_copied">Test receipt copied</string>
     <string name="zer0_probe_request_sent">Adjacent launch requested; verify the visible layout</string>
     <string name="zer0_spaces_limitations">Pop-up placement, resizing, task moves and true tiling need a separately tested backend. No root or Accessibility permission is requested.</string>
+    <string name="zer0_spaces_compact_heading">Spaces</string>
+    <string name="zer0_spaces_compact_note">Switch between launcher contexts. Your running apps stay where Android put them.</string>
+    <string name="zer0_spaces_current">Current space</string>
+    <string name="zer0_spaces_scratch_note">Ephemeral session, not saved</string>
+    <string name="zer0_spaces_actions_heading">Actions</string>
+    <string name="zer0_spaces_pin">Pin</string>
+    <string name="zer0_spaces_unpin">Unpin</string>
+    <string name="zer0_spaces_manage">Manage spaces and window controls</string>
+    <string name="zer0_spaces_manage_note">Rename, page links and experimental split-screen diagnostics</string>
+    <string name="zer0_spaces_back_to_compact">Back to spaces</string>
 </resources>

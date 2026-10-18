@@ -1,6 +1,6 @@
 package app.lawnchair.zer0.spaces;
 
-import android.app.Activity;
+import androidx.activity.ComponentActivity;
 import android.app.AlertDialog;
 import android.app.ActivityOptions;
 import android.content.ClipData;
@@ -42,7 +42,7 @@ import java.util.UUID;
  * Opt-in, downstream-only window experiment. Android/Samsung own real window placement.
  * This activity owns labels and app-pair requests; it does not impersonate a system compositor.
  */
-public final class HyprSpacesActivity extends Activity {
+public final class HyprSpacesActivity extends ComponentActivity {
     public static final String EXTRA_ACTIVATE = "app.lawnchair.zer0.spaces.ACTIVATE";
     public static final String EXTRA_SOURCE_SCREEN_ID =
             "app.lawnchair.zer0.spaces.SOURCE_SCREEN_ID";
@@ -69,6 +69,7 @@ public final class HyprSpacesActivity extends Activity {
     private String scratchSecondary;
     private List<String> scratchPins = new ArrayList<>();
     private boolean firstResume = true;
+    private boolean showAdvancedControls;
     private String searchQuery = "";
     private ScrollView activeScroll;
     private EditText activeSearch;
@@ -174,12 +175,20 @@ public final class HyprSpacesActivity extends Activity {
     }
 
     private void render() {
+        if (!showAdvancedControls) {
+            HyprSpacesUi.show(this);
+            return;
+        }
         final int previousScrollY = activeScroll == null ? 0 : activeScroll.getScrollY();
         final boolean searchWasFocused = activeSearch != null && activeSearch.hasFocus();
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(16), dp(16), dp(16), dp(28));
 
+        content.addView(button(getString(R.string.zer0_spaces_back_to_compact), () -> {
+            showAdvancedControls = false;
+            render();
+        }));
         content.addView(text(getString(R.string.zer0_spaces_title), 26));
         content.addView(text(getString(R.string.zer0_space_active, model.activeName()), 16));
         content.addView(text(getString(R.string.zer0_spaces_disclaimer), 13));
@@ -784,6 +793,110 @@ public final class HyprSpacesActivity extends Activity {
         }
         try {
             startActivity(mainIntent(second, true));
+            updateProbeStage(SplitProbe.Stage.BOTH_SENT);
+            Toast.makeText(this, R.string.zer0_spaces_pair_requested, Toast.LENGTH_LONG).show();
+        } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_SECOND);
+            Toast.makeText(this, R.string.zer0_spaces_second_failed, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    // Presentation API: Lawnchair's Compose preferences render a compact, native
+    // surface. Keep storage, visibility checks and window experiments here.
+    public List<String> uiSpaceNames() {
+        return new ArrayList<>(model.names());
+    }
+
+    public String uiActiveName() {
+        return model.activeName();
+    }
+
+    public String uiScratchName() {
+        return SpaceModel.SCRATCH;
+    }
+
+    public String uiSearchQuery() {
+        return searchQuery;
+    }
+
+    public void uiSetSearchQuery(String text) {
+        searchQuery = text;
+    }
+
+    public List<SpaceAppSearch.Entry> uiSearchApps(String query) {
+        return SpaceAppSearch.filter(searchEntries(), query);
+    }
+
+    public List<SpaceAppSearch.Entry> uiPinnedApps() {
+        ArrayList<SpaceAppSearch.Entry> items = new ArrayList<>();
+        for (String component : currentPins()) {
+            LauncherActivityInfo visible = findVisibleApp(component, apps);
+            if (visible != null) {
+                items.add(new SpaceAppSearch.Entry(component, displayLabel(visible)));
+            }
+        }
+        return items;
+    }
+
+    public void uiActivate(String name) {
+        activate(name);
+    }
+
+    public void uiCreateSpace() {
+        askForName(null);
+    }
+
+    public void uiOpenApp(String component) {
+        launchPinned(component);
+    }
+
+    public void uiPinApp(String component) {
+        pinComponent(component);
+    }
+
+    public void uiUnpinApp(String component) {
+        unpin(component);
+    }
+
+    public void uiShowAdvanced() {
+        showAdvancedControls = true;
+        render();
+    }
+
+    public boolean uiHasValidSavedPair() {
+        String first = getSaved(0);
+        String second = getSaved(1);
+        return first != null && second != null && !first.equals(second)
+                && findVisibleApp(first, apps) != null
+                && findVisibleApp(second, apps) != null;
+    }
+
+    public void uiRequestSavedPair() {
+        if (!uiHasValidSavedPair()) {
+            Toast.makeText(this, R.string.zer0_spaces_pick_distinct, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String first = getSaved(0);
+        String second = getSaved(1);
+        // Re-resolve both against the current personal-profile visibility policy.
+        List<LauncherActivityInfo> visible = loadPersonalApps();
+        LauncherActivityInfo left = findVisibleApp(first, visible);
+        LauncherActivityInfo right = findVisibleApp(second, visible);
+        if (left == null || right == null) {
+            Toast.makeText(this, R.string.zer0_pins_unavailable, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        beginProbe(SplitProbe.Mode.PAIR);
+        try {
+            startActivity(mainIntent(left.getComponentName(), false));
+            updateProbeStage(SplitProbe.Stage.FIRST_SENT);
+        } catch (RuntimeException error) {
+            updateProbeStage(SplitProbe.Stage.FAILED_FIRST);
+            Toast.makeText(this, R.string.zer0_spaces_pair_failed, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        try {
+            startActivity(mainIntent(right.getComponentName(), true));
             updateProbeStage(SplitProbe.Stage.BOTH_SENT);
             Toast.makeText(this, R.string.zer0_spaces_pair_requested, Toast.LENGTH_LONG).show();
         } catch (RuntimeException error) {

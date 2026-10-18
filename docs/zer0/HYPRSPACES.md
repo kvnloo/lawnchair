@@ -1,3 +1,7 @@
+## Native Lawnchair UI update (2026-10-18)
+
+Experimental phone-harness branch now opens a compact Compose screen using **LawnchairTheme**, **PreferenceLayout**, **PreferenceGroup**, **ClickablePreference** and **PreferenceTemplate**, instead of exposing the entire custom Button/Spinner diagnostic page. Default view: switch named space, Scratch, current-space pins, bounded app search, create space and request an explicitly saved pair. Existing advanced window probes, editor and receipts remain available behind **Manage spaces and window controls**. A phone APK/device pass is still required. Current Compose screen never claims true independent OS workspaces or verified tiling. Existing experiment [PR #11](https://github.com/kvnloo/lawnchair/pull/11) inspired the compact-first priority; preserve contributor history and do not duplicate upstream.
+
 # HyprSpaces — experimental Android spaces/window control
 
 **Status (2026-10-17): current fork head dabb9da has hosted JVM voice and HyprSpaces checks PASS, Spotless PASS; three Android APK variants are still running. Previous earlier head 9f2c60b8 passed all Android APK variants. No physical Galaxy S25 Ultra tests or verified compositor layouts have run.** Downstream experiment only; branch [experiment/zer0-hyprspaces](https://github.com/kvnloo/lawnchair/tree/experiment/zer0-hyprspaces) is based on the [integrated preview](https://github.com/kvnloo/lawnchair/pull/8), not on production 16-dev.
