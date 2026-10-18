@@ -107,7 +107,8 @@ public final class VoiceCommandActivity extends Activity {
     private void handleFinalTranscript(String spoken) {
         VoiceCommand command = VoiceCommand.parse(spoken);
         if (command.kind != VoiceCommand.Kind.OPEN_APP
-                && command.kind != VoiceCommand.Kind.SWITCH_SPACE) {
+                && command.kind != VoiceCommand.Kind.SWITCH_SPACE
+                && command.kind != VoiceCommand.Kind.SEARCH_APPS) {
             notifyUser(R.string.zer0_voice_unsupported);
             return;
         }
@@ -115,7 +116,9 @@ public final class VoiceCommandActivity extends Activity {
         // only this one-shot Activity's local context, NOT a measured Android
         // foreground/window revision. A future remote executor needs real UI state.
         PhoneActionGate.Kind kind = command.kind == VoiceCommand.Kind.OPEN_APP
-                ? PhoneActionGate.Kind.OPEN_APP : PhoneActionGate.Kind.SWITCH_SPACE;
+                ? PhoneActionGate.Kind.OPEN_APP
+                : command.kind == VoiceCommand.Kind.SEARCH_APPS
+                        ? PhoneActionGate.Kind.SEARCH_APPS : PhoneActionGate.Kind.SWITCH_SPACE;
         long now = SystemClock.elapsedRealtime();
         PhoneActionGate.Request action = new PhoneActionGate.Request(
                 utteranceId + ":" + kind.name(), utteranceId, kind,
@@ -140,6 +143,12 @@ public final class VoiceCommandActivity extends Activity {
             }
             startActivity(new Intent(this, HyprSpacesActivity.class)
                     .putExtra(HyprSpacesActivity.EXTRA_ACTIVATE, command.target));
+            return;
+        }
+        if (command.kind == VoiceCommand.Kind.SEARCH_APPS) {
+            // Display candidates only. Search speech cannot silently choose or launch an app.
+            startActivity(new Intent(this, HyprSpacesActivity.class)
+                    .putExtra(HyprSpacesActivity.EXTRA_SEARCH_QUERY, command.target));
             return;
         }
         if (command.kind != VoiceCommand.Kind.OPEN_APP) {
