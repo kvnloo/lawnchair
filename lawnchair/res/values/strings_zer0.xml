@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="zer0_voice_command">Voice command (beta)</string>
-    <string name="zer0_voice_prompt">Say “open Maps” or “open Camera”</string>
+    <string name="zer0_voice_command">Smart voice</string>
+    <string name="zer0_voice_prompt">Open an app, switch space, search apps or ask a question</string>
     <string name="zer0_voice_unsupported">This voice command is not available yet</string>
     <string name="zer0_voice_unavailable">Speech recognition is unavailable on this device</string>
     <string name="zer0_voice_ambiguous">More than one app has that name; open it manually</string>
