@@ -2,6 +2,12 @@
 
 **Status:** fork-only opt-in native handoff. No default assistant role claimed, no ChatGPT API authentication, no Jev Android runtime, no online or offline continuous voice session, and no arbitrary cross-app actions. Distinguish this UI from any OS-level assistant integration.
 
+## Hybrid Tern voice handoff (experimental)
+
+**Hybrid voice · Tern (local)** and **Choose z0live voice engine** launch the user's browser on the SAME phone at `http://127.0.0.1:8780/` or `/voice-setup.html` respectively, when z0live is already running inside Tern. No background network/mic service is created by Lawnchair; no new launcher permission or default-assistant role is claimed. The Tern side's z0live browser streams PCM16/24k or Ogg/Opus/24k audio to a loopback-only gateway. User-submitted commands reach an attached OMP harness; any use of the separate Hermes phone-harness plugin still requires its existing approvals.
+
+See [z0live hybrid Android instructions](https://github.com/kvnloo/z0live/blob/feat/android-voice-provider-picker/docs/HYBRID_ANDROID.md). This is a downstream experiment, and physical Samsung tests are pending.
+
 ## Test current handoff
 
 From Lawnchair home, long-press the dock QSB and choose **Assistants (experimental)**:
