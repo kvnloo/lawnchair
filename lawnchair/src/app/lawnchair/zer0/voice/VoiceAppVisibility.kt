@@ -55,15 +55,22 @@ object VoiceAppVisibility {
         val hidden = prefs.hiddenApps.firstCached()
         val policy = prefs.hiddenAppsInSearch.firstCached()
         activities.filter { activity ->
-            val label = activity.label ?: return@filter false
-            if (label.isEmpty()) return@filter false
-            val app = AppInfo(
-                activity.componentName,
-                label,
-                activity.user,
-                Intent(),
-            )
-            sequenceOf(app).filterHiddenApps("", hidden, policy).any()
+            // Preserve per-app failure isolation. One stale/broken package label must
+            // not blank the entire picker, while missing preferences still fail closed.
+            runCatching {
+                val label = activity.label
+                if (label == null || label.isEmpty()) {
+                    false
+                } else {
+                    val app = AppInfo(
+                        activity.componentName,
+                        label,
+                        activity.user,
+                        Intent(),
+                    )
+                    sequenceOf(app).filterHiddenApps("", hidden, policy).any()
+                }
+            }.getOrDefault(false)
         }
     }.getOrDefault(emptyList())
 }
