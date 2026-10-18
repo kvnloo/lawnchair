@@ -1,6 +1,7 @@
 package app.lawnchair.ui.preferences.components.search
 
 import android.content.Intent
+import android.provider.Settings
 import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,6 @@ import app.lawnchair.hotseat.LawnchairHotseat
 import app.lawnchair.preferences.PreferenceAdapter
 import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
-import app.lawnchair.preferences2.firstCached
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.qsb.LawnQsbLayout
 import app.lawnchair.qsb.LawnQsbUi
@@ -56,7 +56,6 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceTemplate
 import app.lawnchair.ui.preferences.navigation.DockSearchProvider
 import app.lawnchair.ui.theme.isSelectedThemeDark
 import app.lawnchair.ui.theme.preferenceGroupColor
-import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.R
 
 @Composable
@@ -112,20 +111,21 @@ fun DockSearchPreference(
                                 ),
                             )
                             SwitchPreference(
+                                adapter = prefs2.zer0GeminiQuickLaunch.getAdapter(),
+                                label = stringResource(R.string.zer0_gemini_quick_launch),
+                                description = stringResource(R.string.zer0_gemini_quick_launch_desc),
+                            )
+                            SwitchPreference(
                                 adapter = prefs2.zer0SmartVoiceRouting.getAdapter(),
-                                label = stringResource(R.string.zer0_smart_voice_title),
-                                description = stringResource(R.string.zer0_smart_voice_description),
+                                label = stringResource(R.string.zer0_fast_voice_title),
+                                description = stringResource(R.string.zer0_fast_voice_description),
                             )
                             ClickablePreference(
-                                label = stringResource(R.string.zer0_smart_voice_try),
+                                label = stringResource(R.string.zer0_gemini_setup),
                             ) {
-                                context.startActivity(
-                                    Intent(context, VoiceCommandActivity::class.java)
-                                        .putExtra(
-                                            VoiceCommandActivity.EXTRA_AUTO_ROUTE,
-                                            prefs2.zer0SmartVoiceRouting.firstCached(),
-                                        ),
-                                )
+                                runCatching {
+                                    context.startActivity(Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS))
+                                }
                             }
                         }
                         PreferenceGroup(
@@ -205,6 +205,7 @@ private fun DockSearchBarPreview(
         LawnQsbLayout.getVoiceIntent(searchProvider, context)
     }
     val smartVoiceEnabled = preferenceManager2().zer0SmartVoiceRouting.getAdapter().state.value
+    val geminiQuickLaunch = preferenceManager2().zer0GeminiQuickLaunch.getAdapter().state.value
     val lensIntent = remember(supportsLens, context) {
         if (supportsLens) LawnQsbLayout.getLensIntent(context) else null
     }
@@ -225,7 +226,7 @@ private fun DockSearchBarPreview(
                 state = rememberHotseatQsbState(
                     searchProvider,
                     themed,
-                    showMic = smartVoiceEnabled || voiceIntent != null,
+                    showMic = geminiQuickLaunch || smartVoiceEnabled || voiceIntent != null,
                     showLens = lensIntent != null,
                 ),
                 style = buildQsbStyle(

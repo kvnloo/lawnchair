@@ -24,12 +24,14 @@ public final class SmartVoiceRouterTest {
         expect("open app Maps", true, true, local);
         expect("switch to Build", true, true, local);
         expect("open life space", true, true, local);
-        expect("What is an LLM?", true, true, chat);
-        expect("Explain attention", true, true, chat);
-        expect("write a poem", true, true, chat);
+        expect("What is an LLM?", true, true, system);
+        expect("Explain attention", true, true, system);
+        expect("write a poem", true, true, system);
         expect("ask ChatGPT about batteries", true, true, chat);
         expect("Explain attention", false, true, system);
         expect("Explain attention", false, false, none);
+        expect("What is an LLM?", true, false, none);
+        expect("ask ChatGPT about batteries", false, true, none);
         expect("turn on flashlight", true, true, system);
         expect("set a timer for 5 minutes", true, true, system);
         expect("navigate to work", true, true, system);

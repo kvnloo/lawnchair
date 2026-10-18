@@ -224,13 +224,13 @@ public final class VoiceCommandActivity extends Activity {
                 transcript,
                 command.kind,
                 AssistantHandoff.isChatGptAvailable(this),
-                AssistantHandoff.isAndroidAssistantAvailable(this));
+                AssistantHandoff.isPreferredGeminiAvailable(this));
         boolean opened = false;
         if (destination == SmartVoiceRouter.Destination.CHATGPT_APP) {
             opened = AssistantHandoff.openChatGpt(this);
             // A removed/hidden app must not silently send the text elsewhere.
         } else if (destination == SmartVoiceRouter.Destination.ANDROID_ASSISTANT) {
-            opened = AssistantHandoff.openAndroidAssistant(this);
+            opened = AssistantHandoff.openPreferredGemini(this);
         }
         // Android apps do not expose a supported API to forward this recognizer
         // result into their voice sessions. Never pretend the command was executed.

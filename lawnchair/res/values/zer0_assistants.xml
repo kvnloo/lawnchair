@@ -1,6 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="zer0_smart_voice_title">Smart voice</string>
+    <string name="zer0_smart_voice_title">Fast actions</string>
+    <string name="zer0_gemini_hint">Ask Gemini</string>
+    <string name="zer0_gemini_bar_a11y">Open Gemini assistant</string>
+    <string name="zer0_gemini_mic_a11y">Talk to Gemini assistant</string>
+    <string name="zer0_fast_voice_a11y">Fast on-device phone commands</string>
+    <string name="zer0_gemini_quick_launch">One-tap Gemini</string>
+    <string name="zer0_gemini_quick_launch_desc">Tap the search bar or microphone for the current Android assistant. Tap the left search icon for normal search.</string>
+    <string name="zer0_gemini_setup">Configure Gemini as Android assistant</string>
+    <string name="zer0_gemini_unavailable">Gemini is unavailable. Set the Google app as your digital assistant in Android Settings.</string>
+    <string name="zer0_fast_voice_title">Fast actions</string>
+    <string name="zer0_fast_voice_description">Show a lightning icon for one-tap offline app and space commands. If offline recognition is missing, open Gemini instead.</string>
     <string name="zer0_smart_voice_description">Use the existing mic to open apps and spaces, or automatically hand off questions to ChatGPT and device requests to Android’s assistant. External apps require speaking again.</string>
     <string name="zer0_smart_voice_try">Try smart voice</string>
     <string name="zer0_smart_voice_handoff">Assistant opened. Continue speaking in that app.</string>

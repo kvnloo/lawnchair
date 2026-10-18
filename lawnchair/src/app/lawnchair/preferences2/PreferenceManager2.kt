@@ -308,7 +308,14 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_dock_search_bar_force_website),
     )
 
-    // Downstream-only experiment. One native mic entry, no OS assistant-role takeover.
+    // Experimental fork: Gemini takes the bar tap; the search icon keeps normal search.
+    // Does not change the phone's configured digital-assistant role.
+    val zer0GeminiQuickLaunch = preference(
+        key = booleanPreferencesKey(name = "zer0_gemini_quick_launch"),
+        defaultValue = true,
+    )
+
+    // Independent on-device fast-action affordance (no remote/STT fallback).
     val zer0SmartVoiceRouting = preference(
         key = booleanPreferencesKey(name = "zer0_smart_voice_routing"),
         defaultValue = true,

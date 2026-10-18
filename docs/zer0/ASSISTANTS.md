@@ -1,4 +1,18 @@
-# Smart voice – native Lawnchair UX (downstream experiment)
+## Native Gemini-first UX (October 18, 2026)
+
+- Tap **anywhere on the dock bar** or its microphone to launch Android's selected assistant directly. When the Google app is the assistant and Gemini is selected, that opens Gemini. The bar uses Lawnchair's existing QSB component with a compact **Ask Gemini** label.
+- Tap **left search/provider icon** for the original Lawnchair search. No loss of app drawer, widgets, native search provider, home gestures or search preferences. Long press remains for Customize/Spaces only; no assistant picker.
+- An optional **lightning icon** uses the existing foreground Android *on-device SpeechRecognizer* solely for local fast actions (open app, switch space, search app). When unavailable, it opens Gemini. It does not invoke the legacy cloud speech prompt or TTS. A lightweight deterministic typed action classifier runs locally; a real Jev decision model/latency bridge is not yet connected.
+- Android's public `ACTION_ASSIST` first; if no handler on a One UI build, launch the uniquely visible, installed Gemini app via `LauncherApps`. This last resort is the ordinary Gemini app, **not an undocumented Gemini Live or overlay deep link**. Fail closed on hidden/ambiguous components.
+- Android Settings → Apps → Default apps → Digital assistant → **Google**; in Google's Gemini settings select **Gemini**. Lawnchair must not change the assistant role. The user configures this only once, not per command.
+- **Gemini audio/transcripts belong to Gemini.** A separate consumer Gemini Live invocation is user-driven inside Google's app; there is no supported way to intercept its audio/voice output or inject Jev execution tools into that session.
+- Do not advertise the model or latency as implemented until TypeSafe Jev (or another model) returns a validated typed proposal over a trusted transport with benchmarked p50/p95 and tool-permission gates. Launcher-owned deterministic actions remain available in the fast lane.
+
+Google's Android support: https://support.google.com/gemini/answer/14554984 ; https://support.google.com/gemini/answer/15274899 ; Android public assist Intent: https://developer.android.com/reference/android/content/Intent#ACTION_ASSIST .
+
+---
+
+# Earlier smart voice implementation (now Gemini-first)
 
 **Status (2026-10-18):** One microphone entry and preference, backed by the existing Lawnchair Compose QSB, popup and settings components. This is a **one-shot speech router**, NOT a native GPT Realtime session or ChatGPT account sign-in. Android APK and Galaxy S25 Ultra execution must be checked on device.
 

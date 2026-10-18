@@ -35,12 +35,11 @@ public final class SmartVoiceRouter {
         String text = Normalizer.normalize(transcript, Normalizer.Form.NFKC)
                 .trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
 
-        if (matchesPrefix(text, "ask gemini", "hey google", "ask google")
-                || deviceRequest(text)) {
-            return hasAndroidAssistant
-                    ? Destination.ANDROID_ASSISTANT : Destination.UNAVAILABLE;
+        // Gemini/Google is the user-selected default assistant, not ChatGPT.
+        // Only a deliberate "ask ChatGPT" utterance opens the consumer app.
+        if (matchesPrefix(text, "ask chatgpt", "open chatgpt")) {
+            return hasChatGpt ? Destination.CHATGPT_APP : Destination.UNAVAILABLE;
         }
-        if (hasChatGpt) return Destination.CHATGPT_APP;
         return hasAndroidAssistant
                 ? Destination.ANDROID_ASSISTANT : Destination.UNAVAILABLE;
     }
