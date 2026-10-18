@@ -28,6 +28,8 @@ import java.util.UUID;
 public final class VoiceCommandActivity extends Activity {
     public static final String EXTRA_PREFER_OFFLINE_HINT =
             "app.lawnchair.zer0.voice.PREFER_OFFLINE_HINT";
+    public static final String EXTRA_AUTO_ROUTE =
+            "app.lawnchair.zer0.voice.AUTO_ROUTE";
     private static final int SPEECH_REQUEST = 41;
     private static final String STATE_UTTERANCE = "zer0_utterance_id";
     private static final String STATE_HANDLED = "zer0_handled";
@@ -58,7 +60,10 @@ public final class VoiceCommandActivity extends Activity {
         try {
             startActivityForResult(speech, SPEECH_REQUEST);
         } catch (ActivityNotFoundException | SecurityException error) {
-            notifyUser(R.string.zer0_voice_unavailable);
+            if (!getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)
+                    || !AssistantHandoff.openAndroidAssistant(this)) {
+                notifyUser(R.string.zer0_voice_unavailable);
+            }
             finish();
         }
     }
@@ -94,7 +99,11 @@ public final class VoiceCommandActivity extends Activity {
         VoiceCommand command = VoiceCommand.parse(spoken);
         if (command.kind != VoiceCommand.Kind.OPEN_APP
                 && command.kind != VoiceCommand.Kind.SWITCH_SPACE) {
-            notifyUser(R.string.zer0_voice_unsupported);
+            if (getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)) {
+                routeToAssistant(spoken, command);
+            } else {
+                notifyUser(R.string.zer0_voice_unsupported);
+            }
             return;
         }
         // This guards session replay and typed action authority. The 0 revision is
@@ -173,6 +182,26 @@ public final class VoiceCommandActivity extends Activity {
                 notifyUser(R.string.zer0_voice_launch_failed);
             }
         }
+    }
+
+    private void routeToAssistant(String transcript, VoiceCommand command) {
+        SmartVoiceRouter.Destination destination = SmartVoiceRouter.select(
+                transcript,
+                command.kind,
+                AssistantHandoff.isChatGptAvailable(this),
+                AssistantHandoff.isAndroidAssistantAvailable(this));
+        boolean opened = false;
+        if (destination == SmartVoiceRouter.Destination.CHATGPT_APP) {
+            opened = AssistantHandoff.openChatGpt(this);
+            // A removed/hidden app must not silently send the text elsewhere.
+        } else if (destination == SmartVoiceRouter.Destination.ANDROID_ASSISTANT) {
+            opened = AssistantHandoff.openAndroidAssistant(this);
+        }
+        // Android apps do not expose a supported API to forward this recognizer
+        // result into their voice sessions. Never pretend the command was executed.
+        notifyUser(opened
+                ? R.string.zer0_smart_voice_handoff
+                : R.string.zer0_smart_voice_unavailable);
     }
 
     private void notifyUser(int message) {

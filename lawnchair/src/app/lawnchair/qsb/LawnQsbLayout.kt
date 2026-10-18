@@ -33,7 +33,6 @@ import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
 import app.lawnchair.zer0.spaces.HyprSpacesActivity
-import app.lawnchair.zer0.voice.AssistantHubActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
@@ -77,6 +76,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             getSearchProvider(context, searchProviderPref)
                         }
                         val themed by prefs2.themedHotseatQsb.asState()
+                        val smartVoiceEnabled by prefs2.zer0SmartVoiceRouting.asState()
 
                         val supportsLens = searchProvider == Google || searchProvider == PixelSearch
                         val voiceIntent = remember(searchProvider, context) {
@@ -89,7 +89,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         val state = rememberHotseatQsbState(
                             searchProvider = searchProvider,
                             themed = themed,
-                            showMic = voiceIntent != null,
+                            showMic = smartVoiceEnabled || voiceIntent != null,
                             showLens = lensIntent != null,
                         )
 
@@ -123,7 +123,16 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             onEndIconClick = { id ->
                                 runCatching {
                                     when (id) {
-                                        QsbIconId.MIC -> voiceIntent?.let { context.startActivity(it) }
+                                        QsbIconId.MIC -> {
+                                            if (smartVoiceEnabled) {
+                                                context.startActivity(
+                                                    Intent(context, VoiceCommandActivity::class.java)
+                                                        .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, true),
+                                                )
+                                            } else {
+                                                voiceIntent?.let { context.startActivity(it) }
+                                            }
+                                        }
                                         QsbIconId.LENS -> lensIntent?.let { context.startActivity(it) }
                                         else -> null
                                     }
@@ -174,7 +183,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0AssistantsOption(), getZer0VoiceOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption(), getZer0VoiceOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -202,23 +211,17 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         true
     }
 
-    private fun getZer0AssistantsOption() = OptionsPopupView.OptionItem(
-        context,
-        R.string.zer0_assistant_hub,
-        R.drawable.ic_mic_flat,
-        StatsLogManager.LauncherEvent.IGNORE,
-    ) {
-        context.startActivity(Intent(context, AssistantHubActivity::class.java))
-        true
-    }
-
     private fun getZer0VoiceOption() = OptionsPopupView.OptionItem(
         context,
-        R.string.zer0_voice_command,
+        R.string.zer0_smart_voice_title,
         R.drawable.ic_mic_flat,
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
-        context.startActivity(Intent(context, VoiceCommandActivity::class.java))
+        val enabled = preferenceManager2.zer0SmartVoiceRouting.firstCached()
+        context.startActivity(
+            Intent(context, VoiceCommandActivity::class.java)
+                .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, enabled),
+        )
         true
     }
 

@@ -308,6 +308,12 @@ class PreferenceManager2 @Inject constructor(
         defaultValue = context.resources.getBoolean(R.bool.config_default_dock_search_bar_force_website),
     )
 
+    // Downstream-only experiment. One native mic entry, no OS assistant-role takeover.
+    val zer0SmartVoiceRouting = preference(
+        key = booleanPreferencesKey(name = "zer0_smart_voice_routing"),
+        defaultValue = true,
+    )
+
     val accentColor = preference(
         key = stringPreferencesKey(name = "accent_color"),
         parse = ColorOption::fromString,

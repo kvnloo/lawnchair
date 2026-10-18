@@ -1,38 +1,35 @@
-# Android voice assistant handoff (experimental)
+# Smart voice – native Lawnchair UX (downstream experiment)
 
-**Status:** fork-only opt-in native handoff. No default assistant role claimed, no ChatGPT API authentication, no Jev Android runtime, no online or offline continuous voice session, and no arbitrary cross-app actions. Distinguish this UI from any OS-level assistant integration.
+**Status (2026-10-18):** One microphone entry and preference, backed by the existing Lawnchair Compose QSB, popup and settings components. This is a **one-shot speech router**, NOT a native GPT Realtime session or ChatGPT account sign-in. Android APK and Galaxy S25 Ultra execution must be checked on device.
 
-## Hybrid Tern voice handoff (experimental)
+## User experience
 
-**Hybrid voice · Tern (local)** and **Choose z0live voice engine** launch the user's browser on the SAME phone at `http://127.0.0.1:8780/` or `/voice-setup.html` respectively, when z0live is already running inside Tern. No background network/mic service is created by Lawnchair; no new launcher permission or default-assistant role is claimed. The Tern side's z0live browser streams PCM16/24k or Ogg/Opus/24k audio to a loopback-only gateway. User-submitted commands reach an attached OMP harness; any use of the separate Hermes phone-harness plugin still requires its existing approvals.
+- Tap the normal dock microphone, or long-press dock search -> **Smart voice**.
+- The speech recognizer returns one finalized utterance. Opening a unique, visible personal-profile app and switching a configured HyprSpace run locally (revalidating target visibility/permission).
+- Other commands: requests matching a bounded device-action vocabulary open the **already configured Android assistant**; conversational questions open the installed **ChatGPT app** if uniquely visible, otherwise Android assistant. **A third-party app is just launched**. Android exposes no documented API to forward this captured utterance to ChatGPT's consumer voice session: user must speak again there. Never suggest that Android's assistant role has changed.
+- Preferences -> Dock search -> **Smart voice** uses Lawnchair's real `SwitchPreference`; switching it off restores the chosen search provider's normal microphone target. No manually choosing ChatGPT vs Gemini for each request.
+- No fabricated UI, standalone menu of buttons, new model session, credentials, permission grants, or unconditional fallback shell commands.
+- If an app is absent/hidden/ambiguous, fail closed. No sensitive action automatically dispatched.
+- Existing Tern/Hermes/OMP Wi-Fi ADB, `z0live` browser entry, and opt-in HyprSpaces probes remain separate and usable.
 
-See [z0live hybrid Android instructions](https://github.com/kvnloo/z0live/blob/feat/android-voice-provider-picker/docs/HYBRID_ANDROID.md). This is a downstream experiment, and physical Samsung tests are pending.
+## Technical
 
-## Test current handoff
+- `PreferenceManager2.zer0SmartVoiceRouting`: opt-in switch controls the existing mic icon (on by default **only in this experimental fork**).
+- `LawnQsbLayout` uses its existing `LawnQsbUi` and `OptionsPopupView`.
+- `VoiceCommandActivity`: bounded one-shot recognizer, local PhoneAction gate, unknown command -> `SmartVoiceRouter` -> `AssistantHandoff`. No exported Activity, mic permission, or speculative system-level privileges.
+- `AssistantHubActivity` raw `LinearLayout` UI removed, along with its launcher menu and manifest entry.
+- Pure JVM routing tests: `bash tools/zer0/test-voice-commands.sh`. Android CI: `./gradlew spotlessCheck assembleLawnWithQuickstepPlayDebug`. Device test still required.
 
-From Lawnchair home, long-press the dock QSB and choose **Assistants (experimental)**:
+## Test cases
 
-1. **Open the default Android assistant** uses Android's public \`Intent.ACTION_ASSIST\`; the OS selects an available activity. On Samsung it may fail to resolve even when system assistant gestures work. A failure shows a local message, never switches the default assistant.
-2. **Choose a default digital assistant in Settings** opens Android Default apps Settings (when available). The user chooses Google/Gemini or another eligible assistant. Lawnchair never alters the role or privileges.
-3. **Open ChatGPT app** resolves an *installed, visible personal-profile launch activity* of exact Android package \`com.openai.chatgpt\`, rechecks the target and launches it through LauncherApps. Sign in and tap ChatGPT's Voice icon **inside the ChatGPT app**. There is no documented public third-party deep link that logs into or controls consumer ChatGPT Voice.
-4. **One-shot navigation** starts the existing external Android recognizer for commands like "Open Camera" and "Switch to Build". **Request offline transcription** sets \`RecognizerIntent.EXTRA_PREFER_OFFLINE\`; Android explicitly allows recognizers to ignore the hint. The separate on-device recognition capability display does **not** mean Lawnchair uses that recognizer.
+1. With Smart voice enabled, speak `open Camera`, `switch to Build`, `explain transformers`, `set a 5-minute timer`. Expect local/open-space, local/open-space, ChatGPT app handoff, Android assistant handoff respectively. **For external handoffs, repeat the request in the opened app.**
+2. Disable Smart voice under Dock search settings: microphone returns to selected provider; long-press Smart voice still supports local commands but never routes unknown requests to external apps.
+3. Remove/disable ChatGPT: question chooses existing Android assistant if available; do not open unrelated launchable apps. Test hidden applications and multiple activities.
+4. Cancel recognizer: zero actions. Revoke recognizer: safe no-handler result. Test TalkBack and screen rotation.
+5. Keep One UI Home installed as fallback. Compare signature and package ID before attempting to replace an APK signed on another CI worker.
 
-Google began retiring classic mobile Google Assistant in September 2026, with **Gemini** replacing it on most Android devices. The Google app generally holds Android's Digital assistant app role; the Gemini/Google settings choose the experience. Do not advise users to disable Google app updates or use unsupported classic Assistant workarounds.
+## Seamless future endpoint
 
-## Backend interfaces and consent model
+For **genuinely continuous one-microphone interaction** and verified actions without repeating requests, the launcher needs a native foreground voice session and its own typed action protocol. Integrate `z0live` + `PhoneAction` once a stable authenticated transport and runtime are implemented. Providers should be transport modules (Android STT, local models, OpenAI developer Realtime API, etc.), not separate chooser screens. ChatGPT consumer Voice cannot be commandeered; OpenAI's [Sign in with ChatGPT for OSS](https://developers.openai.com/siwc/token-sharing-open-source) provides eligible **Responses API** access, not an asserted GPT-Live/Realtime streaming entitlement. No subscription token sharing or reverse-engineered ChatGPT app controls.
 
-| Provider | Current handoff | Needed for actual cross-app action integration |
-| --- | --- | --- |
-| Gemini / Google | Default Android assistant \`ACTION_ASSIST\` | Supported Android AppFunctions/app-owned APIs, subject to system privileges and provider eligibility |
-| ChatGPT consumer app | Open installed app; user starts Voice | No shared consumer session/token; requires a documented supported tool bridge (not available here) |
-| z0live + OpenAI developer Realtime | **Not implemented** | User-controlled backend mints short-lived client secrets; mobile WebRTC/RTC transport, typed PhoneAction tools, confirmations, receipts. Never put a permanent API key in APK |
-| Jev + z0intelligence | **Not implemented** | Verified compatible Android binary/runtime or remote trusted Jev service, explicit transport/auth, versioned typed action contract and timeout |
-| Local STT | One-shot offline preference **only** | Android on-device \`SpeechRecognizer\` or a licensed local model, explicit microphone permission, foreground controls, teardown, latency/accuracy/device tests |
-
-**Cross-app limitation:** Android AppFunctions (API 36+) is experimental, and general invocation is reserved for trusted system-privileged agents. A non-privileged launcher cannot gain unrestricted control over all applications by selecting Google/Gemini/ChatGPT. Accessibility is not a blanket agent-computer-use permission: each user-directed automation must be narrowly scoped, disclosed and consented to and follow distribution/policy rules. Never initiate autonomous sensitive actions from voice/model text.
-
-## Qualification
-
-Verify on Galaxy S25 Ultra: configured assistant handoff/no-handler case; ChatGPT installed/not installed, hidden app and multiple launch components; keyboard/TalkBack; preference-only offline request with network disconnected and online; no inadvertent default-role change; One UI Home remains recoverable. Note that no phone test has been completed yet.
-
-Sources: [Android ACTION_ASSIST](https://developer.android.com/reference/android/content/Intent#ACTION_ASSIST), [Settings ACTION_MANAGE_DEFAULT_APPS_SETTINGS](https://developer.android.com/reference/android/provider/Settings#ACTION_MANAGE_DEFAULT_APPS_SETTINGS), [Android speech recognition offline hint](https://developer.android.com/reference/android/speech/RecognizerIntent#EXTRA_PREFER_OFFLINE), [OpenAI developer Realtime](https://developers.openai.com/api/docs/guides/realtime), [Android AppFunctions](https://developer.android.com/ai/appfunctions).
+Credit: original AOSP/Launcher3 and Lawnchair QSB, Compose preferences and plugin authors remain intact. Research/refs: [Lawnchair patterns](https://github.com/LawnchairLauncher/docs/blob/main/developers/architecture/lawnchair-design-patterns.md), [Android assistant service](https://developer.android.com/reference/android/service/voice/VoiceInteractionService), [ChatGPT OSS plan use](https://developers.openai.com/siwc/token-sharing-open-source).

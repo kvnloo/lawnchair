@@ -7,6 +7,7 @@ trap 'rm -rf "$work"' EXIT
 
 javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/VoiceCommand.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/SmartVoiceRouter.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/PhoneActionGate.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/AssistantLaunchPolicy.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/AppNameMatcher.java" \
@@ -17,6 +18,7 @@ javac -encoding UTF-8 -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/SpacePageBinding.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/spaces/WindowBoundsRequest.java" \
   "$root/tools/zer0/VoiceCommandTest.java" \
+  "$root/tools/zer0/SmartVoiceRouterTest.java" \
   "$root/tools/zer0/PhoneActionGateTest.java" \
   "$root/tools/zer0/AssistantLaunchPolicyTest.java" \
   "$root/tools/zer0/AppNameMatcherTest.java" \
@@ -28,6 +30,7 @@ javac -encoding UTF-8 -d "$work" \
   "$root/tools/zer0/WindowBoundsRequestTest.java"
 
 java -cp "$work" VoiceCommandTest
+java -cp "$work" SmartVoiceRouterTest
 java -cp "$work" AppNameMatcherTest
 
 java -cp "$work" SpaceModelTest
