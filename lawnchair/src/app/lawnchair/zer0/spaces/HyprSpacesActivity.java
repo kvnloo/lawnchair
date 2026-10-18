@@ -29,6 +29,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import app.lawnchair.LawnchairApp;
+import app.lawnchair.zer0.voice.LocalVoiceHandoff;
 import app.lawnchair.zer0.voice.VoiceAppVisibility;
 import com.android.launcher3.R;
 import java.util.ArrayList;
@@ -182,6 +183,8 @@ public final class HyprSpacesActivity extends Activity {
         content.addView(text(getString(R.string.zer0_spaces_title), 26));
         content.addView(text(getString(R.string.zer0_space_active, model.activeName()), 16));
         content.addView(text(getString(R.string.zer0_spaces_disclaimer), 13));
+        content.addView(button(getString(R.string.zer0_assistant_tern_voice),
+                () -> LocalVoiceHandoff.openSession(this)));
         if (!model.isScratchActive()) {
             int linkedScreenId = prefs.getInt(pageKey(model.activeName()),
                     SpacePageBinding.NO_SCREEN);
