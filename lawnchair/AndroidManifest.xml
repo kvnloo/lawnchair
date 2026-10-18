@@ -20,6 +20,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Opt-in foreground on-device recognition; Android runtime permission is required. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -39,6 +42,13 @@
     <uses-permission android:name="android.permission.STATUS_BAR_SERVICE" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.SUSPEND_APPS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <!-- The on-device Android speech service must be discoverable on Android 11+. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 
     <!-- Support non-cellular enabled devices -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -64,6 +74,14 @@
             android:excludeFromRecents="true"
             android:label="@string/zer0_voice_command"
             android:theme="@style/Theme.Transparent" />
+
+        <!-- Optional, non-exported Android offline speech recognition. -->
+        <activity
+            android:name="app.lawnchair.zer0.voice.OnDeviceVoiceActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/zer0_assistant_on_device_title"
+            android:theme="@style/Theme.Lawnchair" />
 
         <!-- Downstream experiment: user-invoked named spaces and public split launch hints. -->
         <activity

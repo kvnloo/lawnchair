@@ -5,4 +5,15 @@
     <string name="zer0_smart_voice_try">Try smart voice</string>
     <string name="zer0_smart_voice_handoff">Assistant opened. Continue speaking in that app.</string>
     <string name="zer0_smart_voice_unavailable">No supported assistant is available for that request.</string>
+    <string name="zer0_assistant_on_device_title">On-device voice</string>
+    <string name="zer0_assistant_on_device_info">One command at a time; the microphone stops when you leave or cancel. No cloud speech fallback.</string>
+    <string name="zer0_assistant_on_device_start">Listen</string>
+    <string name="zer0_assistant_on_device_cancel">Cancel</string>
+    <string name="zer0_assistant_on_device_unavailable">On-device speech recognition unavailable.</string>
+    <string name="zer0_assistant_on_device_permission_denied">Microphone permission not granted.</string>
+    <string name="zer0_assistant_on_device_listening">Listening…</string>
+    <string name="zer0_assistant_on_device_processing">Processing…</string>
+    <string name="zer0_assistant_on_device_failed">Recognition failed. Check your offline language pack.</string>
+    <string name="zer0_assistant_on_device_timeout">Listening timed out. Microphone stopped.</string>
+    <string name="zer0_assistant_on_device_no_match">No speech recognized.</string>
 </resources>

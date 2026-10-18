@@ -31,6 +31,8 @@ public final class VoiceCommandActivity extends Activity {
             "app.lawnchair.zer0.voice.PREFER_OFFLINE_HINT";
     public static final String EXTRA_AUTO_ROUTE =
             "app.lawnchair.zer0.voice.AUTO_ROUTE";
+    public static final String EXTRA_FINAL_TRANSCRIPT =
+            "app.lawnchair.zer0.voice.FINAL_ON_DEVICE_TRANSCRIPT";
     private static final int SPEECH_REQUEST = 41;
     private static final String STATE_UTTERANCE = "zer0_utterance_id";
     private static final String STATE_HANDLED = "zer0_handled";
@@ -48,6 +50,17 @@ public final class VoiceCommandActivity extends Activity {
             return;
         }
         utteranceId = UUID.randomUUID().toString();
+        // Only the in-package, non-exported on-device recognizer can send this.
+        String finalized = getIntent().getStringExtra(EXTRA_FINAL_TRANSCRIPT);
+        if (finalized != null) {
+            handledFinal = true;
+            try {
+                handleFinalTranscript(finalized);
+            } finally {
+                finish();
+            }
+            return;
+        }
 
         Intent speech = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,

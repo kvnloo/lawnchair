@@ -33,6 +33,7 @@ import app.lawnchair.ui.theme.LawnchairTheme
 import app.lawnchair.util.ProvideLifecycleState
 import app.lawnchair.util.repeatOnAttached
 import app.lawnchair.zer0.spaces.HyprSpacesActivity
+import app.lawnchair.zer0.voice.OnDeviceVoiceActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
@@ -125,10 +126,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                     when (id) {
                                         QsbIconId.MIC -> {
                                             if (smartVoiceEnabled) {
-                                                context.startActivity(
-                                                    Intent(context, VoiceCommandActivity::class.java)
-                                                        .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, true),
-                                                )
+                                                launchVoice(automaticRouting = true)
                                             } else {
                                                 voiceIntent?.let { context.startActivity(it) }
                                             }
@@ -220,11 +218,22 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
         val enabled = preferenceManager2.zer0SmartVoiceRouting.firstCached()
-        context.startActivity(
-            Intent(context, VoiceCommandActivity::class.java)
-                .putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, enabled),
-        )
+        launchVoice(automaticRouting = enabled)
         true
+    }
+
+    private fun launchVoice(automaticRouting: Boolean) {
+        val intent = if (automaticRouting && OnDeviceVoiceActivity.isAvailable(context)) {
+            Intent(context, OnDeviceVoiceActivity::class.java)
+                .putExtra(OnDeviceVoiceActivity.EXTRA_START_NOW, true)
+        } else {
+            // Without a local recognizer, the existing system recognizer owns
+            // the one-shot prompt. Never assert this fallback is offline.
+            Intent(context, VoiceCommandActivity::class.java)
+        }
+        context.startActivity(
+            intent.putExtra(VoiceCommandActivity.EXTRA_AUTO_ROUTE, automaticRouting),
+        )
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
