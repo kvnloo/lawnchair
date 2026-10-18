@@ -20,6 +20,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Requested only after the user taps Start in the on-device voice activity. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
@@ -39,6 +41,13 @@
     <uses-permission android:name="android.permission.STATUS_BAR_SERVICE" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.SUSPEND_APPS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
+
+    <!-- Required to discover Android speech recognition services on Android 11+. -->
+    <queries>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+    </queries>
 
     <!-- Support non-cellular enabled devices -->
     <uses-feature android:name="android.hardware.telephony" android:required="false" />
@@ -64,6 +73,14 @@
             android:excludeFromRecents="true"
             android:label="@string/zer0_voice_command"
             android:theme="@style/Theme.Transparent" />
+
+        <!-- Downstream zer0: non-exported, foreground-only one-shot on-device STT. -->
+        <activity
+            android:name="app.lawnchair.zer0.voice.OnDeviceVoiceActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:label="@string/zer0_assistant_on_device_title"
+            android:theme="@style/Theme.Lawnchair" />
 
         <!-- Downstream zer0: explicit system-assistant and installed-app handoff UI. -->
         <activity

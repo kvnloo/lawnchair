@@ -74,6 +74,13 @@ public final class AssistantHubActivity extends Activity {
                 // A capability query does not grant microphone access or start recognition.
             }
         }
+        Button dedicatedOffline = new Button(this);
+        dedicatedOffline.setAllCaps(false);
+        dedicatedOffline.setText(R.string.zer0_assistant_on_device_entry);
+        dedicatedOffline.setEnabled(onDeviceAvailable);
+        dedicatedOffline.setOnClickListener(v ->
+                startActivity(new Intent(this, OnDeviceVoiceActivity.class)));
+        content.addView(dedicatedOffline);
         content.addView(text(
                 onDeviceAvailable ? R.string.zer0_assistant_offline_service_available
                         : R.string.zer0_assistant_offline_service_unavailable,

@@ -28,6 +28,8 @@ import java.util.UUID;
 public final class VoiceCommandActivity extends Activity {
     public static final String EXTRA_PREFER_OFFLINE_HINT =
             "app.lawnchair.zer0.voice.PREFER_OFFLINE_HINT";
+    public static final String EXTRA_FINAL_TRANSCRIPT =
+            "app.lawnchair.zer0.voice.FINAL_ON_DEVICE_TRANSCRIPT";
     private static final int SPEECH_REQUEST = 41;
     private static final String STATE_UTTERANCE = "zer0_utterance_id";
     private static final String STATE_HANDLED = "zer0_handled";
@@ -45,6 +47,18 @@ public final class VoiceCommandActivity extends Activity {
             return;
         }
         utteranceId = UUID.randomUUID().toString();
+        // A finalized transcript can only be sent by an in-package recognizer.
+        // Both receiver and sender are non-exported, no external intent-filter.
+        String finalized = getIntent().getStringExtra(EXTRA_FINAL_TRANSCRIPT);
+        if (finalized != null) {
+            handledFinal = true;
+            try {
+                handleFinalTranscript(finalized);
+            } finally {
+                finish();
+            }
+            return;
+        }
 
         Intent speech = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
                 .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
