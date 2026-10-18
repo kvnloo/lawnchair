@@ -60,6 +60,9 @@ public final class AssistantHubActivity extends Activity {
         button(content, R.string.zer0_assistant_default, this::openDefaultAssistant);
         button(content, R.string.zer0_assistant_choose, this::openDefaultAssistantSettings);
         button(content, R.string.zer0_assistant_chatgpt, this::openChatGpt);
+        button(content, R.string.zer0_assistant_tern_voice, () -> LocalVoiceHandoff.openSession(this));
+        button(content, R.string.zer0_assistant_tern_setup, () -> LocalVoiceHandoff.openSetup(this));
+        content.addView(text(R.string.zer0_assistant_tern_note, 13));
 
         content.addView(text(R.string.zer0_assistant_local_title, 20));
         button(content, R.string.zer0_assistant_nav, () -> openOneShot(false));
