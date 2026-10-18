@@ -32,6 +32,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     private Runnable timeout;
     private TextView status;
     private Button startButton;
+    private boolean foregroundStarted;
 
     @Override
     protected void onCreate(Bundle savedState) {
@@ -77,6 +78,12 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        foregroundStarted = true;
+    }
+
     private boolean isAvailable() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return false;
         try {
@@ -87,7 +94,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     }
 
     private void requestMicrophoneAndListen() {
-        if (session.isTerminal() || !isAvailable()) {
+        if (!foregroundStarted || session.isTerminal() || !isAvailable()) {
             status.setText(R.string.zer0_assistant_on_device_unavailable);
             return;
         }
@@ -104,6 +111,10 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     public void onRequestPermissionsResult(int code, String[] permissions, int[] grants) {
         super.onRequestPermissionsResult(code, permissions, grants);
         if (code != MIC_PERMISSION_REQUEST || session.isTerminal()) return;
+        if (!foregroundStarted) {
+            session.cancel(); // A late permission grant cannot activate a background mic.
+            return;
+        }
         if (grants.length == 1 && grants[0] == PackageManager.PERMISSION_GRANTED) {
             listenOnce();
         } else {
@@ -112,7 +123,7 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
     }
 
     private void listenOnce() {
-        if (!isAvailable() || !session.begin()) return;
+        if (!foregroundStarted || !isAvailable() || !session.begin()) return;
         startButton.setEnabled(false);
         status.setText(R.string.zer0_assistant_on_device_listening);
         try {
@@ -195,11 +206,11 @@ public final class OnDeviceVoiceActivity extends Activity implements Recognition
 
     @Override
     protected void onStop() {
-        // Do not cancel an unstarted permission request, but never record in background.
-        if (recognizer != null) {
-            session.cancel();
-            releaseRecognizer();
-        }
+        foregroundStarted = false;
+        // Cancel pending permission results too; returning to this Activity does not
+        // restart an interrupted microphone session or consume a stale transcript.
+        session.cancel();
+        releaseRecognizer();
         super.onStop();
     }
 
