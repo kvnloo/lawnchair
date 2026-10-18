@@ -22,7 +22,8 @@ public final class SmartVoiceRouter {
             boolean hasAndroidAssistant) {
         if (!validTranscript(transcript)) return Destination.UNAVAILABLE;
         if (command == VoiceCommand.Kind.OPEN_APP
-                || command == VoiceCommand.Kind.SWITCH_SPACE) {
+                || command == VoiceCommand.Kind.SWITCH_SPACE
+                || command == VoiceCommand.Kind.SEARCH_APPS) {
             return Destination.LOCAL_ACTION;
         }
         // Unsupported local navigation is never executed without the required OS

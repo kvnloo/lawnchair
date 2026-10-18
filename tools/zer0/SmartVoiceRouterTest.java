@@ -19,6 +19,8 @@ public final class SmartVoiceRouterTest {
         SmartVoiceRouter.Destination system = SmartVoiceRouter.Destination.ANDROID_ASSISTANT;
         SmartVoiceRouter.Destination none = SmartVoiceRouter.Destination.UNAVAILABLE;
         expect("open camera", true, true, local);
+        expect("search for Maps", true, true, local);
+        expect("find app Camera", true, true, local);
         expect("open app Maps", true, true, local);
         expect("switch to Build", true, true, local);
         expect("open life space", true, true, local);

@@ -44,6 +44,7 @@ import java.util.UUID;
  */
 public final class HyprSpacesActivity extends ComponentActivity {
     public static final String EXTRA_ACTIVATE = "app.lawnchair.zer0.spaces.ACTIVATE";
+    public static final String EXTRA_SEARCH_QUERY = "app.lawnchair.zer0.spaces.SEARCH_QUERY";
     public static final String EXTRA_SOURCE_SCREEN_ID =
             "app.lawnchair.zer0.spaces.SOURCE_SCREEN_ID";
     public static final String PENDING_SCREEN_ID = "pending_screen_id";
@@ -99,6 +100,10 @@ public final class HyprSpacesActivity extends ComponentActivity {
         if (activatedRequestedSpace && scheduleLinkedHomePageIfAny()) {
             finish();
             return;
+        }
+        String requestedQuery = getIntent().getStringExtra(EXTRA_SEARCH_QUERY);
+        if (SpaceAppSearch.acceptsQuery(requestedQuery)) {
+            searchQuery = requestedQuery;
         }
         apps = loadPersonalApps();
         render();

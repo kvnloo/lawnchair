@@ -12,6 +12,7 @@ import android.os.SystemClock;
 import android.speech.RecognizerIntent;
 import android.widget.Toast;
 import app.lawnchair.zer0.spaces.HyprSpacesActivity;
+import app.lawnchair.zer0.spaces.SpaceAppSearch;
 import app.lawnchair.zer0.spaces.SpaceModel;
 import com.android.launcher3.R;
 import java.util.ArrayList;
@@ -98,7 +99,8 @@ public final class VoiceCommandActivity extends Activity {
     private void handleFinalTranscript(String spoken) {
         VoiceCommand command = VoiceCommand.parse(spoken);
         if (command.kind != VoiceCommand.Kind.OPEN_APP
-                && command.kind != VoiceCommand.Kind.SWITCH_SPACE) {
+                && command.kind != VoiceCommand.Kind.SWITCH_SPACE
+                && command.kind != VoiceCommand.Kind.SEARCH_APPS) {
             if (getIntent().getBooleanExtra(EXTRA_AUTO_ROUTE, false)) {
                 routeToAssistant(spoken, command);
             } else {
@@ -109,8 +111,18 @@ public final class VoiceCommandActivity extends Activity {
         // This guards session replay and typed action authority. The 0 revision is
         // only this one-shot Activity's local context, NOT a measured Android
         // foreground/window revision. A future remote executor needs real UI state.
-        PhoneActionGate.Kind kind = command.kind == VoiceCommand.Kind.OPEN_APP
-                ? PhoneActionGate.Kind.OPEN_APP : PhoneActionGate.Kind.SWITCH_SPACE;
+        PhoneActionGate.Kind kind;
+        switch (command.kind) {
+            case OPEN_APP:
+                kind = PhoneActionGate.Kind.OPEN_APP;
+                break;
+            case SEARCH_APPS:
+                kind = PhoneActionGate.Kind.SEARCH_APPS;
+                break;
+            default:
+                kind = PhoneActionGate.Kind.SWITCH_SPACE;
+                break;
+        }
         long now = SystemClock.elapsedRealtime();
         PhoneActionGate.Request action = new PhoneActionGate.Request(
                 utteranceId + ":" + kind.name(), utteranceId, kind,
@@ -118,6 +130,16 @@ public final class VoiceCommandActivity extends Activity {
                 0, now + 15_000);
         if (ACTION_GATE.admit(action, now, 0) != PhoneActionGate.Decision.ADMITTED) {
             notifyUser(R.string.zer0_voice_unsupported);
+            return;
+        }
+
+        if (command.kind == VoiceCommand.Kind.SEARCH_APPS) {
+            if (!SpaceAppSearch.acceptsQuery(command.target)) {
+                notifyUser(R.string.zer0_voice_unsupported);
+                return;
+            }
+            startActivity(new Intent(this, HyprSpacesActivity.class)
+                    .putExtra(HyprSpacesActivity.EXTRA_SEARCH_QUERY, command.target));
             return;
         }
 

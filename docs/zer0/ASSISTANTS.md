@@ -5,7 +5,7 @@
 ## User experience
 
 - Tap the normal dock microphone, or long-press dock search -> **Smart voice**.
-- The speech recognizer returns one finalized utterance. Opening a unique, visible personal-profile app and switching a configured HyprSpace run locally (revalidating target visibility/permission).
+- The speech recognizer returns one finalized utterance. Opening a unique, visible personal-profile app, switching a configured HyprSpace and safely filtering launcher app search run locally (revalidating target visibility/permission).
 - Other commands: requests matching a bounded device-action vocabulary open the **already configured Android assistant**; conversational questions open the installed **ChatGPT app** if uniquely visible, otherwise Android assistant. **A third-party app is just launched**. Android exposes no documented API to forward this captured utterance to ChatGPT's consumer voice session: user must speak again there. Never suggest that Android's assistant role has changed.
 - Preferences -> Dock search -> **Smart voice** uses Lawnchair's real `SwitchPreference`; switching it off restores the chosen search provider's normal microphone target. No manually choosing ChatGPT vs Gemini for each request.
 - No fabricated UI, standalone menu of buttons, new model session, credentials, permission grants, or unconditional fallback shell commands.
