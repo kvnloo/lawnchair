@@ -1,0 +1,75 @@
+name: zer0 phone harness APK
+
+on:
+  push:
+    branches:
+      - experiment/hyprspaces-phone-harness
+    paths:
+      - 'lawnchair/**'
+      - 'tools/zer0/**'
+      - 'build.gradle'
+      - 'gradle/**'
+      - '.github/workflows/zer0-phone-harness.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zer0-phone-harness-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - name: Verify voice, spaces, and safety contracts
+        run: bash tools/zer0/test-voice-commands.sh
+
+  android:
+    needs: contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Check Lawnchair formatting
+        run: ./gradlew spotlessCheck
+      - name: Build side-by-side phone-harness APK
+        run: ./gradlew assembleLawnWithQuickstepPlayDebug
+      - name: Print package and signing information
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -d '' apks < <(find build/outputs/apk -type f -name '*.apk' -print0)
+          if [[ ${#apks[@]} -ne 1 ]]; then
+            printf 'Expected one APK, found %s\n' "${#apks[@]}"
+            exit 1
+          fi
+          apk="${apks[0]}"
+          tools="$(find "${ANDROID_HOME}/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          printf 'APK: %s\n' "$apk"
+          sha256sum "$apk"
+          "$tools/aapt" dump badging "$apk" | grep -E "^(package:|sdkVersion:|targetSdkVersion:|native-code:)" || true
+          "$tools/apksigner" verify --print-certs "$apk"
+      - uses: actions/upload-artifact@v7
+        with:
+          name: HyprSpaces-PhoneHarness-PlayDebug-${{ github.sha }}
+          path: build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 30
