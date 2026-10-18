@@ -133,7 +133,9 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                                 voiceIntent?.let { context.startActivity(it) }
                                             }
                                         }
+
                                         QsbIconId.LENS -> lensIntent?.let { context.startActivity(it) }
+
                                         else -> null
                                     }
                                 }
