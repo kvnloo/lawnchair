@@ -17,9 +17,9 @@ See [discovery receipts](Z0LIVE_DISCOVERY.md) for the earlier work and Ripple id
    ```sh
    z0live pair s25 --qr
    ```
-   Open **z0live → Scan pairing QR** (also available in Settings when re-pairing),
+   Open **Lawnchair Settings → ⋮ → Experimental features → Integrations → z0live → Manage pairing → Scan pairing QR**,
    scan the desktop QR and confirm the displayed server origin. Google Play services
-   supplies a QR-only scanner; Lawnchair requests no CAMERA permission. The scanner
+   supplies a QR-only scanner; QR scanning requests no Camera permission; the separate optional flashlight tool requests Camera permission only when explicitly enabled in settings. The scanner
    module may need a first-use download. If unavailable, an error is shown and you
    can still open a pairing deeplink or paste it into **Settings → Paste pairing link
    → Review pairing**. Treat QR codes and links as passwords. Credentials are only
@@ -28,7 +28,7 @@ See [discovery receipts](Z0LIVE_DISCOVERY.md) for the earlier work and Ripple id
    path. Pending links stay in process memory until controls are resumed rather than
    expiring unseen after 30 seconds. Process death discards them: re-scan/reopen the
    link. No unconfirmed credential is written to disk or retained in Activity intents.
-4. Tap the QSB microphone, or Start in the glass controls. Grant microphone and
+4. Tap the QSB microphone, or Start in the Material 3 session sheet. Grant microphone and
    notification permissions. Pairing and external assistant/deeplink entry do not
    start recording without a visible Start action. Captions, mute and End are in
    the controls; the foreground notification also has mute/end. Closing controls
@@ -79,13 +79,36 @@ The canonical contract is the z0live backend's `docs/API.md`:
 - authenticated `/v1/health`, `/v1/realtime/session`, direct OpenAI `/v1/realtime/calls`;
 - inbox is `{messages:[...],after:N,has_more:B}`, **not a bare array**;
 - cursor persists after handling; subsequent pages drain without waiting for a new session;
-- `action:null` means speech only; no local phone tools are declared, so non-null
-  unknown actions are explicitly reported as failed, never executed;
-- builtin `/v1/tools/tell_hermes`, `/v1/tools/get_context`, `/v1/tools/summarize`;
+- `action:null` means speech only. Declared local tools run through public Android APIs;
+  unknown, invalid and stale-session inbox actions are rejected with a structured result;
+- phone tools: home, fuzzy app opening/disambiguation and app search/list, web search/URL,
+  Settings pages, Clock timer/alarm intents, maps geo intent, dialer/SMS composer (never
+  auto-send), media keys, torch (optional Camera permission), media volume, share-note,
+  Ripple open/close and z0live mute/end;
+- back/recents/notification shade are declared only with the separate explicit z0live
+  navigation opt-in AND the existing Lawnchair Accessibility service enabled. No screen
+  reading or Accessibility gesture/click automation is added;
+- builtin `/v1/tools/tell_hermes`, `/v1/tools/get_context`, `/v1/tools/summarize`, plus the broker's live work tools (`work_search`, `ask_hermes`, `start_task`, `task_status`, `what_changed`). The session mint's validated `builtin_tools` catalog is authoritative; older brokers use a compatibility fallback. `ask_hermes` gets a bounded 40-second client deadline for its 25-second synchronous wait;
 - bare batched event arrays with canonical types, Unix seconds and UUID `data.event_id`;
 - broker-generated session identity, explicit `/v1/sessions/ID/end` on hangup;
 - tool continuation waits for `response.done` and pending tool work; Hermes TTS waits
   for user/provider idle and temporarily suppresses the mic without losing manual mute.
+
+## Native surfaces and identity
+
+The settings destination uses Lawnchair's existing PreferenceLayout, PreferenceGroup,
+ClickablePreference and SwitchPreference within the typed navigation graph. The session
+sheet and Ripple chrome use LawnchairTheme, Material 3, dynamic colors and native
+icons. The old programmatic Java activities are removed. Closing the session sheet
+keeps the explicit foreground session alive; the ongoing notification is the minimal
+cross-app surface. No overlay-window permission is requested. Pairing and captions
+remain protected by FLAG_SECURE; do not remove it just to collect screenshots.
+
+Persona `z0live.persona.v2` is minted server-side with the exact current builtin and
+app tool schemas. It knows ChatGPT Realtime (`gpt-realtime`, `marin`), direct phone ↔
+OpenAI WebRTC, the short-lived tailnet desktop broker and separate Claude Opus Hermes
+session. Local tools return structured dispatch/ambiguity/permission/error results;
+Clock/composer/media dispatch is not proof of saved alarms, sent messages or playback.
 
 ## Verification
 
@@ -107,6 +130,25 @@ not a claim that the inherited launcher is globally lint-clean. New-feature find
 fixed (including backup whitelist validation, back dispatcher, Compose resource reads and
 English-only labels); the legacy tile overload is narrowly guarded/suppressed below API 34.
 
+For a consented paired debug APK, run the real-phone text-turn suite in one batch:
+
+```sh
+python3 tools/zer0/device-z0live-checks.py --serial DEVICE \
+  --broker-db /absolute/path/to/broker.db --out /private/device-receipts \
+  --consent-real-device-actions
+```
+
+The receiver is packaged only from `debug/`, protected by Android's shell/system DUMP
+permission, never starts microphone capture and accepts turns only when connected and
+idle. The driver shell-quotes complete turns on the device, mutes the test mic, verifies
+the exact full injected transcript, waits for real GPT audio completion and tool results,
+checks focus transitions, cancels its timer and ends only its own session. It aborts if
+the session changes. Reserve the phone for the batch: concurrent owner navigation can
+invalidate focus evidence. `--only` runs a bounded continuation set (including
+`what-changed`). These are live provider checks, not fixtures; microphone/STT, physical
+speaker quality, a saved alarm, actual media playback and configured Ripple still need
+their own acceptance evidence.
+
 CI builds on push to this branch and publishes an immutable `z0live-build-*` prerelease
 plus the moving `z0live-latest` download, metadata, checksum and certificate. Metadata
 records commit, run, versionName, package and byte size. CI never embeds desktop/device
@@ -122,9 +164,11 @@ credentials and does not need a running broker.
   new session and process restart. Network/peer loss ends honestly; **automatic WebRTC
   reconnection is not implemented** (Start creates a new session).
 - Persistent foreground session is user-started, not hotword/boot listening or an unkillable
-  service. Samsung battery restrictions can stop it. No phone install/runtime proof is claimed.
+  service. Samsung battery restrictions can stop it. Real S25 install, connection, identity,
+  app matching/Chrome, Wi-Fi, torch and volume checks have been exercised; full per-feature
+  acceptance must use the current release APK and the device receipts, not CI alone.
 - Inbox uses polling, not SSE. Telemetry is bounded in memory, retries up to three times;
   it is not a durable offline outbox. Long outages/process death can lose unsent events.
 - New experimental z0live labels are English-only (marked non-translatable pending localization).
-- No screen reading, remote phone-action execution, embedded Ripple native component,
+- No screen reading, unrestricted remote phone-action execution, embedded Ripple native component,
   verified Ripple deployment or separate shared Android SDK is shipped.
