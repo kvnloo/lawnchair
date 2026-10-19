@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lawnchair CI/APK/device evidence record (not attestation)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "source",
+    "ci"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sha",
+        "ref"
+      ],
+      "properties": {
+        "sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ci": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "run_url",
+        "head_sha",
+        "conclusion",
+        "jobs"
+      ],
+      "properties": {
+        "run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "run_url": {
+          "type": "string",
+          "pattern": "^https://github.com/"
+        },
+        "head_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "conclusion": {
+          "enum": [
+            "success",
+            "failure",
+            "cancelled",
+            "skipped",
+            "pending",
+            "in_progress"
+          ]
+        },
+        "jobs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "required",
+              "state"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "required": {
+                "type": "boolean"
+              },
+              "state": {
+                "enum": [
+                  "success",
+                  "failure",
+                  "cancelled",
+                  "skipped",
+                  "pending",
+                  "in_progress"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_sha",
+        "run_id",
+        "package_id",
+        "variant",
+        "sha256",
+        "signer_sha256",
+        "url"
+      ],
+      "properties": {
+        "source_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "run_id": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "package_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variant": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "signer_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "url": {
+          "type": "string",
+          "pattern": "^https://github.com/"
+        }
+      }
+    },
+    "device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "owner_consented",
+        "source_sha",
+        "installed_apk_sha256",
+        "test_target",
+        "observations"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "NOT RUN",
+            "BLOCKED"
+          ]
+        },
+        "owner_consented": {
+          "type": "boolean"
+        },
+        "source_sha": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "installed_apk_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-fA-F]{64}$"
+        },
+        "test_target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
