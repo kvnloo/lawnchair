@@ -29,6 +29,9 @@ public final class Z0LiveProtocol {
     private final String backend;
     private final String token;
     private final String callsEndpoint;
+    private static final java.util.Set<String> LEGACY_BUILTINS = java.util.Set.of(
+            "tell_hermes", "get_context", "summarize", "work_search", "ask_hermes", "start_task", "task_status", "what_changed");
+    private final java.util.Map<String, java.util.Set<String>> sessionBuiltins = new java.util.concurrent.ConcurrentHashMap<>();
 
     public static final class Session {
         public final String secret;
@@ -36,13 +39,17 @@ public final class Z0LiveProtocol {
         public final String model;
         public final String voice;
         public final String sessionId;
+        public final String instructionsVersion;
+        public final java.util.Set<String> builtinTools;
 
-        private Session(String secret, long expiresAt, String model, String voice, String sessionId) {
+        private Session(String secret, long expiresAt, String model, String voice, String sessionId, java.util.Set<String> builtinTools, String instructionsVersion) {
             this.secret = secret;
             this.expiresAt = expiresAt;
             this.model = model;
             this.voice = voice;
             this.sessionId = sessionId;
+            this.builtinTools = java.util.Set.copyOf(builtinTools);
+            this.instructionsVersion = instructionsVersion;
         }
     }
 
@@ -86,8 +93,23 @@ public final class Z0LiveProtocol {
                 throw new IOException("Expired or invalid session credential");
             }
             String sessionId = result.has("session_id") ? requiredText(result, "session_id", 256) : "";
-            return new Session(secret, expiresAt, requiredText(result, "model", 256),
-                    requiredText(result, "voice", 256), sessionId);
+            java.util.Set<String> builtins = LEGACY_BUILTINS;
+            if (result.has("builtin_tools")) {
+                JSONArray declared = result.optJSONArray("builtin_tools");
+                if (declared == null || declared.length() > 64) throw new IOException("Invalid builtin tool catalog");
+                java.util.Set<String> parsed = new java.util.HashSet<>();
+                for (int i = 0; i < declared.length(); i++) {
+                    Object value = declared.opt(i);
+                    if (!(value instanceof String) || !((String) value).matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !parsed.add((String) value)) {
+                        throw new IOException("Invalid builtin tool identity");
+                    }
+                }
+                builtins = java.util.Set.copyOf(parsed);
+            }
+            Session session = new Session(secret, expiresAt, requiredText(result, "model", 256),
+                    requiredText(result, "voice", 256), sessionId, builtins, result.has("instructions_version") ? requiredText(result, "instructions_version", 256) : "legacy");
+            if (!sessionId.isEmpty()) sessionBuiltins.put(sessionId, session.builtinTools);
+            return session;
         } catch (JSONException ignored) {
             throw new IOException("Invalid session JSON");
         }
@@ -164,9 +186,7 @@ public final class Z0LiveProtocol {
         if (sessionId == null || callId == null || name == null || arguments == null) {
             throw new IOException("Missing tool inputs");
         }
-        if (!("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name)
-                || "ask_hermes".equals(name) || "work_search".equals(name)
-                || "start_task".equals(name) || "task_status".equals(name))) {
+        if (!name.matches("[A-Za-z_][A-Za-z0-9_]{0,63}") || !sessionBuiltins.getOrDefault(sessionId, LEGACY_BUILTINS).contains(name)) {
             throw new IOException("Unsupported broker tool");
         }
         JSONObject argumentValue = object(arguments);

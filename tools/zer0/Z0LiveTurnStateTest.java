@@ -30,6 +30,20 @@ public final class Z0LiveTurnStateTest {
         check(!turn.canSpeakInbox());
         turn.playback(false);
         check(turn.canSpeakInbox());
+        turn.userSpeaking(true);
+        check(!turn.canSpeakInbox());
+        turn.inputMuted(true);
+        check(turn.canSpeakInbox());
+        turn.userSpeaking(true); // delayed VAD event after the mic track was disabled
+        check(turn.canSpeakInbox());
+        turn.toolCompleted();
+        check(turn.takeContinuation(false));
+        turn.responseDone();
+        turn.inputMuted(false);
+        turn.userSpeaking(true);
+        check(!turn.canSpeakInbox());
+        turn.userSpeaking(false);
+        check(turn.canSpeakInbox());
         System.out.println("PASS: " + checks + " safe-turn continuation and inbox checks");
     }
 }

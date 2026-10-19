@@ -31,6 +31,7 @@ public final class Z0LiveProtocolTest {
         qrAndDeeplinkPairing();
         routesAndAuthorization();
         sessionValidation();
+        mintedBuiltinCatalog();
         inboxValidation();
         errorsAndRedirects();
         boundedResponses();
@@ -160,7 +161,7 @@ public final class Z0LiveProtocolTest {
             equal(toolBody.getString("session_id"), "sess-1", "tool session id");
             equal(toolBody.getString("call_id"), "call-1", "tool call id");
             equal(toolBody.getJSONObject("arguments").getString("task"), "hello", "tool argument object");
-            for (String builtin : new String[] {"get_context", "summarize", "ask_hermes", "work_search", "start_task", "task_status"}) {
+            for (String builtin : new String[] {"get_context", "summarize", "ask_hermes", "work_search", "start_task", "task_status", "what_changed"}) {
                 backend.reply(200, "{\"ok\":true}");
                 equal(protocol.tool("sess-1", "call-extended", builtin, "{}").getBoolean("ok"), true, "extended builtin result");
                 equal(backend.last().path, "/v1/tools/" + builtin, "extended builtin route");
@@ -174,6 +175,28 @@ public final class Z0LiveProtocolTest {
             for (Request request : backend.requests) {
                 equal(request.authorization, "Bearer " + TOKEN, "every backend request authenticated");
                 check(!request.body.contains(SECRET), "ephemeral credential stays out of backend payloads");
+            }
+        }
+    }
+
+    private static void mintedBuiltinCatalog() throws Exception {
+        try (Server backend = new Server(); Server openai = new Server()) {
+            Z0LiveProtocol protocol = protocol(backend, openai);
+            long expires = System.currentTimeMillis() / 1000 + 300;
+            String valid = sessionJson(expires, true);
+            JSONObject minted = new JSONObject(valid).put("builtin_tools", new JSONArray().put("future_tool"));
+            backend.reply(200, minted.toString());
+            Z0LiveProtocol.Session session = protocol.session(new JSONObject(), new JSONArray());
+            check(session.builtinTools.contains("future_tool"), "mint-time builtin catalog consumed");
+            backend.reply(200, "{\"ok\":true}");
+            check(protocol.tool(session.sessionId, "call-future", "future_tool", "{}").getBoolean("ok"), "new minted builtin dispatched without app release");
+            equal(backend.last().path, "/v1/tools/future_tool", "minted builtin route");
+            int before = backend.requests.size();
+            io(() -> protocol.tool(session.sessionId, "call-old", "tell_hermes", "{}"), "unminted builtin rejected");
+            equal(backend.requests.size(), before, "unminted tool makes no request");
+            for (Object invalid : new Object[] {"not an array", JSONObject.NULL, new JSONArray().put("../route"), new JSONArray().put("same").put("same"), new JSONArray().put(17)}) {
+                backend.reply(200, new JSONObject(valid).put("builtin_tools", invalid).toString());
+                io(() -> protocol.session(new JSONObject(), new JSONArray()), "invalid builtin catalog rejected");
             }
         }
     }

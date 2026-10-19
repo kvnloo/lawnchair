@@ -186,7 +186,14 @@ public final class Z0LiveService extends Service {
     private void mute() {
         if (!running) return;
         audio.toggleMute();
+        turn.inputMuted(audio.isMuted());
+        if (audio.isMuted()) {
+            // A disabled mic track sends no silence: don't leave a partial VAD utterance blocking tools/inbox forever.
+            turn.userSpeaking(false);
+            if (peer != null && audio.isConnected()) peer.send(object("type", "input_audio_buffer.clear").toString());
+        }
         applyAudio();
+        drainTurn();
         event("mute", "", object("muted", audio.isMuted()));
         publish();
     }
@@ -238,7 +245,7 @@ public final class Z0LiveService extends Service {
                     if (!valid(id)) return;
                     if (session.sessionId == null || session.sessionId.isEmpty()) { fail(getString(R.string.z0live_service_missing_session)); return; }
                     sessionId = session.sessionId;
-                    event("session_ready", "", object("model", session.model, "voice", session.voice));
+                    event("session_ready", "", object("model", session.model, "voice", session.voice, "instructions_version", session.instructionsVersion, "builtin_tools", new JSONArray(session.builtinTools)));
                     try {
                         if (!requestAudioFocus()) { fail(getString(R.string.z0live_service_audio_focus_unavailable)); return; }
                         createTts(id);
@@ -359,6 +366,10 @@ public final class Z0LiveService extends Service {
                     break;
                 case "input_audio_buffer.speech_started":
                     turn.userSpeaking(true);
+                    break;
+                case "input_audio_buffer.cleared":
+                    turn.userSpeaking(false);
+                    drainTurn();
                     break;
                 case "input_audio_buffer.speech_stopped":
                     turn.userSpeaking(false);
