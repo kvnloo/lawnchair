@@ -40,12 +40,14 @@ public final class Z0LiveService extends Service {
     private static volatile Z0LiveService current;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService network = Executors.newSingleThreadExecutor();
+    private final ExecutorService control = Executors.newSingleThreadExecutor();
     private final OkHttpClient http = new OkHttpClient.Builder()
             .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .callTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
             .followRedirects(false).followSslRedirects(false).build();
     private final Z0LiveTelemetry telemetry = new Z0LiveTelemetry();
+    private final Z0LiveBrokerSession broker = new Z0LiveBrokerSession(telemetry::offer, android.os.SystemClock::elapsedRealtime);
     private final Z0LiveTurnState turn = new Z0LiveTurnState();
     private final Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
     private long sessionInboxFloor;
@@ -74,6 +76,7 @@ public final class Z0LiveService extends Service {
     private final Runnable telemetryTick = new Runnable() {
         public void run() {
             if (!running) return;
+            broker.heartbeat();
             flush(false);
             main.postDelayed(this, 2500);
         }
@@ -189,10 +192,12 @@ public final class Z0LiveService extends Service {
     private void mute() {
         if (!running) return;
         audio.toggleMute();
-        turn.inputMuted(audio.isMuted());
+        turn.inputMuted(!audio.microphoneEnabled());
         if (audio.isMuted()) {
             // A disabled mic track sends no silence: don't leave a partial VAD utterance blocking tools/inbox forever.
             turn.userSpeaking(false);
+            broker.inputMuted();
+            flush(false);
             if (peer != null && audio.isConnected()) peer.send(object("type", "input_audio_buffer.clear").toString());
         }
         applyAudio();
@@ -253,6 +258,8 @@ public final class Z0LiveService extends Service {
                     inboxCursor = Math.max(Math.max(0, inboxCursor), head);
                     sessionInboxFloor = inboxCursor;
                     sessionId = session.sessionId;
+                    broker.start(sessionId);
+                    flush(false);
                     event("session_ready", "", object("model", session.model, "voice", session.voice, "instructions_version", session.instructionsVersion, "builtin_tools", new JSONArray(session.builtinTools)));
                     try {
                         if (!requestAudioFocus()) { fail(getString(R.string.z0live_service_audio_focus_unavailable)); return; }
@@ -301,6 +308,13 @@ public final class Z0LiveService extends Service {
                     if (!running) return;
                     boolean gained = change == AudioManager.AUDIOFOCUS_GAIN;
                     audio.setFocus(gained);
+                    turn.inputMuted(!audio.microphoneEnabled());
+                    if (!gained) {
+                        turn.userSpeaking(false);
+                        broker.inputMuted();
+                        flush(false);
+                        if (peer != null && audio.isConnected()) peer.send(object("type", "input_audio_buffer.clear").toString());
+                    }
                     if (!gained && inboxItem != null) {
                         interruptRealtime();
                         finishInbox(false);
@@ -336,7 +350,10 @@ public final class Z0LiveService extends Service {
         if (!debugReady() || Looper.myLooper() != Looper.getMainLooper() || text == null || text.isBlank() || text.length() > 2000) return false;
         service.turn.responseStarted();
         service.caption = "You: " + text;
+        if (service.broker.transcript(text)) service.interruptRealtime();
+        service.discardInterruptedInbox();
         service.event("user_transcript", text, object("source", "debug_text"));
+        service.flush(false);
         service.peer.send(object("type", "conversation.item.create", "item", object("type", "message", "role", "user", "content", new JSONArray().put(object("type", "input_text", "text", text)))).toString());
         service.peer.send(object("type", "response.create").toString());
         Log.i("z0live", "debug_turn injected");
@@ -358,11 +375,18 @@ public final class Z0LiveService extends Service {
         try {
             JSONObject message = new JSONObject(raw);
             String type = message.optString("type");
+            broker.realtime(message, audio.microphoneEnabled());
+            discardInterruptedInbox();
+            // Floor/cancel/usage delivery must not wait for the periodic telemetry tick.
+            flush(false);
             switch (type) {
                 case "conversation.item.input_audio_transcription.completed":
                     String input = bounded(message.optString("transcript"), 8000);
                     caption = "You: " + input;
+                    if (broker.transcript(input)) interruptRealtime();
+                    discardInterruptedInbox();
                     event(type, input, new JSONObject());
+                    flush(false);
                     publish();
                     break;
                 case "response.audio_transcript.delta":
@@ -386,8 +410,9 @@ public final class Z0LiveService extends Service {
                     turn.responseStarted();
                     break;
                 case "input_audio_buffer.speech_started":
+                    if (!audio.microphoneEnabled()) break;
                     turn.userSpeaking(true);
-                    if (!audio.isMuted()) interruptRealtime();
+                    interruptRealtime();
                     break;
                 case "input_audio_buffer.cleared":
                     turn.userSpeaking(false);
@@ -472,7 +497,14 @@ public final class Z0LiveService extends Service {
         }
         event("tool_call", "", object("call_id", callId, "name", bounded(name, 80), "arguments", parsed));
         Log.i("z0live", "tool_call name=" + name + " call_id=" + callId);
-        if (Z0LivePhoneTools.supports(this, name)) {
+        broker.toolCalled(callId, call);
+        if ("cancel_work".equals(name) && backend.isBuiltin(sessionId, name)) {
+            broker.cancelWork();
+            discardInterruptedInbox();
+            interruptRealtime();
+            flush(false);
+        }
+        if (!backend.isBuiltin(sessionId, name) && Z0LivePhoneTools.supports(this, name)) {
             JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
             toolOutput(callId, result);
             if ("z0live_end".equals(name) && result.optBoolean("ok")) main.postDelayed(() -> finishSession("", true), 1000);
@@ -480,10 +512,20 @@ public final class Z0LiveService extends Service {
         }
         pendingTools++;
         int id = generation;
+        String sid = sessionId;
         network.execute(() -> {
             try {
-                JSONObject result = backend.tool(sessionId, callId, name, arguments);
-                main.post(() -> { if (valid(id)) { pendingTools--; toolOutput(callId, result); } });
+                JSONObject result = backend.tool(sid, callId, name, arguments);
+                main.post(() -> { if (valid(id)) {
+                    String lateTurn = broker.toolResult(callId, result);
+                    if (!lateTurn.isEmpty()) control.execute(() -> {
+                        try { backend.cancelTurn(sid, lateTurn); }
+                        catch (IOException ignored) { telemetryFailed.incrementAndGet(); }
+                    });
+                    pendingTools--;
+                    toolOutput(callId, lateTurn.isEmpty() ? result : object("ok", false, "status", "cancelling", "turn_id", lateTurn, "say", "Cancellation was requested for the interrupted work."));
+                    flush(false);
+                } });
             } catch (IOException e) {
                 main.post(() -> {
                     if (!valid(id)) return;
@@ -519,6 +561,16 @@ public final class Z0LiveService extends Service {
 
     private JSONObject pendingInbox;
 
+    private void discardInterruptedInbox() {
+        if (broker.discard(pendingInbox)) {
+            JSONObject dropped = pendingInbox;
+            pendingInbox = null;
+            inboxCursor = Math.max(inboxCursor, dropped.optLong("id"));
+            persistCursor();
+            event("inbox_failed", "", object("id", dropped.optLong("id"), "delivery", "cancelled", "spoken", false));
+        }
+    }
+
     private void pollInbox() {
         if (inboxBusy || inboxItem != null || pendingInbox != null || !running) return;
         inboxBusy = true;
@@ -543,7 +595,9 @@ public final class Z0LiveService extends Service {
                         if (itemId > inboxCursor && itemId < nextId) { next = item; nextId = itemId; }
                     }
                     if (next != null) {
+                        broker.inbox(next);
                         pendingInbox = next;
+                        discardInterruptedInbox();
                         drainTurn();
                     } else if (page.after > inboxCursor) {
                         inboxCursor = page.after;
@@ -563,6 +617,7 @@ public final class Z0LiveService extends Service {
     private void handleInbox(JSONObject item) {
         inboxPlayback.begin(item.optLong("id"));
         inboxItem = item;
+        if (broker.discard(item)) { finishInbox(false, true, "cancelled"); return; }
         if (item.optLong("id") <= sessionInboxFloor || !Z0LiveInboxDelivery.maySpeak(hasActiveSession(), sessionId, item)) {
             Z0LiveInboxNotifications.show(this, item);
             finishInbox(true, true, "notification");
@@ -591,6 +646,7 @@ public final class Z0LiveService extends Service {
             return;
         }
         try {
+            broker.speakingInbox(item);
             JSONArray commands = Z0LiveInboxDelivery.realtimeReply(say);
             turn.responseStarted();
             for (int i = 0; i < commands.length(); i++) peer.send(commands.optJSONObject(i).toString());
@@ -613,7 +669,8 @@ public final class Z0LiveService extends Service {
         JSONObject handled = inboxItem;
         inboxItem = null;
         inboxResponseId = "";
-        if (!success) Z0LiveInboxNotifications.show(this, handled);
+        if (!success && !broker.discard(handled)) Z0LiveInboxNotifications.show(this, handled);
+        broker.deliveredInbox(handled, success);
         Log.i("z0live", "inbox_delivery id=" + handled.optLong("id") + " success=" + success + " via=" + delivery);
         event(success ? ("realtime".equals(delivery) ? "inbox_handled" : "inbox_notified") : "inbox_failed", "",
                 object("id", handled.optLong("id"), "action", handled.optString("action", ""), "delivery", delivery, "spoken", success && "realtime".equals(delivery)));
@@ -639,8 +696,9 @@ public final class Z0LiveService extends Service {
     private void flush(boolean finalFlush) {
         if (backend == null || telemetryBusy) return;
         telemetryBusy = true;
-        network.execute(() -> {
-            int budget = finalFlush ? 6 : 1;
+        Runnable send = () -> {
+            boolean failed = false;
+            int budget = 6;
             do {
                 JSONArray batch = telemetry.batch(24);
                 if (batch.length() == 0) break;
@@ -650,6 +708,7 @@ public final class Z0LiveService extends Service {
                 } catch (IOException e) {
                     telemetryFailed.incrementAndGet();
                     telemetry.failed(batch);
+                    failed = true;
                     if (!finalFlush) break;
                 }
             } while (--budget > 0);
@@ -657,15 +716,21 @@ public final class Z0LiveService extends Service {
                 try { backend.endSession(brokerSessionToEnd); }
                 catch (IOException ignored) { telemetryFailed.incrementAndGet(); }
             }
+            boolean retryOnTick = failed;
             main.post(() -> {
                 telemetryBusy = false;
                 if (finalFlush) {
                     telemetryFailed.addAndGet(telemetry.size());
                     network.shutdown();
+                    control.shutdown();
                 } else if (ending) flush(true);
+                else if (!retryOnTick && telemetry.size() > 0) flush(false);
                 publish();
             });
-        });
+        };
+        // Mint can finish after hangup: the final send must wait for its server session ID.
+        if (finalFlush) network.execute(() -> control.execute(send));
+        else control.execute(send);
     }
     private void fail(String message) { finishSession(message, false); }
     private void finishSession(String reason, boolean userEnd) {
@@ -674,6 +739,7 @@ public final class Z0LiveService extends Service {
         // Persist an honest failed receipt before invalidating the session. The claimed inbox
         // identity is already durable, so an interrupted Realtime reply cannot replay on restart.
         finishInbox(false, false);
+        broker.end();
         boolean wasRunning = running;
         running = false;
         pendingNetwork = false;

@@ -16,7 +16,8 @@ public final class Z0LiveEvents {
                 case "response.output_audio_transcript.done":
                 case "response.output_text.done": type = "assistant_transcript"; break;
                 case "user_transcript": case "assistant_transcript":
-                case "tool_call": case "tool_result": case "feedback": case "summary": type = source; break;
+                case "tool_call": case "tool_result": case "feedback": case "summary":
+                case "floor": case "barge_in": case "cancel": case "model_usage": type = source; break;
                 default: type = "app_state";
             }
             data.put("event_id", UUID.randomUUID().toString()).put("source", source);
