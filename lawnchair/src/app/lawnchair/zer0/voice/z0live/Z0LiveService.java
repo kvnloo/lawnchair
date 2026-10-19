@@ -100,6 +100,11 @@ public final class Z0LiveService extends Service {
         Z0LiveService service = current;
         if (service != null) service.main.post(() -> service.mute());
     }
+    /** Bound to one manually started voice generation; disarm on End/restart. */
+    static int gestureSessionGeneration() {
+        Z0LiveService s = current;
+        return s != null && s.running && !s.ending && !s.closingResources ? s.generation : -1;
+    }
     public static void retry(Context context) {
         Z0LiveService service = current;
         if (service != null) service.main.post(() -> {
