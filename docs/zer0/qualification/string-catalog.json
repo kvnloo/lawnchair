@@ -1,0 +1,1597 @@
+{
+  "catalog_version": 1,
+  "source_branch": "integration/chatgpt-lawnchair",
+  "policy": "English source strings only; proposed translatability is advisory, no resource modifications. No private hostnames, bearer values or invented translations.",
+  "entries": [
+    {
+      "key": "z0live_title",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "z0live",
+      "source_translatable": false,
+      "recommend_translatable": false,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Product or named brand; leave untranslated unless naming policy changes."
+    },
+    {
+      "key": "z0live_voice",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Voice",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_provider_voice",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Search provider voice",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Ripple",
+      "source_translatable": false,
+      "recommend_translatable": false,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Product or named brand; leave untranslated unless naming policy changes."
+    },
+    {
+      "key": "z0live_widget_description",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Start z0live voice or open your Ripple panel",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_start",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Start",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_end",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "End session",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_mute",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Mute",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_unmute",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Unmute",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_close",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Close",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_settings",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Settings",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ready",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Ready when you are",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_first",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Pair with your backend before starting voice.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_hint",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Paste pairing link",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_review",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Review pairing",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_scan",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Scan pairing QR",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_scan_failed",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "QR scanner unavailable. Check Google Play services and try again, or open or paste the pairing link instead.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_confirm",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Pair with this backend?",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_explanation",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "%1$s\\n\\nThis backend will receive your voice session. Pairing replaces the saved backend after the current session ends.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_action",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Pair",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_invalid",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "This pairing link is invalid. Paste a complete link from your backend.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_saved",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Pairing saved. Tap Start to begin.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_pair_stopping",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Ending the current session before changing pairing…",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_forget",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Forget pairing",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_forget_confirm",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Forget this backend?",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_forget_explanation",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "The current voice session will end and its saved pairing will be removed.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_storage_error",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Encrypted settings are unavailable. Voice cannot start until they can be read.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_save_error",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Encrypted settings could not be saved. Try again.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_paired_backend",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Backend: %1$s",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_mic_required",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Microphone permission is required to start voice.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_start_failed",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Voice could not start. Try again.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_hint",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Your Ripple HTTPS URL",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_save",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Save Ripple URL",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_saved",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Ripple URL saved.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_invalid",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Use an HTTPS URL without a username or password.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_missing",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Set your Ripple HTTPS URL in z0live Settings.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_network_help",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Connect to the backend network, then return here to retry.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_tailscale",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Open Tailscale",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_tailscale_unavailable",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Tailscale is unavailable or hidden in launcher settings.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_retry",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Retry connection",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_telemetry_failed",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Telemetry sends failed: %1$d",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "d"
+        }
+      ],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_ripple_failed",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "The panel could not load securely. Check its URL and your network.",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_external_title",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Open this link outside Ripple?",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_external_message",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Open %1$s in another app?",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "z0live_external_open",
+      "source": "lawnchair/res/values/z0live_strings.xml",
+      "source_text": "Open",
+      "source_translatable": false,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_command",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "Smart voice",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_prompt",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "Open an app, switch space, search apps or ask a question",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_unsupported",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "This voice command is not available yet",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_unavailable",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "Speech recognition is unavailable on this device",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_ambiguous",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "More than one app has that name; open it manually",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_no_match",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "No app has that exact name",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_voice_launch_failed",
+      "source": "lawnchair/res/values/strings_zer0.xml",
+      "source_text": "Could not open that app",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_smart_voice_title",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Fast actions",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_hint",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Ask Gemini",
+      "source_translatable": true,
+      "recommend_translatable": false,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Product or named brand; leave untranslated unless naming policy changes."
+    },
+    {
+      "key": "zer0_gemini_bar_a11y",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Open Gemini assistant",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_mic_a11y",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Talk to Gemini assistant",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_fast_voice_a11y",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Fast on-device phone commands",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_quick_launch",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "One-tap Gemini",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_quick_launch_desc",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Tap the search bar or microphone for the current Android assistant. Tap the left search icon for normal search.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_setup",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Configure Gemini as Android assistant",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_gemini_unavailable",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Gemini is unavailable. Set the Google app as your digital assistant in Android Settings.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_fast_voice_title",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Fast actions",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_fast_voice_description",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Show a lightning icon for one-tap offline app and space commands. If offline recognition is missing, open Gemini instead.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_smart_voice_description",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Use the existing mic to open apps and spaces, or automatically hand off questions to ChatGPT and device requests to Android’s assistant. External apps require speaking again.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_smart_voice_try",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Try smart voice",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_smart_voice_handoff",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Assistant opened. Continue speaking in that app.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_smart_voice_unavailable",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "No supported assistant is available for that request.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_title",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "On-device voice",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_info",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "One command at a time; the microphone stops when you leave or cancel. No cloud speech fallback.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_start",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Listen",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_cancel",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Cancel",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_unavailable",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "On-device speech recognition unavailable.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_permission_denied",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Microphone permission not granted.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_listening",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Listening…",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_processing",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Processing…",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_failed",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Recognition failed. Check your offline language pack.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_timeout",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "Listening timed out. Microphone stopped.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_on_device_no_match",
+      "source": "lawnchair/res/values/zer0_assistants.xml",
+      "source_text": "No speech recognized.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_tern_voice",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Hybrid voice · Tern (local)",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_tern_setup",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Choose z0live voice engine",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_tern_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Opens the local Tern voice UI in a browser. Start z0live in Tern first. Wi-Fi ADB and Hermes phone-harness approvals remain unchanged.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_assistant_tern_unavailable",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "No browser available for the local Tern voice UI",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_title",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "zer0 spaces · experimental",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Spaces (experimental)",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_active",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Active space: %1$s",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_disclaimer",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Named contexts, not separate Android desktops. The standard Lawnchair home and app drawer remain unchanged.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_create",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "New space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_rename",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Rename",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_scratch",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Scratch (temporary, not saved)",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_unknown",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Space not found",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_accessible_activate",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Switch to %1$s space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_accessible_delete_space",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Delete %1$s space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_accessible_unpin",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Unpin %1$s from space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_page_binding_status",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Linked home-screen ID: %1$s",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_page_binding_none",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "None",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_page_bind",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Link this space to the home page I came from",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_page_unbind",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Unlink this home page",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_space_delete_confirm",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Delete %1$s? Your home icons and Android apps will not be removed.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_search_title",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Find an app",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_search_hint",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Search visible installed apps",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_search_open",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Open %1$s",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_search_pin",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Pin %1$s to this space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "s"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_search_select",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Select an app from the results; Enter requires an unambiguous exact name",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_title",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Pinned apps",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Shortcuts belong to this space. Pick an app below to pin it; Scratch pins vanish when you leave.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_empty",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "No pinned apps in this space.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_add",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Pin first app to space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_limit",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Maximum eight apps per space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_pins_unavailable",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "App unavailable or hidden",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pair_title",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Split-screen app pair",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pair_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Choose two personal-profile apps. This requests a split through the standard Android API, without Samsung-only privileges.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_primary",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "First app",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_secondary",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Second app",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_save_pair",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Save pair to this space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_launch_pair",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Request split-screen pair",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pick_distinct",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Select two different apps",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pair_saved",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "App pair saved",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pair_failed",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Could not launch the first app",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_second_failed",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "First app launched; second app could not be opened",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pair_requested",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Split requested; verify the resulting layout",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_adjacent",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Request second app adjacent to Spaces",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_bounds",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Try public floating-window bounds (experimental)",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_bounds_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Only tests ActivityOptions.setLaunchBounds on displays advertising freeform support. Android/One UI may ignore the bounds or open the app full-screen; no private Samsung API is used.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_bounds_sent",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Window bounds requested; report what actually appeared",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_bounds_unavailable",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Floating bounds experiment is unsupported or launch failed",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_system_split",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Try Android system split action (opt-in)",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_system_split_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Only available if Lawnchair accessibility was separately enabled and Android lists the split action. No service enablement or permission prompt is triggered here.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_system_unavailable",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Android system split action is not currently available",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "accessibility-critical",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_capabilities",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Android API: %1$d. Freeform feature advertised: %2$b. Spaces currently in multi-window: %3$b. These are signals, not proof that arbitrary window placement is permitted.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [
+        {
+          "position": 1,
+          "type": "d"
+        },
+        {
+          "position": 2,
+          "type": "b"
+        },
+        {
+          "position": 3,
+          "type": "b"
+        }
+      ],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_title",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Last multi-window experiment",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_explanation",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Report what you actually saw after returning here. The launcher cannot independently verify the layout, even when an activity launch returns successfully.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_two",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "I saw two apps together",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_fullscreen",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "It opened full-screen instead",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_one",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Only one of the selected apps appeared",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_none",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "No visible change",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_copy",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Copy redacted test receipt",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_clear",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Clear test receipt",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_copied",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Test receipt copied",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_probe_request_sent",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Adjacent launch requested; verify the visible layout",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_limitations",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Pop-up placement, resizing, task moves and true tiling need a separately tested backend. No root or Accessibility permission is requested.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_compact_heading",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Spaces",
+      "source_translatable": true,
+      "recommend_translatable": false,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Product or named brand; leave untranslated unless naming policy changes."
+    },
+    {
+      "key": "zer0_spaces_compact_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Switch between launcher contexts. Your running apps stay where Android put them.",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_current",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Current space",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_scratch_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Ephemeral session, not saved",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_actions_heading",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Actions",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_pin",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Pin",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_unpin",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Unpin",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_manage",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Manage spaces and window controls",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_manage_note",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Rename, page links and experimental split-screen diagnostics",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    },
+    {
+      "key": "zer0_spaces_back_to_compact",
+      "source": "lawnchair/res/values/zer0_spaces.xml",
+      "source_text": "Back to spaces",
+      "source_translatable": true,
+      "recommend_translatable": true,
+      "placeholders": [],
+      "usage": "visible-label",
+      "context": "Describe a user-facing control, current state or error; preserve capability/consent distinctions."
+    }
+  ],
+  "hardcoded_literals": [
+    {
+      "source": "lawnchair/src/app/lawnchair/zer0/spaces/HyprSpacesActivity.java#render",
+      "literal": "● ",
+      "use": "Advanced active-space glyph prefix; add textual current-state equivalent for TalkBack"
+    },
+    {
+      "source": "lawnchair/src/app/lawnchair/zer0/spaces/HyprSpacesActivity.java#render",
+      "literal": "×",
+      "use": "Advanced delete/unpin glyph; content descriptions supplied, verify accessibility focus"
+    },
+    {
+      "source": "lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveActivity.kt#SessionSheet",
+      "literal": "snapshot.status / snapshot.caption / snapshot.error",
+      "use": "Dynamic server/provider strings; not resource translations, sanitize/summarize for status announcements"
+    }
+  ]
+}
