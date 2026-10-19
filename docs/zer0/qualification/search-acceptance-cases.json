@@ -1,0 +1,249 @@
+{
+  "schema_version": 1,
+  "upstream": "LawnchairLauncher/lawnchair",
+  "downstream": "kvnloo/lawnchair",
+  "queue": "https://github.com/kvnloo/lawnchair/issues/10",
+  "source_sha_policy": "each case carries an existing fork PR head; refresh prior to promotion; these are not current-upstream qualified",
+  "cases": [
+    {
+      "id": "HIDDEN-NEVER-EXACT",
+      "carrier": {
+        "pr": 3,
+        "head": "14df6933f3821ede62119bf6f63f304e2209adcd",
+        "source_path": "tests/multivalentTests/src/app/lawnchair/search/algorithms/SearchUtilsTest.kt"
+      },
+      "scenario": "Never: hidden app absent even when complete name is typed",
+      "expected": "Honor hidden-app visibility policy",
+      "test_target": "SearchUtilsTest.never mode excludes a hidden app even with an exact query",
+      "negative_control": false,
+      "credits": [
+        "Lawnchair/AOSP search authors",
+        "mvanhorn",
+        "validcube"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "HIDDEN-IF-PARTIAL",
+      "carrier": {
+        "pr": 3,
+        "head": "14df6933f3821ede62119bf6f63f304e2209adcd",
+        "source_path": "tests/multivalentTests/src/app/lawnchair/search/algorithms/SearchUtilsTest.kt"
+      },
+      "scenario": "IF_NAME_TYPED: partial query must not reveal hidden app",
+      "expected": "Honor hidden-app visibility policy",
+      "test_target": "SearchUtilsTest.exact-name mode excludes a hidden app on a partial query",
+      "negative_control": false,
+      "credits": [
+        "Lawnchair/AOSP search authors",
+        "mvanhorn",
+        "validcube"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "HIDDEN-IF-FULL",
+      "carrier": {
+        "pr": 3,
+        "head": "14df6933f3821ede62119bf6f63f304e2209adcd",
+        "source_path": "tests/multivalentTests/src/app/lawnchair/search/algorithms/SearchUtilsTest.kt"
+      },
+      "scenario": "IF_NAME_TYPED: exact full query reveals hidden app",
+      "expected": "Honor hidden-app visibility policy",
+      "test_target": "SearchUtilsTest.exact-name mode reveals a hidden app on a full query",
+      "negative_control": false,
+      "credits": [
+        "Lawnchair/AOSP search authors",
+        "mvanhorn",
+        "validcube"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "HIDDEN-ALWAYS-ZERO",
+      "carrier": {
+        "pr": 3,
+        "head": "14df6933f3821ede62119bf6f63f304e2209adcd",
+        "source_path": "tests/multivalentTests/src/app/lawnchair/search/algorithms/SearchUtilsTest.kt"
+      },
+      "scenario": "ALWAYS: hidden app remains eligible for zero-state results",
+      "expected": "Honor hidden-app visibility policy",
+      "test_target": "SearchUtilsTest.always mode includes a hidden app without a query",
+      "negative_control": false,
+      "credits": [
+        "Lawnchair/AOSP search authors",
+        "mvanhorn",
+        "validcube"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "HIDDEN-UNKNOWN",
+      "carrier": {
+        "pr": 3,
+        "head": "14df6933f3821ede62119bf6f63f304e2209adcd",
+        "source_path": "tests/multivalentTests/src/app/lawnchair/search/algorithms/SearchUtilsTest.kt"
+      },
+      "scenario": "Unknown visibility preference fails closed",
+      "expected": "Honor hidden-app visibility policy",
+      "test_target": "SearchUtilsTest.unknown mode defaults to excluding hidden apps",
+      "negative_control": false,
+      "credits": [
+        "Lawnchair/AOSP search authors",
+        "mvanhorn",
+        "validcube"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "STALE-AB",
+      "carrier": {
+        "pr": 4,
+        "head": "c46b38e0cb7ccfabf6f1a10c15bf6d8649a8bf8f",
+        "source_path": "lawnchair/src/app/lawnchair/allapps/AllAppsSearchInput.kt"
+      },
+      "scenario": "Delayed result for query A must not replace currently typed query B",
+      "expected": "Do not render results from obsolete search state",
+      "test_target": "Android: delayed provider A then type B; inspect result and type",
+      "negative_control": false,
+      "credits": [
+        "Flightkick",
+        "MrSluffy",
+        "Lawnchair/AOSP search authors"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "STALE-ACLEAR",
+      "carrier": {
+        "pr": 4,
+        "head": "c46b38e0cb7ccfabf6f1a10c15bf6d8649a8bf8f",
+        "source_path": "lawnchair/src/app/lawnchair/allapps/AllAppsSearchInput.kt"
+      },
+      "scenario": "Delayed A result after clear must not repaint stale A",
+      "expected": "Do not render results from obsolete search state",
+      "test_target": "Android: A then clear; observe zero state and late callback",
+      "negative_control": false,
+      "credits": [
+        "Flightkick",
+        "MrSluffy",
+        "Lawnchair/AOSP search authors"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "STALE-ACLEARA",
+      "carrier": {
+        "pr": 4,
+        "head": "c46b38e0cb7ccfabf6f1a10c15bf6d8649a8bf8f",
+        "source_path": "lawnchair/src/app/lawnchair/allapps/AllAppsSearchInput.kt"
+      },
+      "scenario": "A then clear then A again: same string from first request is not guarded by request generation",
+      "expected": "Known limitation: same-string prior generation may be accepted; capture repro, do not mark fixed",
+      "test_target": "Android: delay first A callback, clear and retype A; expected known limitation",
+      "negative_control": true,
+      "credits": [
+        "Flightkick",
+        "MrSluffy",
+        "Lawnchair/AOSP search authors"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "STALE-KEYBOARD-ZERO",
+      "carrier": {
+        "pr": 4,
+        "head": "c46b38e0cb7ccfabf6f1a10c15bf6d8649a8bf8f",
+        "source_path": "lawnchair/src/app/lawnchair/allapps/AllAppsSearchInput.kt"
+      },
+      "scenario": "Keyboard zero-state after clearing must stay usable without stale results",
+      "expected": "Do not render results from obsolete search state",
+      "test_target": "Android: QSB focus, type A, clear button, keyboard and zero state",
+      "negative_control": false,
+      "credits": [
+        "Flightkick",
+        "MrSluffy",
+        "Lawnchair/AOSP search authors"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    },
+    {
+      "id": "STALE-HOME-REOPEN",
+      "carrier": {
+        "pr": 4,
+        "head": "c46b38e0cb7ccfabf6f1a10c15bf6d8649a8bf8f",
+        "source_path": "lawnchair/src/app/lawnchair/allapps/AllAppsSearchInput.kt"
+      },
+      "scenario": "Old drawer result must not leak into reopened home/app drawer search",
+      "expected": "Do not render results from obsolete search state",
+      "test_target": "Android: A, return home, reopen app drawer, late provider completion",
+      "negative_control": false,
+      "credits": [
+        "Flightkick",
+        "MrSluffy",
+        "Lawnchair/AOSP search authors"
+      ],
+      "evidence": {
+        "host": "LIMITED",
+        "android": "NOT_RUN",
+        "device": "NOT_RUN",
+        "review": "NOT_RUN"
+      },
+      "status": "QUALIFICATION_NEEDED"
+    }
+  ]
+}
