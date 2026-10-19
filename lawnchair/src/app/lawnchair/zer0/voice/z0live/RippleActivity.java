@@ -1,6 +1,7 @@
 package app.lawnchair.zer0.voice.z0live;
 
-import android.app.Activity;
+import androidx.activity.ComponentActivity;
+import androidx.activity.OnBackPressedCallback;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.graphics.Color;
@@ -29,7 +30,7 @@ import com.android.launcher3.R;
 import java.io.ByteArrayInputStream;
 
 /** A disposable web panel for the owner's configured Ripple HTTPS origin. */
-public final class RippleActivity extends Activity {
+public final class RippleActivity extends ComponentActivity {
     private WebView web;
     private Uri origin;
     private TextView error;
@@ -38,6 +39,12 @@ public final class RippleActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedState) {
         super.onCreate(savedState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override public void handleOnBackPressed() {
+                if (web != null && web.canGoBack()) web.goBack();
+                else finish();
+            }
+        });
         discardIncomingIntent(getIntent());
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -221,12 +228,6 @@ public final class RippleActivity extends Activity {
         public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError failure) {
             if (request.isForMainFrame()) showError(R.string.z0live_ripple_failed);
         }
-    }
-
-    @Override
-    public void onBackPressed() {
-        if (web != null && web.canGoBack()) web.goBack();
-        else super.onBackPressed();
     }
 
     @Override

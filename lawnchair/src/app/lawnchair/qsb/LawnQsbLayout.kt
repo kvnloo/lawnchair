@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.ViewCompositionStrategy
+import androidx.compose.ui.res.stringResource
 import androidx.core.view.children
 import androidx.lifecycle.lifecycleScope
 import app.lawnchair.LawnchairLauncher
@@ -71,6 +72,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                 LawnchairTheme {
                     ProvideLifecycleState {
                         val context = LocalContext.current
+                        val z0liveDescription = stringResource(R.string.z0live_title)
 
                         val prefs = preferenceManager()
                         val prefs2 = preferenceManager2
@@ -100,7 +102,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 hintText = context.getString(R.string.zer0_gemini_hint),
                                 endIcons = baseState.endIcons.map { icon ->
                                     if (icon.id == QsbIconId.MIC) {
-                                        icon.copy(contentDescription = context.getString(R.string.z0live_title))
+                                        icon.copy(contentDescription = z0liveDescription)
                                     } else {
                                         icon
                                     }
@@ -122,7 +124,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                             baseState.copy(
                                 endIcons = baseState.endIcons.map { icon ->
                                     if (icon.id == QsbIconId.MIC) {
-                                        icon.copy(contentDescription = context.getString(R.string.z0live_title))
+                                        icon.copy(contentDescription = z0liveDescription)
                                     } else {
                                         icon
                                     }

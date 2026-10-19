@@ -93,6 +93,15 @@ bash tools/zer0/test-z0live-audio.sh
 ./gradlew assembleLawnWithQuickstepPlayDebug
 ```
 
+Full-project lint initially failed with thousands of existing upstream/fork diagnostics.
+The native baseline was generated against detached pre-feature source `ba091219e2`;
+101 additional NewApi/WrongConstant findings on **29 byte-identical inherited Quickstep
+files** are source-hash pinned by `check-z0live-lint-baseline.py` and the provenance JSON.
+No z0live source/resource findings are baselined. This is a no-new-feature-errors gate,
+not a claim that the inherited launcher is globally lint-clean. New-feature findings were
+fixed (including backup whitelist validation, back dispatcher, Compose resource reads and
+English-only labels); the legacy tile overload is narrowly guarded/suppressed below API 34.
+
 CI builds on push to this branch and publishes an immutable `z0live-build-*` prerelease
 plus the moving `z0live-latest` download, metadata, checksum and certificate. Metadata
 records commit, run, versionName, package and byte size. CI never embeds desktop/device
@@ -111,5 +120,6 @@ credentials and does not need a running broker.
   service. Samsung battery restrictions can stop it. No phone install/runtime proof is claimed.
 - Inbox uses polling, not SSE. Telemetry is bounded in memory, retries up to three times;
   it is not a durable offline outbox. Long outages/process death can lose unsent events.
+- New experimental z0live labels are English-only (marked non-translatable pending localization).
 - No screen reading, remote phone-action execution, embedded Ripple native component,
   verified Ripple deployment, built-in QR camera or separate shared Android SDK is shipped.

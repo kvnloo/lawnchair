@@ -4,12 +4,10 @@
         <include domain="database" path="." />
         <include domain="sharedpref" path="com.android.launcher3.prefs.xml" />
         <include domain="file" path="downgrade_schema.json" />
-        <exclude domain="sharedpref" path="z0live_secrets.xml" />
     </cloud-backup>
     <device-transfer>
         <include domain="database" path="." />
         <include domain="sharedpref" path="com.android.launcher3.prefs.xml" />
         <include domain="file" path="downgrade_schema.json" />
-        <exclude domain="sharedpref" path="z0live_secrets.xml" />
     </device-transfer>
 </data-extraction-rules>

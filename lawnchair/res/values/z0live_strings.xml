@@ -1,46 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="z0live_title">z0live</string>
-    <string name="z0live_voice">Voice</string>
-    <string name="z0live_provider_voice">Search provider voice</string>
-    <string name="z0live_ripple">Ripple</string>
-    <string name="z0live_widget_description">Start z0live voice or open your Ripple panel</string>
-    <string name="z0live_start">Start</string>
-    <string name="z0live_end">End session</string>
-    <string name="z0live_mute">Mute</string>
-    <string name="z0live_unmute">Unmute</string>
-    <string name="z0live_close">Close</string>
-    <string name="z0live_settings">Settings</string>
-    <string name="z0live_ready">Ready when you are</string>
-    <string name="z0live_pair_first">Pair with your backend before starting voice.</string>
-    <string name="z0live_pair_hint">Paste pairing link</string>
-    <string name="z0live_pair_review">Review pairing</string>
-    <string name="z0live_pair_confirm">Pair with this backend?</string>
-    <string name="z0live_pair_explanation">%1$s\n\nThis backend will receive your voice session. Pairing replaces the saved backend after the current session ends.</string>
-    <string name="z0live_pair_action">Pair</string>
-    <string name="z0live_pair_invalid">This pairing link is invalid. Paste a complete link from your backend.</string>
-    <string name="z0live_pair_saved">Pairing saved. Tap Start to begin.</string>
-    <string name="z0live_pair_stopping">Ending the current session before changing pairing…</string>
-    <string name="z0live_forget">Forget pairing</string>
-    <string name="z0live_forget_confirm">Forget this backend?</string>
-    <string name="z0live_forget_explanation">The current voice session will end and its saved pairing will be removed.</string>
-    <string name="z0live_storage_error">Encrypted settings are unavailable. Voice cannot start until they can be read.</string>
-    <string name="z0live_save_error">Encrypted settings could not be saved. Try again.</string>
-    <string name="z0live_paired_backend">Backend: %1$s</string>
-    <string name="z0live_mic_required">Microphone permission is required to start voice.</string>
-    <string name="z0live_start_failed">Voice could not start. Try again.</string>
-    <string name="z0live_ripple_hint">Your Ripple HTTPS URL</string>
-    <string name="z0live_ripple_save">Save Ripple URL</string>
-    <string name="z0live_ripple_saved">Ripple URL saved.</string>
-    <string name="z0live_ripple_invalid">Use an HTTPS URL without a username or password.</string>
-    <string name="z0live_ripple_missing">Set your Ripple HTTPS URL in z0live Settings.</string>
-    <string name="z0live_network_help">Connect to the backend network, then return here to retry.</string>
-    <string name="z0live_tailscale">Open Tailscale</string>
-    <string name="z0live_tailscale_unavailable">Tailscale is unavailable or hidden in launcher settings.</string>
-    <string name="z0live_retry">Retry connection</string>
-    <string name="z0live_telemetry_failed">Telemetry sends failed: %1$d</string>
-    <string name="z0live_ripple_failed">The panel could not load securely. Check its URL and your network.</string>
-    <string name="z0live_external_title">Open this link outside Ripple?</string>
-    <string name="z0live_external_message">Open %1$s in another app?</string>
-    <string name="z0live_external_open">Open</string>
+    <string translatable="false" name="z0live_title">z0live</string>
+    <string translatable="false" name="z0live_voice">Voice</string>
+    <string translatable="false" name="z0live_provider_voice">Search provider voice</string>
+    <string translatable="false" name="z0live_ripple">Ripple</string>
+    <string translatable="false" name="z0live_widget_description">Start z0live voice or open your Ripple panel</string>
+    <string translatable="false" name="z0live_start">Start</string>
+    <string translatable="false" name="z0live_end">End session</string>
+    <string translatable="false" name="z0live_mute">Mute</string>
+    <string translatable="false" name="z0live_unmute">Unmute</string>
+    <string translatable="false" name="z0live_close">Close</string>
+    <string translatable="false" name="z0live_settings">Settings</string>
+    <string translatable="false" name="z0live_ready">Ready when you are</string>
+    <string translatable="false" name="z0live_pair_first">Pair with your backend before starting voice.</string>
+    <string translatable="false" name="z0live_pair_hint">Paste pairing link</string>
+    <string translatable="false" name="z0live_pair_review">Review pairing</string>
+    <string translatable="false" name="z0live_pair_confirm">Pair with this backend?</string>
+    <string translatable="false" name="z0live_pair_explanation">%1$s\n\nThis backend will receive your voice session. Pairing replaces the saved backend after the current session ends.</string>
+    <string translatable="false" name="z0live_pair_action">Pair</string>
+    <string translatable="false" name="z0live_pair_invalid">This pairing link is invalid. Paste a complete link from your backend.</string>
+    <string translatable="false" name="z0live_pair_saved">Pairing saved. Tap Start to begin.</string>
+    <string translatable="false" name="z0live_pair_stopping">Ending the current session before changing pairing…</string>
+    <string translatable="false" name="z0live_forget">Forget pairing</string>
+    <string translatable="false" name="z0live_forget_confirm">Forget this backend?</string>
+    <string translatable="false" name="z0live_forget_explanation">The current voice session will end and its saved pairing will be removed.</string>
+    <string translatable="false" name="z0live_storage_error">Encrypted settings are unavailable. Voice cannot start until they can be read.</string>
+    <string translatable="false" name="z0live_save_error">Encrypted settings could not be saved. Try again.</string>
+    <string translatable="false" name="z0live_paired_backend">Backend: %1$s</string>
+    <string translatable="false" name="z0live_mic_required">Microphone permission is required to start voice.</string>
+    <string translatable="false" name="z0live_start_failed">Voice could not start. Try again.</string>
+    <string translatable="false" name="z0live_ripple_hint">Your Ripple HTTPS URL</string>
+    <string translatable="false" name="z0live_ripple_save">Save Ripple URL</string>
+    <string translatable="false" name="z0live_ripple_saved">Ripple URL saved.</string>
+    <string translatable="false" name="z0live_ripple_invalid">Use an HTTPS URL without a username or password.</string>
+    <string translatable="false" name="z0live_ripple_missing">Set your Ripple HTTPS URL in z0live Settings.</string>
+    <string translatable="false" name="z0live_network_help">Connect to the backend network, then return here to retry.</string>
+    <string translatable="false" name="z0live_tailscale">Open Tailscale</string>
+    <string translatable="false" name="z0live_tailscale_unavailable">Tailscale is unavailable or hidden in launcher settings.</string>
+    <string translatable="false" name="z0live_retry">Retry connection</string>
+    <string translatable="false" name="z0live_telemetry_failed">Telemetry sends failed: %1$d</string>
+    <string translatable="false" name="z0live_ripple_failed">The panel could not load securely. Check its URL and your network.</string>
+    <string translatable="false" name="z0live_external_title">Open this link outside Ripple?</string>
+    <string translatable="false" name="z0live_external_message">Open %1$s in another app?</string>
+    <string translatable="false" name="z0live_external_open">Open</string>
 </resources>

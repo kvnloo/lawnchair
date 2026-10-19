@@ -29,6 +29,8 @@ public final class Z0LiveTile extends TileService implements Z0LiveStatus.Observ
         tile.updateTile();
     }
 
+    // Intent overload is required below API 34; the PendingIntent API does not exist there.
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     @Override
     public void onClick() {
         super.onClick();

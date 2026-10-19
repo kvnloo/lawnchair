@@ -43,12 +43,16 @@ jobs:
         run: bash tools/zer0/test-z0live-backend-contract.sh
       - name: Verify native audio and safe turn gates
         run: bash tools/zer0/test-z0live-audio.sh
+      - name: Verify pinned inherited lint debt (no feature sources baselined)
+        run: |
+          git fetch --no-tags --depth=1 origin ba091219e2d7c4cac8f173754d0c234f9ff866f0
+          python3 tools/zer0/check-z0live-lint-baseline.py
       - name: Check formatting
-        run: ./gradlew spotlessCheck
+        run: ./gradlew spotlessCheck --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
       - name: Android lint
-        run: ./gradlew lintLawnWithQuickstepPlayDebug
+        run: ./gradlew lintLawnWithQuickstepPlayDebug --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
       - name: Build signed debug APK
-        run: ./gradlew assembleLawnWithQuickstepPlayDebug
+        run: ./gradlew assembleLawnWithQuickstepPlayDebug --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
       - name: Inspect APK and collect reproducible metadata
         run: |
           set -euo pipefail
