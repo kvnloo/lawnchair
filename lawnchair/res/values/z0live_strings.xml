@@ -45,4 +45,6 @@
     <string translatable="false" name="z0live_external_title">Open this link outside Ripple?</string>
     <string translatable="false" name="z0live_external_message">Open %1$s in another app?</string>
     <string translatable="false" name="z0live_external_open">Open</string>
+    <string translatable="false" name="z0live_oura_setup">Set up Oura double-tap (NOOP)</string>
+    <string translatable="false" name="z0live_oura_missing">Install the matching NOOP debug APK to set up Oura double-tap.</string>
 </resources>
