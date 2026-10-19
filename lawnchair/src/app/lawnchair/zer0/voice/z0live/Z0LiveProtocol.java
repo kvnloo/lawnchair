@@ -164,7 +164,9 @@ public final class Z0LiveProtocol {
         if (sessionId == null || callId == null || name == null || arguments == null) {
             throw new IOException("Missing tool inputs");
         }
-        if (!("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name))) {
+        if (!("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name)
+                || "ask_hermes".equals(name) || "work_search".equals(name)
+                || "start_task".equals(name) || "task_status".equals(name))) {
             throw new IOException("Unsupported broker tool");
         }
         JSONObject argumentValue = object(arguments);
