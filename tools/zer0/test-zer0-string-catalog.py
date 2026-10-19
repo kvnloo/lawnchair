@@ -24,7 +24,7 @@ class CatalogValidatorTests(unittest.TestCase):
         dest.parent.mkdir(parents=True)
         self.words = (
             '<resources>'
-            '<string name="greeting">Don\\'t skip %1$s and %2$d — 你好</string>'
+            "<string name=\"greeting\">Don't skip %1$s and %2$d — 你好</string>"
             '<string name="brand" translatable="false">z0live</string>'
             '</resources>'
         )
@@ -32,7 +32,7 @@ class CatalogValidatorTests(unittest.TestCase):
         self.catalog = {
             "catalog_version": 1,
             "entries": [
-                self.entry("greeting", "Don\\'t skip %1$s and %2$d — 你好",
+                self.entry("greeting", "Don't skip %1$s and %2$d — 你好",
                            [{"position": 1, "type": "s"}, {"position": 2, "type": "d"}]),
                 self.entry("brand", "z0live", [], False),
             ],
