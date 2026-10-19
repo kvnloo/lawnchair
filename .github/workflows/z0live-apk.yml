@@ -1,0 +1,122 @@
+name: z0live voice APK
+
+on:
+  push:
+    branches: [feat/z0live-realtime]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: z0live-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    if: github.repository == 'kvnloo/lawnchair' && github.ref == 'refs/heads/feat/z0live-realtime'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Load stable fork debug signer
+        env:
+          DEBUG_KEYSTORE: ${{ secrets.Z0LIVE_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$DEBUG_KEYSTORE" || { echo '::error::Missing Z0LIVE_DEBUG_KEYSTORE_BASE64'; exit 1; }
+          umask 077
+          mkdir -p "$HOME/.android"
+          printf '%s' "$DEBUG_KEYSTORE" | base64 --decode > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+      - name: Verify existing bounded voice contracts
+        run: bash tools/zer0/test-voice-commands.sh
+      - name: Verify actual z0live protocol client against mock server
+        run: bash tools/zer0/test-z0live-backend-contract.sh
+      - name: Verify native audio and safe turn gates
+        run: bash tools/zer0/test-z0live-audio.sh
+      - name: Check formatting
+        run: ./gradlew spotlessCheck
+      - name: Android lint
+        run: ./gradlew lintLawnWithQuickstepPlayDebug
+      - name: Build signed debug APK
+        run: ./gradlew assembleLawnWithQuickstepPlayDebug
+      - name: Inspect APK and collect reproducible metadata
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib, subprocess
+          apks = list(pathlib.Path('build/outputs/apk').rglob('*.apk'))
+          assert len(apks) == 1, f'Expected one APK, found {len(apks)}'
+          apk = apks[0]
+          build_tools = sorted(pathlib.Path(os.environ['ANDROID_HOME'], 'build-tools').iterdir(), key=lambda p: [int(x) for x in p.name.split('.') if x.isdigit()])[-1]
+          badging = subprocess.check_output([str(build_tools / 'aapt'), 'dump', 'badging', str(apk)], text=True)
+          cert = subprocess.check_output([str(build_tools / 'apksigner'), 'verify', '--print-certs', str(apk)], text=True)
+          import re, shutil
+          package = re.search(r"package: name='([^']+)' versionCode='([^']+)' versionName='([^']+)'", badging)
+          assert package, badging
+          assert package[1] == 'app.lawnchair.play.debug'
+          out = pathlib.Path('z0live-dist'); out.mkdir()
+          target = out / 'Lawnchair-z0live.apk'; shutil.copyfile(apk, target)
+          metadata = {'commit': os.environ['GITHUB_SHA'], 'run_id': os.environ['GITHUB_RUN_ID'], 'package': package[1], 'versionCode': package[2], 'versionName': package[3], 'size': target.stat().st_size, 'sha256': hashlib.sha256(target.read_bytes()).hexdigest(), 'debug_signed': True}
+          (out / 'apk-metadata.json').write_text(json.dumps(metadata, indent=2) + '\n')
+          (out / 'SHA256SUMS').write_text(metadata['sha256'] + '  Lawnchair-z0live.apk\n')
+          (out / 'signing-certificate.txt').write_text(cert)
+          print(json.dumps(metadata, indent=2)); print(cert)
+          PY
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Lawnchair-z0live-${{ github.sha }}
+          path: z0live-dist/*
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: z0live-lint-${{ github.sha }}
+          path: build/reports/lint-results-*
+          if-no-files-found: warn
+
+  publish:
+    needs: android
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Lawnchair-z0live-${{ github.sha }}
+          path: dist
+      - name: Publish fork-only prerelease with stable asset URL
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tag="z0live-build-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}"
+          notes="Downstream experimental Lawnchair z0live build. Commit: ${COMMIT}. Native microphone foreground service; direct OpenAI Realtime audio; encrypted tailnet pairing. Debug-signed, not a Play Store release. Phone/Samsung runtime qualification remains required. Read docs/zer0/Z0LIVE.md on feat/z0live-realtime."
+          gh release create "$tag" dist/* --repo "$REPO" --target "$COMMIT" --title "z0live voice build ${GITHUB_RUN_NUMBER}" --notes "$notes" --prerelease --latest=false
+          # Dedicated moving tag; never move unrelated release tags.
+          if gh api "repos/$REPO/git/ref/tags/z0live-latest" >/dev/null 2>&1; then
+            gh api --method PATCH "repos/$REPO/git/refs/tags/z0live-latest" -f sha="$COMMIT" -F force=true >/dev/null
+          else
+            gh api --method POST "repos/$REPO/git/refs" -f ref=refs/tags/z0live-latest -f sha="$COMMIT" >/dev/null
+          fi
+          if gh release view z0live-latest --repo "$REPO" >/dev/null 2>&1; then
+            gh release edit z0live-latest --repo "$REPO" --title 'Lawnchair z0live — latest experimental APK' --notes "$notes" --prerelease --latest=false
+            gh release upload z0live-latest dist/* --repo "$REPO" --clobber
+          else
+            gh release create z0live-latest dist/* --repo "$REPO" --verify-tag --title 'Lawnchair z0live — latest experimental APK' --notes "$notes" --prerelease --latest=false
+          fi
+          gh release view z0live-latest --repo "$REPO" --json url,tagName,isPrerelease,assets
+          gh api "repos/$REPO/git/ref/tags/z0live-latest" --jq '.object.sha'

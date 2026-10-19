@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<voice-interaction-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:sessionService="app.lawnchair.zer0.voice.z0live.Z0LiveAssistantSessionService"
+    android:settingsActivity="app.lawnchair.zer0.voice.z0live.Z0LiveActivity"
+    android:supportsAssist="true" android:supportsLocalInteraction="false"
+    android:supportsLaunchVoiceAssistFromKeyguard="false" />

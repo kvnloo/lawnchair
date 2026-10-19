@@ -37,6 +37,7 @@ import app.lawnchair.zer0.spaces.HyprSpacesActivity
 import app.lawnchair.zer0.voice.AssistantHandoff
 import app.lawnchair.zer0.voice.OnDeviceVoiceActivity
 import app.lawnchair.zer0.voice.VoiceCommandActivity
+import app.lawnchair.zer0.voice.z0live.Z0LiveActivity
 import com.android.launcher3.BaseActivity
 import com.android.launcher3.DeviceProfile
 import com.android.launcher3.R
@@ -83,9 +84,6 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         val geminiQuickLaunch by prefs2.zer0GeminiQuickLaunch.asState()
 
                         val supportsLens = searchProvider == Google || searchProvider == PixelSearch
-                        val voiceIntent = remember(searchProvider, context) {
-                            getVoiceIntent(searchProvider, context)
-                        }
                         val lensIntent = remember(supportsLens, context) {
                             if (supportsLens) getLensIntent(context) else null
                         }
@@ -93,7 +91,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                         val baseState = rememberHotseatQsbState(
                             searchProvider = searchProvider,
                             themed = themed,
-                            showMic = geminiQuickLaunch || smartVoiceEnabled || voiceIntent != null,
+                            showMic = true,
                             showLens = lensIntent != null,
                         )
                         val state = if (geminiQuickLaunch) {
@@ -102,7 +100,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 hintText = context.getString(R.string.zer0_gemini_hint),
                                 endIcons = baseState.endIcons.map { icon ->
                                     if (icon.id == QsbIconId.MIC) {
-                                        icon.copy(contentDescription = context.getString(R.string.zer0_gemini_mic_a11y))
+                                        icon.copy(contentDescription = context.getString(R.string.z0live_title))
                                     } else {
                                         icon
                                     }
@@ -121,7 +119,15 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 },
                             )
                         } else {
-                            baseState
+                            baseState.copy(
+                                endIcons = baseState.endIcons.map { icon ->
+                                    if (icon.id == QsbIconId.MIC) {
+                                        icon.copy(contentDescription = context.getString(R.string.z0live_title))
+                                    } else {
+                                        icon
+                                    }
+                                },
+                            )
                         }
 
                         val style = buildQsbStyle(
@@ -145,13 +151,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
                                 runCatching {
                                     when (id) {
                                         QsbIconId.MIC -> {
-                                            if (geminiQuickLaunch) {
-                                                openGemini()
-                                            } else if (smartVoiceEnabled) {
-                                                launchFastAction()
-                                            } else {
-                                                voiceIntent?.let { context.startActivity(it) }
-                                            }
+                                            context.startActivity(Z0LiveActivity.intent(context, true))
                                         }
 
                                         QsbIconId.FAST -> launchFastAction()
@@ -207,7 +207,7 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         val launcher = context.launcher
         val pos = Rect()
         launcher.dragLayer.getDescendantRectRelativeToSelf(composeView, pos)
-        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZer0SpacesOption()), true)
+        OptionsPopupView.show<LawnchairLauncher>(launcher, RectF(pos), listOf(getCustomizeOption(), getZ0LiveOption(), getGeminiOption(), getFastVoiceOption(), getProviderVoiceOption(), getZer0SpacesOption()), true)
     }
 
     private fun getCustomizeOption() = OptionsPopupView.OptionItem(
@@ -217,6 +217,46 @@ class LawnQsbLayout(context: Context, attrs: AttributeSet?) : FrameLayout(contex
         StatsLogManager.LauncherEvent.IGNORE,
     ) {
         context.startActivity(PreferenceActivity.createIntent(context, Search()))
+        true
+    }
+
+    private fun getZ0LiveOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.z0live_title,
+        R.drawable.ic_setting,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        context.startActivity(Z0LiveActivity.intent(context, false))
+        true
+    }
+
+    private fun getGeminiOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.zer0_gemini_hint,
+        R.drawable.ic_setting,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        openGemini()
+        true
+    }
+
+    private fun getFastVoiceOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.zer0_fast_voice_a11y,
+        R.drawable.ic_zer0_fast,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        launchFastAction()
+        true
+    }
+
+    private fun getProviderVoiceOption() = OptionsPopupView.OptionItem(
+        context,
+        R.string.z0live_provider_voice,
+        R.drawable.ic_setting,
+        StatsLogManager.LauncherEvent.IGNORE,
+    ) {
+        getVoiceIntent(searchProvider, context)?.let { context.startActivity(it) }
         true
     }
 

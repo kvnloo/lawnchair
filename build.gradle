@@ -467,6 +467,9 @@ dependencies {
     implementation libs.bundles.opto
     implementation libs.androidx.datastore.preferences
 
+    lawnImplementation libs.stream.webrtc
+    lawnImplementation libs.androidx.security.crypto
+
     implementation libs.bundles.retrofit
 
     implementation libs.bundles.room

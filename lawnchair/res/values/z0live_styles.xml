@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Z0LiveGlass" parent="android:style/Theme.Material.Dialog.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@drawable/z0live_glass</item>
+        <item name="android:windowMinWidthMajor">92%</item>
+        <item name="android:windowMinWidthMinor">92%</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:backgroundDimAmount">0.36</item>
+        <item name="android:colorAccent">#A3E9DD</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    <style name="Theme.Z0LivePanel" parent="android:style/Theme.Material.NoActionBar">
+        <item name="android:colorAccent">#A3E9DD</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#171D23</item>
+        <item name="android:navigationBarColor">#171D23</item>
+        <item name="android:windowActionModeOverlay">true</item>
+    </style>
+</resources>

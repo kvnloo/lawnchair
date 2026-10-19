@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:orientation="horizontal" android:gravity="center" android:padding="8dp"
+    android:background="@drawable/z0live_glass">
+    <Button android:id="@+id/z0live_widget_voice" android:layout_width="0dp" android:layout_height="match_parent"
+        android:layout_weight="1" android:minHeight="48dp" android:text="@string/z0live_voice"
+        android:textColor="#FFFFFFFF" android:contentDescription="@string/z0live_start" />
+    <Button android:id="@+id/z0live_widget_ripple" android:layout_width="0dp" android:layout_height="match_parent"
+        android:layout_weight="1" android:minHeight="48dp" android:text="@string/z0live_ripple"
+        android:textColor="#FFFFFFFF" />
+</LinearLayout>
