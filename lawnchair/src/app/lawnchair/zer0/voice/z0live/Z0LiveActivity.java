@@ -3,6 +3,7 @@ package app.lawnchair.zer0.voice.z0live;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
@@ -399,6 +400,19 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         }
     }
 
+    /** Optional z0live onboarding: only an existing active session receives gesture control. */
+    private void openOuraSetup() {
+        Intent target = new Intent().setClassName(
+                "com.noop.whoop.debug", "com.noop.oura.OuraGestureSetupActivity");
+        PendingIntent capability = OuraGestureReceiver.arm(this);
+        if (capability != null) target.putExtra(OuraGestureReceiver.EXTRA_CAPABILITY, capability);
+        try {
+            startActivity(target);
+        } catch (RuntimeException error) {
+            showMessage(R.string.z0live_oura_missing);
+        }
+    }
+
     private void buildUi() {
         ScrollView scroll = new ScrollView(this);
         scroll.setFillViewport(false);
@@ -415,6 +429,7 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         message = text(body, "", 15);
         telemetry = text(body, "", 14);
         start = button(body, R.string.z0live_start, this::requestStart);
+        button(body, R.string.z0live_oura_setup, this::openOuraSetup);
         LinearLayout controls = row(body);
         mute = button(controls, R.string.z0live_mute, () -> Z0LiveService.toggleMute(this));
         end = button(controls, R.string.z0live_end, () -> {
