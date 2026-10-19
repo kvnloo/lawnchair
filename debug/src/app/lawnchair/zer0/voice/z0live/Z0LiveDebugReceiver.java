@@ -9,6 +9,9 @@ import android.util.Log;
 public final class Z0LiveDebugReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context, Intent intent) {
         if (intent.getBooleanExtra("stats", false)) { Z0LiveService.debugAudioStats(); return; }
+        if (intent.getBooleanExtra("ready", false)) { setResultCode(Z0LiveService.debugReady() ? 1 : 0); return; }
+        if (intent.hasExtra("muted")) { Z0LiveService.debugMute(intent.getBooleanExtra("muted", true)); return; }
+        if (intent.getBooleanExtra("end", false)) { Z0LiveService.end(context); return; }
         boolean accepted = Z0LiveService.injectDebugText(intent.getStringExtra("text"));
         Log.i("z0live", "debug_turn accepted=" + accepted);
         setResultCode(accepted ? 1 : 0);

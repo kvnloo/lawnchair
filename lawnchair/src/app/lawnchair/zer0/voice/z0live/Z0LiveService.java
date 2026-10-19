@@ -168,7 +168,7 @@ public final class Z0LiveService extends Service {
         PendingIntent mute = PendingIntent.getService(this, 8793,
                 new Intent(this, Z0LiveService.class).setAction(MUTE), PendingIntent.FLAG_IMMUTABLE);
         return new Notification.Builder(this, CHANNEL)
-                .setSmallIcon(android.R.drawable.ic_btn_speak_now)
+                .setSmallIcon(R.drawable.z0live_mic)
                 .setContentTitle(getString(R.string.z0live_notification_title, status, audio.isMuted() ? getString(R.string.z0live_notification_muted) : ""))
                 .setContentText(error.isEmpty() ? getString(R.string.z0live_notification_detail) : error)
                 .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true)
@@ -306,19 +306,26 @@ public final class Z0LiveService extends Service {
         Z0LiveService service = current;
         if (service != null && service.peer != null) service.peer.logDebugAudioStats();
     }
+    public static boolean debugReady() {
+        Z0LiveService service = current;
+        return com.android.launcher3.BuildConfig.DEBUG && service != null && service.running
+                && service.peer != null && service.audio.isConnected() && service.inboxItem == null
+                && service.pendingInbox == null && service.pendingTools == 0 && service.turn.canSpeakInbox();
+    }
+    public static void debugMute(boolean muted) {
+        Z0LiveService service = current;
+        if (com.android.launcher3.BuildConfig.DEBUG && service != null && service.running && service.audio.isMuted() != muted) service.mute();
+    }
     public static boolean injectDebugText(String text) {
         Z0LiveService service = current;
-        if (service == null || !service.running || service.peer == null || text == null || text.isBlank() || text.length() > 2000) return false;
-        service.main.post(() -> {
-            if (!service.running || service.peer == null) return;
-            if (!service.turn.canSpeakInbox()) { Log.w("z0live", "debug_turn rejected: busy"); return; }
-            service.caption = "You: " + text;
-            service.event("user_transcript", text, object("source", "debug_text"));
-            service.peer.send(object("type", "conversation.item.create", "item", object("type", "message", "role", "user", "content", new JSONArray().put(object("type", "input_text", "text", text)))).toString());
-            service.peer.send(object("type", "response.create").toString());
-            Log.i("z0live", "debug_turn injected");
-            service.publish();
-        });
+        if (!debugReady() || Looper.myLooper() != Looper.getMainLooper() || text == null || text.isBlank() || text.length() > 2000) return false;
+        service.turn.responseStarted();
+        service.caption = "You: " + text;
+        service.event("user_transcript", text, object("source", "debug_text"));
+        service.peer.send(object("type", "conversation.item.create", "item", object("type", "message", "role", "user", "content", new JSONArray().put(object("type", "input_text", "text", text)))).toString());
+        service.peer.send(object("type", "response.create").toString());
+        Log.i("z0live", "debug_turn injected");
+        service.publish();
         return true;
     }
 
@@ -668,7 +675,8 @@ public final class Z0LiveService extends Service {
     @Override public void onDestroy() {
         if (!ending) finishSession("Voice service stopped by Android", false);
         if (current == this) current = null;
-        http.connectionPool().evictAll();
+        // Closing pooled TLS sockets can perform network writes; never do it on Android's main thread.
+        new Thread(() -> http.connectionPool().evictAll(), "z0live-http-close").start();
         super.onDestroy();
     }
     private static String bounded(String value, int max) { return value.length() > max ? value.substring(0, max) : value; }

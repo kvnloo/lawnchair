@@ -8,6 +8,7 @@ public final class Z0LiveAudioState {
     private boolean connected;
 
     public boolean isMuted() { return muted; }
+    public boolean isConnected() { return connected; }
     public void toggleMute() { muted = !muted; }
     public void setPlayingInbox(boolean value) { playingInbox = value; }
     public void setFocus(boolean value) { focus = value; }
