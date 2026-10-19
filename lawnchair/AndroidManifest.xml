@@ -49,6 +49,7 @@
     <!-- The on-device Android speech service must be discoverable on Android 11+. -->
     <queries>
         <package android:name="com.tailscale.ipn" />
+        <package android:name="com.noop.whoop.debug" />
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
         <intent>
             <action android:name="android.speech.RecognitionService" />
@@ -73,6 +74,9 @@
 
     <application android:dataExtractionRules="@xml/z0live_data_extraction_rules">
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
+        <!-- Capability-backed Oura tap messages never expose a public broadcast surface. -->
+        <receiver android:name="app.lawnchair.zer0.voice.z0live.OuraGestureReceiver"
+            android:exported="false" />
         <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveService"
             android:exported="false" android:stopWithTask="false"
             android:foregroundServiceType="microphone" />

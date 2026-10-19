@@ -1,0 +1,97 @@
+name: Oura z0live Lawnchair APK (fork)
+
+on:
+  push:
+    branches: [chatgpt/lc-oura-noop-handoff]
+    paths:
+      - 'lawnchair/**'
+      - 'tools/zer0/**'
+      - 'docs/zer0/**'
+      - '.github/workflows/oura-z0live-lawnchair-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: oura-z0live-lawnchair-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  android:
+    if: github.repository == 'kvnloo/lawnchair'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Use existing z0live APK signing identity
+        env:
+          DEBUG_KEYSTORE: ${{ secrets.Z0LIVE_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$DEBUG_KEYSTORE" || { echo "::error::Missing existing z0live stable signer"; exit 1; }
+          umask 077
+          mkdir -p "$HOME/.android"
+          printf '%s' "$DEBUG_KEYSTORE" | base64 --decode > "$HOME/.android/debug.keystore"
+          chmod 600 "$HOME/.android/debug.keystore"
+      - name: Offline gesture admission tests
+        run: bash tools/zer0/test-oura-gesture-admission.sh
+      - name: Voice, backend and safe audio tests
+        run: |
+          bash tools/zer0/test-voice-commands.sh
+          bash tools/zer0/test-z0live-backend-contract.sh
+          bash tools/zer0/test-z0live-audio.sh
+      - name: Pin inherited upstream lint baseline
+        run: |
+          git fetch --no-tags --depth=1 origin ba091219e2d7c4cac8f173754d0c234f9ff866f0
+          python3 tools/zer0/check-z0live-lint-baseline.py
+      - name: Formatting and lint
+        run: |
+          ./gradlew spotlessCheck --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
+          ./gradlew lintLawnWithQuickstepPlayDebug --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
+      - name: Build APK
+        run: ./gradlew assembleLawnWithQuickstepPlayDebug --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
+      - name: Inspect APK and sign metadata
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          apk="$(find build/outputs/apk -name '*.apk' -type f | head -1)"
+          test -n "$apk"
+          cp "$apk" dist/Lawnchair-Oura-z0live.apk
+          SDKTOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
+          "$SDKTOOLS/apksigner" verify --print-certs dist/Lawnchair-Oura-z0live.apk > dist/certificate.txt
+          "$SDKTOOLS/aapt" dump badging dist/Lawnchair-Oura-z0live.apk | grep -E '^(package:|sdkVersion:|targetSdkVersion:)' | tee dist/package.txt
+          grep -q "package: name='app.lawnchair.play.debug'" dist/package.txt
+          sha256sum dist/Lawnchair-Oura-z0live.apk | tee dist/SHA256SUMS
+          printf 'repository=%s\ncommit=%s\nrun=%s\nplatform=Android\n' \
+            "$GITHUB_REPOSITORY" "$GITHUB_SHA" "$GITHUB_RUN_ID" > dist/build-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Lawnchair-Oura-z0live-${{ github.sha }}
+          path: dist/*
+          retention-days: 30
+          if-no-files-found: error
+      - name: Publish exact-commit test APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="oura-z0live-lawnchair-${GITHUB_SHA:0:12}"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Already published: $tag"
+            exit 0
+          fi
+          gh release create "$tag" dist/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+            --title "Lawnchair Oura z0live beta ${GITHUB_SHA:0:12}" --prerelease --latest=false \
+            --notes "Fork-only experimental z0live + NOOP Oura enrollment. Signed using existing z0live debug signer. Tests/build/CI verified for exact commit ${GITHUB_SHA}; owner must verify Android phone+ring hardware and voice consent, issue #26. No unprompted microphone recording."
+          gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json url,assets
