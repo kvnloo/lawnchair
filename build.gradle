@@ -292,6 +292,11 @@ android {
     }
 
     sourceSets {
+        debug {
+            java.srcDirs = ['debug/src']
+            kotlin.directories.addAll('debug/src')
+            manifest.srcFile 'debug/AndroidManifest.xml'
+        }
         main {
             res.srcDirs = ['res']
 
