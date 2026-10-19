@@ -28,6 +28,7 @@ done
 
 javac --release 17 --add-modules jdk.httpserver -encoding UTF-8 -cp "$classpath" -d "$work" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/PairingValidation.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/PendingPairing.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveProtocol.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveTelemetry.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveEvents.java" \

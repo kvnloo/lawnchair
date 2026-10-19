@@ -15,14 +15,19 @@ See [discovery receipts](Z0LIVE_DISCOVERY.md) for the earlier work and Ripple id
    `https://0.taila30dc.ts.net:8791`; it must be tailnet-reachable with valid TLS.
 3. On the desktop run, in the z0live checkout:
    ```sh
-   ./bin/z0live pair lawnchair-s25
+   z0live pair s25 --qr
    ```
-   Treat the printed pairing link as a password. Open it on the phone, or paste it
-   into **z0live → Settings → Paste pairing link → Review pairing**. Confirm the
-   displayed server origin. Credentials are Keystore-encrypted and excluded from
-   Android cloud/device-transfer backups. The link is not retained in the Activity
-   intent/history. No pairing QR scanner is bundled; use a trusted external scanner
-   to open a generated QR if desired.
+   Open **z0live → Scan pairing QR** (also available in Settings when re-pairing),
+   scan the desktop QR and confirm the displayed server origin. Google Play services
+   supplies a QR-only scanner; Lawnchair requests no CAMERA permission. The scanner
+   module may need a first-use download. If unavailable, an error is shown and you
+   can still open a pairing deeplink or paste it into **Settings → Paste pairing link
+   → Review pairing**. Treat QR codes and links as passwords. Credentials are only
+   saved after confirmation, Keystore-encrypted and excluded from backups. Both scan
+   and VIEW links use the same validator, single-use pending request and confirm/save
+   path. Pending links stay in process memory until controls are resumed rather than
+   expiring unseen after 30 seconds. Process death discards them: re-scan/reopen the
+   link. No unconfirmed credential is written to disk or retained in Activity intents.
 4. Tap the QSB microphone, or Start in the glass controls. Grant microphone and
    notification permissions. Pairing and external assistant/deeplink entry do not
    start recording without a visible Start action. Captions, mute and End are in
@@ -122,4 +127,4 @@ credentials and does not need a running broker.
   it is not a durable offline outbox. Long outages/process death can lose unsent events.
 - New experimental z0live labels are English-only (marked non-translatable pending localization).
 - No screen reading, remote phone-action execution, embedded Ripple native component,
-  verified Ripple deployment, built-in QR camera or separate shared Android SDK is shipped.
+  verified Ripple deployment or separate shared Android SDK is shipped.

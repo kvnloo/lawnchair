@@ -473,6 +473,7 @@ dependencies {
 
     lawnImplementation libs.stream.webrtc
     lawnImplementation libs.androidx.security.crypto
+    lawnImplementation "com.google.android.gms:play-services-code-scanner:16.1.0"
 
     implementation libs.bundles.retrofit
 
@@ -537,6 +538,15 @@ licensee {
     allow(SpdxId.Apache_20)
     allow(SpdxId.BSD_3_Clause)
     allow(SpdxId.GPL_20_or_later)
+    // Permission-free Google scanner SDK and its pinned Google-terms transitive dependencies.
+    allowDependency("com.google.android.gms", "play-services-code-scanner", "16.1.0")
+    allowDependency("com.google.android.gms", "play-services-base", "18.1.0")
+    allowDependency("com.google.android.gms", "play-services-basement", "18.1.0")
+    allowDependency("com.google.android.gms", "play-services-tasks", "18.0.2")
+    allowDependency("com.google.android.odml", "image", "1.0.0-beta1")
+    allowDependency("com.google.mlkit", "barcode-scanning-common", "17.0.0")
+    allowDependency("com.google.mlkit", "common", "18.9.0")
+    allowDependency("com.google.mlkit", "vision-common", "17.0.0")
     allowDependency(libs.libsu.core)
     allowDependency(libs.libsu.service)
     allowUrl("https://github.com/patrykmichalik/opto/blob/master/LICENSE")

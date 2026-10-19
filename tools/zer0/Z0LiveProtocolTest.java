@@ -28,6 +28,7 @@ public final class Z0LiveProtocolTest {
 
     public static void main(String[] args) throws Exception {
         pairingValidation();
+        qrAndDeeplinkPairing();
         routesAndAuthorization();
         sessionValidation();
         inboxValidation();
@@ -77,6 +78,23 @@ public final class Z0LiveProtocolTest {
                 "production validates backend origin");
         illegal(() -> new Z0LiveProtocol(new OkHttpClient(), "http://evil.example", TOKEN,
                 "http://127.0.0.1:1/v1/realtime/calls"), "test constructor only admits loopback");
+    }
+
+    private static void qrAndDeeplinkPairing() throws Exception {
+        String scanned = "z0live://pair?url=https%3A%2F%2Fvoice.example%3A8443%2F&token=a%2Bb%3D";
+        PendingPairing qr = new PendingPairing();
+        PendingPairing deeplink = new PendingPairing();
+        qr.offer(scanned);
+        deeplink.offer(scanned);
+        PairingValidation.Pairing fromQr = qr.take();
+        PairingValidation.Pairing fromLink = deeplink.take();
+        equal(fromQr.backendUrl, fromLink.backendUrl, "QR and VIEW origins identical");
+        equal(fromQr.token, fromLink.token, "QR and VIEW tokens identical");
+        equal(qr.take() == null, true, "scanned request consumed only once");
+        equal(deeplink.take() == null, true, "VIEW request consumed only once");
+        deeplink.offer(scanned);
+        illegal(() -> deeplink.offer("not a pairing QR"), "invalid scan rejected");
+        equal(deeplink.take().token, fromQr.token, "invalid input preserves validated pending request");
     }
 
     private static void routesAndAuthorization() throws Exception {

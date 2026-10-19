@@ -12,8 +12,6 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.os.Process;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -26,14 +24,15 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import app.lawnchair.zer0.voice.VoiceAppVisibility;
 import com.android.launcher3.R;
+import com.google.mlkit.vision.barcode.common.Barcode;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions;
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning;
 import java.util.List;
-import java.util.UUID;
 
 /** Visible permission, pairing, and session controls. The service owns microphone audio. */
 public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Observer {
     private static final String INTERNAL_ACTION = "app.lawnchair.zer0.voice.z0live.OPEN";
     private static final String EXTRA_START_NOW = "app.lawnchair.zer0.voice.z0live.START_NOW";
-    private static final String EXTRA_PAIRING_HANDOFF = "app.lawnchair.zer0.voice.z0live.PAIRING_HANDOFF";
     private static final String EXTRA_BAD_LINK = "app.lawnchair.zer0.voice.z0live.BAD_LINK";
     private static final int MICROPHONE_REQUEST = 301;
     private static final int NOTIFICATION_REQUEST = 302;
@@ -60,14 +59,9 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
     private PairingValidation.Pairing replacement;
     private String localMessage;
 
-    // One short-lived, single-consumer handoff. No credential enters a clean Activity intent.
-    private static final Handler LINK_MAIN = new Handler(Looper.getMainLooper());
-    private static PairingValidation.Pairing linkPairing;
-    private static String linkId;
-    private static final Runnable EXPIRE_LINK = () -> {
-        linkPairing = null;
-        linkId = null;
-    };
+    // Retain only in memory until visible; process death discards it. Nothing enters a clean Intent.
+    private static final PendingPairing PENDING_PAIRING = new PendingPairing();
+    private boolean scanning;
 
     /** Exported no-history trampoline. It never requests permission or starts microphone audio. */
     public static final class LinkActivity extends Activity {
@@ -77,7 +71,6 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
             Intent incoming = getIntent();
             Uri data = incoming.getData();
             Intent clean = intent(this, false).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            String handoff = null;
             try {
                 if (savedState != null) {
                     clean.putExtra(EXTRA_BAD_LINK, true);
@@ -87,13 +80,7 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
                         && "z0live://voice".equals(data.toString())) {
                     // An exported voice link does not authorize a microphone start.
                 } else if (Intent.ACTION_VIEW.equals(incoming.getAction()) && data != null) {
-                    PairingValidation.Pairing parsed = PairingValidation.parse(data.toString());
-                    LINK_MAIN.removeCallbacks(EXPIRE_LINK);
-                    linkPairing = parsed;
-                    handoff = UUID.randomUUID().toString();
-                    linkId = handoff;
-                    LINK_MAIN.postDelayed(EXPIRE_LINK, 30_000);
-                    clean.putExtra(EXTRA_PAIRING_HANDOFF, handoff);
+                    PENDING_PAIRING.offer(data.toString());
                 } else {
                     clean.putExtra(EXTRA_BAD_LINK, true);
                 }
@@ -107,18 +94,12 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
             try {
                 startActivity(clean);
             } catch (RuntimeException error) {
-                if (handoff != null && handoff.equals(linkId)) clearLink();
+                // Keep the validated request for the next visible opening of z0live.
             } finally {
                 if (isTaskRoot()) finishAndRemoveTask();
                 else finish();
             }
         }
-    }
-
-    private static void clearLink() {
-        LINK_MAIN.removeCallbacks(EXPIRE_LINK);
-        linkPairing = null;
-        linkId = null;
     }
 
     public static Intent intent(Context context, boolean startNow) {
@@ -147,6 +128,7 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         autoStart = false;
         wantsStart = false;
         captureIntent(incoming, true);
+        if (resumed) consumePairing();
         if (resumed && autoStart) {
             autoStart = false;
             requestStart();
@@ -155,7 +137,6 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
 
     private void captureIntent(Intent incoming, boolean allowInternalStart) {
         Uri data = incoming.getData();
-        String handoff = incoming.getStringExtra(EXTRA_PAIRING_HANDOFF);
         boolean badLink = incoming.getBooleanExtra(EXTRA_BAD_LINK, false);
         autoStart = allowInternalStart && data == null
                 && incoming.getComponent() != null
@@ -167,12 +148,6 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         incoming.setClipData(null);
         incoming.replaceExtras((Bundle) null);
         setIntent(intent(this, false).addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS));
-        if (handoff != null) {
-            PairingValidation.Pairing value = handoff.equals(linkId) ? linkPairing : null;
-            if (handoff.equals(linkId)) clearLink();
-            if (value != null) confirmPairing(value);
-            else badLink = true;
-        }
         if (data != null || badLink) {
             autoStart = false;
             settings.setVisibility(View.VISIBLE);
@@ -190,6 +165,7 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
     protected void onResume() {
         super.onResume();
         resumed = true;
+        consumePairing();
         Z0LiveStatus.Snapshot snapshot = Z0LiveStatus.get();
         onChanged(snapshot);
         if (snapshot.pendingNetwork && snapshot.active) Z0LiveService.retry(this);
@@ -299,6 +275,48 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         mute.setText(snapshot.muted ? R.string.z0live_unmute : R.string.z0live_mute);
         end.setVisibility(snapshot.active ? View.VISIBLE : View.GONE);
         network.setVisibility(snapshot.pendingNetwork ? View.VISIBLE : View.GONE);
+    }
+
+    private void consumePairing() {
+        if (!resumed || isFinishing() || isDestroyed()) return;
+        PairingValidation.Pairing value = PENDING_PAIRING.take();
+        if (value == null) return;
+        autoStart = false;
+        wantsStart = false;
+        confirmPairing(value);
+    }
+
+    private void acceptPairingLink(String value) {
+        PENDING_PAIRING.offer(value);
+        consumePairing();
+    }
+
+    private void scanPairing() {
+        if (scanning || store == null) return;
+        scanning = true;
+        GmsBarcodeScannerOptions options = new GmsBarcodeScannerOptions.Builder()
+                .setBarcodeFormats(Barcode.FORMAT_QR_CODE).build();
+        try {
+            GmsBarcodeScanning.getClient(this, options).startScan()
+                    .addOnSuccessListener(barcode -> {
+                        if (isDestroyed()) return;
+                        scanning = false;
+                        try {
+                            acceptPairingLink(barcode.getRawValue());
+                        } catch (IllegalArgumentException error) {
+                            showMessage(R.string.z0live_pair_invalid);
+                        }
+                    })
+                    .addOnCanceledListener(() -> scanning = false)
+                    .addOnFailureListener(error -> {
+                        if (isDestroyed()) return;
+                        scanning = false;
+                        showMessage(R.string.z0live_pair_scan_failed);
+                    });
+        } catch (RuntimeException error) {
+            scanning = false;
+            showMessage(R.string.z0live_pair_scan_failed);
+        }
     }
 
     private void confirmPairing(PairingValidation.Pairing pairing) {
@@ -414,12 +432,13 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
         body.addView(settings);
         settings.setVisibility(View.GONE);
         backend = text(settings, "", 14);
+        button(settings, R.string.z0live_pair_scan, this::scanPairing);
         pairingLink = input(settings, R.string.z0live_pair_hint, true);
         button(settings, R.string.z0live_pair_review, () -> {
             String value = pairingLink.getText().toString();
             pairingLink.setText("");
             try {
-                confirmPairing(PairingValidation.parse(value));
+                acceptPairingLink(value);
             } catch (IllegalArgumentException error) {
                 showMessage(R.string.z0live_pair_invalid);
             }
