@@ -22,11 +22,9 @@
     <string name="z0live_service_malformed_event" translatable="false">Malformed realtime event</string>
     <string name="z0live_service_invalid_call" translatable="false">Invalid realtime tool call ID</string>
     <string name="z0live_service_tool_failed" translatable="false">Server tool failed. Check the documented builtin tool routes.</string>
-    <string name="z0live_service_tts_unavailable" translatable="false">Android TextToSpeech is unavailable; inbox speech will be reported as failed</string>
     <string name="z0live_service_invalid_inbox" translatable="false">Inbox returned an invalid item; cursor has not advanced</string>
     <string name="z0live_service_inbox_retry" translatable="false">Inbox polling failed; retrying while the session is open</string>
     <string name="z0live_service_inbox_action_failed" translatable="false">Inbox action failed: </string>
-    <string name="z0live_service_tts_failed" translatable="false">Android could not speak an inbox item; failure reported</string>
     <string name="z0live_service_cursor_failed" translatable="false">Inbox cursor could not be saved; replies may repeat after restart</string>
     <string name="z0live_notification_channel" translatable="false">z0live microphone</string>
     <string name="z0live_notification_description" translatable="false">Ongoing voice session with mute and end controls</string>
@@ -35,4 +33,7 @@
     <string name="z0live_notification_title" translatable="false">z0live · %1$s%2$s</string>
     <string name="z0live_service_ending" translatable="false">Ending</string>
     <string name="z0live_service_ended" translatable="false">Ended</string>
+    <string name="z0live_service_inbox_speech_failed" translatable="false">Hermes reply was interrupted. A silent notification keeps the reply available.</string>
+    <string name="z0live_inbox_notification_channel" translatable="false">Hermes replies (silent)</string>
+    <string name="z0live_inbox_notification_title" translatable="false">Hermes reply</string>
 </resources>

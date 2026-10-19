@@ -78,7 +78,7 @@ The canonical contract is the z0live backend's `docs/API.md`:
 
 - authenticated `/v1/health`, `/v1/realtime/session`, direct OpenAI `/v1/realtime/calls`;
 - inbox is `{messages:[...],after:N,has_more:B}`, **not a bare array**;
-- cursor persists after handling; subsequent pages drain without waiting for a new session;
+- cursor is encrypted, monotonic and scoped to backend + paired-device credential. Each explicit connection snapshots the latest inbox id and starts there: history is never an opening speech/summary. Live reply identities are persisted before speech dispatch;
 - `action:null` means speech only. Declared local tools run through public Android APIs;
   unknown, invalid and stale-session inbox actions are rejected with a structured result;
 - phone tools: home, fuzzy app opening/disambiguation and app search/list, web search/URL,
@@ -91,8 +91,18 @@ The canonical contract is the z0live backend's `docs/API.md`:
 - builtin `/v1/tools/tell_hermes`, `/v1/tools/get_context`, `/v1/tools/summarize`, plus the broker's live work tools (`work_search`, `ask_hermes`, `start_task`, `task_status`, `what_changed`). The session mint's validated `builtin_tools` catalog is authoritative; older brokers use a compatibility fallback. `ask_hermes` gets a bounded 40-second client deadline for its 25-second synchronous wait;
 - bare batched event arrays with canonical types, Unix seconds and UUID `data.event_id`;
 - broker-generated session identity, explicit `/v1/sessions/ID/end` on hangup;
-- tool continuation waits for `response.done` and pending tool work; Hermes TTS waits
-  for user/provider idle and temporarily suppresses the mic without losing manual mute.
+- tool continuation waits for `response.done` and pending tool work. Android TextToSpeech
+  is not used. A new reply scoped to the current human-started session is injected as
+  data into that Realtime conversation, then GPT relays it in its existing voice with
+  tool calls disabled. Old-session/broadcast replies are silent notifications, not speech;
+- inactive delivery is a best-effort JobScheduler poll (minimum 15-minute interval,
+  network required, Android/OEM scheduling and notification permission apply). It never
+  starts a microphone session or executes phone tools. Interrupted replies also remain
+  in silent notifications; the local cursor prevents automatic replay;
+- barge-in explicitly enables server VAD `interrupt_response` and `create_response`.
+  User speech cancels an active response and clears the WebRTC output audio buffer;
+  OpenAI's WebRTC buffer-clear also truncates unheard conversation audio. The mic stays
+  available for interruption unless the owner manually mutes it or audio focus is lost.
 
 ## Native surfaces and identity
 
@@ -130,7 +140,9 @@ not a claim that the inherited launcher is globally lint-clean. New-feature find
 fixed (including backup whitelist validation, back dispatcher, Compose resource reads and
 English-only labels); the legacy tile overload is narrowly guarded/suppressed below API 34.
 
-For a consented paired debug APK, run the real-phone text-turn suite in one batch:
+**Phone automation is currently prohibited until the parent explicitly re-enables it.**
+The following is a reference command, not authorization to execute it. For a reserved,
+consented paired debug APK, the real-phone text-turn suite runs in one batch:
 
 ```sh
 python3 tools/zer0/device-z0live-checks.py --serial DEVICE \
@@ -164,9 +176,12 @@ credentials and does not need a running broker.
   new session and process restart. Network/peer loss ends honestly; **automatic WebRTC
   reconnection is not implemented** (Start creates a new session).
 - Persistent foreground session is user-started, not hotword/boot listening or an unkillable
-  service. Samsung battery restrictions can stop it. Real S25 install, connection, identity,
-  app matching/Chrome, Wi-Fi, torch and volume checks have been exercised; full per-feature
-  acceptance must use the current release APK and the device receipts, not CI alone.
+  service. Samsung battery restrictions can stop it. **Current-repair device acceptance:
+  NOT RUN.** Phone actions were stopped at the owner's/parent's direction after repeated
+  inbox speech disrupted phone use. Earlier diagnostic installs/turns are not acceptance
+  proof for the no-replay/Realtime-inbox/barge-in repair. Do not run ADB, install or inject
+  turns until the parent explicitly re-enables phone access. Local/JVM/CI checks alone
+  do not satisfy G0/G2/G8.
 - Inbox uses polling, not SSE. Telemetry is bounded in memory, retries up to three times;
   it is not a durable offline outbox. Long outages/process death can lose unsent events.
 - New experimental z0live labels are English-only (marked non-translatable pending localization).

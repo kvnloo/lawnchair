@@ -147,6 +147,17 @@ public final class Z0LiveProtocol {
         }
     }
 
+    /** Snapshot a finite history watermark without speaking or executing any historical item. */
+    public long inboxHead() throws IOException {
+        long cursor = 0;
+        for (int page = 0; page < 100; page++) {
+            InboxPage result = inboxPage(cursor);
+            cursor = result.after;
+            if (!result.hasMore) return cursor;
+        }
+        throw new IOException("Inbox history exceeds safe initialization budget");
+    }
+
     public JSONArray inbox(long after) throws IOException {
         return inboxPage(after).messages;
     }

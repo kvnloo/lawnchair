@@ -20,11 +20,8 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
 import com.android.launcher3.R;
-import android.speech.tts.TextToSpeech;
-import android.speech.tts.UtteranceProgressListener;
 import java.io.IOException;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -50,27 +47,30 @@ public final class Z0LiveService extends Service {
             .followRedirects(false).followSslRedirects(false).build();
     private final Z0LiveTelemetry telemetry = new Z0LiveTelemetry();
     private final Z0LiveTurnState turn = new Z0LiveTurnState();
+    private final Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
+    private long sessionInboxFloor;
     private final AtomicInteger telemetryFailed = new AtomicInteger();
     private final Z0LiveAudioState audio = new Z0LiveAudioState();
+    private final Z0LiveInboxPlayback inboxPlayback = new Z0LiveInboxPlayback();
     private final Set<String> toolCalls = new HashSet<>();
     private final java.util.Map<String, String> toolNames = new java.util.HashMap<>();
     private Z0LiveProtocol backend;
     private Z0LivePeer peer;
-    private TextToSpeech tts;
     private AudioManager audioManager;
     private AudioFocusRequest focusRequest;
-    private boolean running, pendingNetwork, connecting, telemetryBusy, inboxBusy, ttsReady;
+    private boolean running, pendingNetwork, connecting, telemetryBusy, inboxBusy;
     private boolean speaking, ending, closingResources;
     private int generation, reachabilityAttempts, pendingTools;
     private Z0LiveStore store;
+    private PairingValidation.Pairing activePairing;
     private long inboxCursor;
     private String sessionId = "", status = "", caption = "", error = "";
-    private String speakingInboxId;
     private volatile String brokerSessionToEnd = "";
     private JSONObject inboxItem;
+    private String inboxResponseId = "";
     private final Runnable healthRetry = () -> checkBackend();
     private final Runnable connectionTimeout = () -> fail(getString(R.string.z0live_service_connection_timeout));
-    private final Runnable inboxTimeout = () -> finishInbox(false);
+    private final Runnable inboxTimeout = () -> { interruptRealtime(); finishInbox(false); };
     private final Runnable telemetryTick = new Runnable() {
         public void run() {
             if (!running) return;
@@ -95,6 +95,7 @@ public final class Z0LiveService extends Service {
         if (current != null && (current.running || current.closingResources)) return;
         activity.startForegroundService(new Intent(activity, Z0LiveService.class).setAction(START));
     }
+    public static boolean hasActiveSession() { return Z0LiveStatus.get().active; }
     public static void end(Context context) {
         Z0LiveService service = current;
         if (service != null) service.main.post(() -> service.finishSession("", true));
@@ -116,6 +117,7 @@ public final class Z0LiveService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         current = this;
+        Z0LiveInboxNotifications.schedule(this);
         status = getString(R.string.z0live_service_connecting);
         NotificationChannel channel = new NotificationChannel(CHANNEL, getString(R.string.z0live_notification_channel), NotificationManager.IMPORTANCE_LOW);
         channel.setDescription(getString(R.string.z0live_notification_description));
@@ -148,7 +150,8 @@ public final class Z0LiveService extends Service {
         try {
             store = new Z0LiveStore(this);
             PairingValidation.Pairing pairing = store.pairing();
-            inboxCursor = store.inboxCursor();
+            activePairing = pairing;
+            inboxCursor = pairing == null ? -1 : store.inboxCursor(pairing);
             if (pairing == null) { fail(getString(R.string.z0live_service_pair_required)); return START_NOT_STICKY; }
             backend = new Z0LiveProtocol(http, pairing.backendUrl, pairing.token);
             event("session_start", "", object("client", "lawnchair"));
@@ -239,16 +242,20 @@ public final class Z0LiveService extends Service {
         main.postDelayed(connectionTimeout, 45000);
         network.execute(() -> {
             try {
+                // Every explicit connection establishes a live-only floor. Never read old replies aloud.
+                long head = backend.inboxHead();
+                store.setInboxCursor(activePairing, Math.max(Math.max(0, inboxCursor), head));
                 Z0LiveProtocol.Session session = backend.session(object("app", getPackageName(), "screen", "z0live voice"), Z0LivePhoneTools.schemas(this));
                 brokerSessionToEnd = session.sessionId;
                 main.post(() -> {
                     if (!valid(id)) return;
                     if (session.sessionId == null || session.sessionId.isEmpty()) { fail(getString(R.string.z0live_service_missing_session)); return; }
+                    inboxCursor = Math.max(Math.max(0, inboxCursor), head);
+                    sessionInboxFloor = inboxCursor;
                     sessionId = session.sessionId;
                     event("session_ready", "", object("model", session.model, "voice", session.voice, "instructions_version", session.instructionsVersion, "builtin_tools", new JSONArray(session.builtinTools)));
                     try {
                         if (!requestAudioFocus()) { fail(getString(R.string.z0live_service_audio_focus_unavailable)); return; }
-                        createTts(id);
                         peer = new Z0LivePeer(this, main, new Z0LivePeer.Listener() {
                             public void onOffer(String sdp) {
                                 if (!valid(id)) return;
@@ -268,6 +275,7 @@ public final class Z0LiveService extends Service {
                                 status = getString(R.string.z0live_service_listening);
                                 error = "";
                                 applyAudio();
+                                peer.send(Z0LiveBargeIn.vadConfiguration());
                                 Log.i("z0live", "connected model=" + session.model + " voice=" + session.voice);
                                 event("connected", "", object("model", session.model, "voice", session.voice));
                                 publish();
@@ -278,7 +286,7 @@ public final class Z0LiveService extends Service {
                         });
                     } catch (RuntimeException e) { fail(getString(R.string.z0live_service_audio_start_failed)); }
                 });
-            } catch (IOException e) {
+            } catch (IOException | RuntimeException e) {
                 main.post(() -> { if (valid(id)) fail(getString(R.string.z0live_service_session_failed)); });
             }
         });
@@ -294,7 +302,7 @@ public final class Z0LiveService extends Service {
                     boolean gained = change == AudioManager.AUDIOFOCUS_GAIN;
                     audio.setFocus(gained);
                     if (!gained && inboxItem != null) {
-                        if (tts != null) tts.stop();
+                        interruptRealtime();
                         finishInbox(false);
                     }
                     applyAudio();
@@ -336,6 +344,16 @@ public final class Z0LiveService extends Service {
         return true;
     }
 
+    private void interruptRealtime() {
+        if (peer != null) {
+            JSONArray commands = bargeIn.interrupt();
+            for (int i = 0; i < commands.length(); i++) peer.send(commands.optJSONObject(i).toString());
+        }
+        turn.playback(false);
+        speaking = false;
+        if (inboxItem != null) finishInbox(false);
+    }
+
     private void realtimeEvent(String raw) {
         try {
             JSONObject message = new JSONObject(raw);
@@ -362,10 +380,14 @@ public final class Z0LiveService extends Service {
                     publish();
                     break;
                 case "response.created":
+                    JSONObject createdResponse = message.optJSONObject("response");
+                    bargeIn.responseStarted(createdResponse == null ? "" : createdResponse.optString("id"));
+                    if (inboxItem != null && inboxResponseId.isEmpty() && createdResponse != null) inboxResponseId = createdResponse.optString("id");
                     turn.responseStarted();
                     break;
                 case "input_audio_buffer.speech_started":
                     turn.userSpeaking(true);
+                    if (!audio.isMuted()) interruptRealtime();
                     break;
                 case "input_audio_buffer.cleared":
                     turn.userSpeaking(false);
@@ -377,6 +399,7 @@ public final class Z0LiveService extends Service {
                     break;
                 case "output_audio_buffer.started":
                     speaking = true;
+                    bargeIn.playback(true);
                     turn.playback(true);
                     status = getString(R.string.z0live_service_speaking);
                     event(type, "", new JSONObject());
@@ -385,7 +408,9 @@ public final class Z0LiveService extends Service {
                 case "output_audio_buffer.stopped":
                 case "output_audio_buffer.cleared":
                     speaking = false;
+                    bargeIn.playback(false);
                     turn.playback(false);
+                    if (inboxItem != null && inboxResponseId.equals(message.optString("response_id"))) finishInbox("output_audio_buffer.stopped".equals(type));
                     drainTurn();
                     status = getString(inboxItem == null ? R.string.z0live_service_listening : R.string.z0live_service_speaking);
                     event(type, "", new JSONObject());
@@ -404,10 +429,13 @@ public final class Z0LiveService extends Service {
                     publish();
                     break;
                 case "error":
+                    JSONObject providerError = message.optJSONObject("error");
+                    if (providerError != null && "response_cancel_not_active".equals(providerError.optString("code"))) break;
                     event("realtime_error", "", new JSONObject());
                     fail(getString(R.string.z0live_service_realtime_failed));
                     break;
                 case "response.done":
+                    bargeIn.responseDone();
                     turn.responseDone();
                     drainTurn();
                     JSONObject response = message.optJSONObject("response");
@@ -491,28 +519,6 @@ public final class Z0LiveService extends Service {
 
     private JSONObject pendingInbox;
 
-    private void createTts(int id) {
-        tts = new TextToSpeech(this, result -> main.post(() -> {
-            if (!valid(id)) return;
-            ttsReady = result == TextToSpeech.SUCCESS;
-            if (ttsReady) {
-                int language = tts.setLanguage(Locale.getDefault());
-                ttsReady = language != TextToSpeech.LANG_MISSING_DATA && language != TextToSpeech.LANG_NOT_SUPPORTED;
-            }
-            if (!ttsReady) { error = getString(R.string.z0live_service_tts_unavailable); publish(); }
-        }));
-        tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
-        tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-            public void onStart(String utteranceId) {}
-            public void onDone(String utteranceId) { complete(utteranceId, true); }
-            public void onError(String utteranceId) { complete(utteranceId, false); }
-            public void onStop(String utteranceId, boolean interrupted) { complete(utteranceId, false); }
-            private void complete(String utteranceId, boolean success) {
-                main.post(() -> { if (valid(id) && utteranceId.equals(speakingInboxId)) finishInbox(success); });
-            }
-        });
-    }
     private void pollInbox() {
         if (inboxBusy || inboxItem != null || pendingInbox != null || !running) return;
         inboxBusy = true;
@@ -555,7 +561,13 @@ public final class Z0LiveService extends Service {
         });
     }
     private void handleInbox(JSONObject item) {
+        inboxPlayback.begin(item.optLong("id"));
         inboxItem = item;
+        if (item.optLong("id") <= sessionInboxFloor || !Z0LiveInboxDelivery.maySpeak(hasActiveSession(), sessionId, item)) {
+            Z0LiveInboxNotifications.show(this, item);
+            finishInbox(true, true, "notification");
+            return;
+        }
         String action = item.isNull("action") ? "" : item.optString("action", "");
         if (!action.isEmpty() && !"none".equals(action) && !"say".equals(action)) {
             // Hermes cannot use a stale/broadcast inbox item as fresh phone authority.
@@ -567,43 +579,57 @@ public final class Z0LiveService extends Service {
             event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
             if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
         }
+        // Claim the identity before sending speech: interruption/process loss must never replay it.
+        inboxCursor = Math.max(inboxCursor, item.optLong("id"));
+        persistCursor();
         String say = item.optString("say", "");
-        if (say.isEmpty()) { finishInbox(true); return; }
-        if (!ttsReady || say.length() > Math.min(4000, TextToSpeech.getMaxSpeechInputLength())) {
-            finishInbox(false); return;
+        if (say.isEmpty()) { finishInbox(true, true, "none"); return; }
+        if (item.optLong("id") <= sessionInboxFloor || !Z0LiveInboxDelivery.maySpeak(hasActiveSession(), sessionId, item)
+                || !audio.realtimeSpeakerEnabled()) {
+            Z0LiveInboxNotifications.show(this, item);
+            finishInbox(true, true, "notification");
+            return;
         }
-        speakingInboxId = UUID.randomUUID().toString();
-        audio.setPlayingInbox(true);
-        applyAudio();
-        caption = "Inbox: " + say;
-        status = getString(R.string.z0live_service_speaking);
-        publish();
-        main.postDelayed(inboxTimeout, 60000);
-        if (tts.speak(say, TextToSpeech.QUEUE_FLUSH, null, speakingInboxId) == TextToSpeech.ERROR) finishInbox(false);
+        try {
+            JSONArray commands = Z0LiveInboxDelivery.realtimeReply(say);
+            turn.responseStarted();
+            for (int i = 0; i < commands.length(); i++) peer.send(commands.optJSONObject(i).toString());
+            caption = "Hermes: " + say;
+            status = getString(R.string.z0live_service_speaking);
+            publish();
+            main.postDelayed(inboxTimeout, 60000);
+        } catch (RuntimeException invalid) {
+            Z0LiveInboxNotifications.show(this, item);
+            finishInbox(false);
+        }
     }
-    private void finishInbox(boolean success) {
+    private void finishInbox(boolean success) { finishInbox(success, true, "realtime"); }
+    private void finishInbox(boolean success, boolean continueSession) { finishInbox(success, continueSession, "realtime"); }
+    private void finishInbox(boolean success, boolean continueSession, String delivery) {
         if (inboxItem == null) return;
+        Z0LiveInboxPlayback.Receipt receipt = inboxPlayback.finish(success);
+        if (receipt == null) return;
         main.removeCallbacks(inboxTimeout);
         JSONObject handled = inboxItem;
         inboxItem = null;
-        speakingInboxId = null;
-        if (!success && tts != null) tts.stop();
-        audio.setPlayingInbox(false);
-        applyAudio();
-        Log.i("z0live", "inbox_speech id=" + handled.optLong("id") + " success=" + success);
-        event(success ? "inbox_handled" : "inbox_failed", "", object("id", handled.optLong("id"), "action", handled.optString("action", "")));
+        inboxResponseId = "";
+        if (!success) Z0LiveInboxNotifications.show(this, handled);
+        Log.i("z0live", "inbox_delivery id=" + handled.optLong("id") + " success=" + success + " via=" + delivery);
+        event(success ? ("realtime".equals(delivery) ? "inbox_handled" : "inbox_notified") : "inbox_failed", "",
+                object("id", handled.optLong("id"), "action", handled.optString("action", ""), "delivery", delivery, "spoken", success && "realtime".equals(delivery)));
         // Failure/rejection is handled explicitly and reported before advancing; never skip an unhandled item.
-        inboxCursor = handled.optLong("id", inboxCursor);
+        inboxCursor = Z0LiveInboxPlayback.cursorAfter(inboxCursor, receipt);
         persistCursor();
+        if (!continueSession) return;
         drainTurn();
         main.post(this::pollInbox);
         status = getString(R.string.z0live_service_listening);
-        if (!success) error = getString(R.string.z0live_service_tts_failed);
+        if (!success) error = getString(R.string.z0live_service_inbox_speech_failed);
         publish();
     }
 
     private void persistCursor() {
-        try { if (store != null) store.setInboxCursor(inboxCursor); }
+        try { if (store != null && activePairing != null) store.setInboxCursor(activePairing, inboxCursor); }
         catch (RuntimeException ignored) { error = getString(R.string.z0live_service_cursor_failed); }
     }
 
@@ -645,6 +671,9 @@ public final class Z0LiveService extends Service {
     private void finishSession(String reason, boolean userEnd) {
         if (ending) return;
         ending = true;
+        // Persist an honest failed receipt before invalidating the session. The claimed inbox
+        // identity is already durable, so an interrupted Realtime reply cannot replay on restart.
+        finishInbox(false, false);
         boolean wasRunning = running;
         running = false;
         pendingNetwork = false;
@@ -659,7 +688,6 @@ public final class Z0LiveService extends Service {
         Z0LivePeer oldPeer = peer;
         peer = null;
         closingResources = oldPeer != null;
-        if (tts != null) { tts.stop(); tts.shutdown(); tts = null; }
         if (audioManager != null && focusRequest != null) {
             audioManager.abandonAudioFocusRequest(focusRequest);
             audioManager.setMode(AudioManager.MODE_NORMAL);

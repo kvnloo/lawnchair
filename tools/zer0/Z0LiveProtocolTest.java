@@ -32,6 +32,7 @@ public final class Z0LiveProtocolTest {
         routesAndAuthorization();
         sessionValidation();
         mintedBuiltinCatalog();
+        inboxHistoryHead();
         inboxValidation();
         errorsAndRedirects();
         boundedResponses();
@@ -176,6 +177,18 @@ public final class Z0LiveProtocolTest {
                 equal(request.authorization, "Bearer " + TOKEN, "every backend request authenticated");
                 check(!request.body.contains(SECRET), "ephemeral credential stays out of backend payloads");
             }
+        }
+    }
+
+    private static void inboxHistoryHead() throws Exception {
+        try (Server backend = new Server(); Server openai = new Server()) {
+            Z0LiveProtocol protocol = protocol(backend, openai);
+            backend.reply(200, "{\"messages\":[{\"id\":41}],\"after\":41,\"has_more\":true}");
+            backend.reply(200, "{\"messages\":[{\"id\":80}],\"after\":80,\"has_more\":false}");
+            equal(protocol.inboxHead(), 80L, "first connect skips to actual latest inbox id");
+            equal(backend.last().path, "/v1/inbox?after=41", "history head follows real page cursor");
+            backend.reply(200, "{\"messages\":[],\"after\":0,\"has_more\":false}");
+            equal(protocol.inboxHead(), 0L, "empty first inbox starts at zero, not infinity");
         }
     }
 

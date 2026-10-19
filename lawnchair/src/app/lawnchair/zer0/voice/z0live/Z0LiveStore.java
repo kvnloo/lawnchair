@@ -11,8 +11,11 @@ import java.security.GeneralSecurityException;
 public final class Z0LiveStore {
     public static final String PREFERENCES_NAME = "z0live_secrets";
     private final SharedPreferences preferences;
+    private final Context appContext;
+    private static final Object INBOX_LOCK = new Object();
 
     public Z0LiveStore(Context context) {
+        appContext = context.getApplicationContext();
         try {
             Context app = context.getApplicationContext();
             MasterKey key = new MasterKey.Builder(app)
@@ -45,12 +48,24 @@ public final class Z0LiveStore {
             throw new IllegalArgumentException("A pairing token is required.");
         }
         commit(preferences.edit().putString("backend", backend).putString("token", pairing.token).remove("inbox_cursor"));
+        Z0LiveInboxNotifications.schedule(appContext);
     }
 
-    public long inboxCursor() { return Math.max(0, preferences.getLong("inbox_cursor", 0)); }
-
-    public void setInboxCursor(long cursor) {
-        commit(preferences.edit().putLong("inbox_cursor", cursor));
+    private String inboxCursorKey(PairingValidation.Pairing pairing) {
+        if (pairing == null) throw new IllegalStateException("Pairing required for inbox cursor");
+        return Z0LiveInboxDelivery.cursorKey(pairing.backendUrl, pairing.token);
+    }
+    public long inboxCursor() { return inboxCursor(pairing()); }
+    public long inboxCursor(PairingValidation.Pairing pairing) {
+        synchronized (INBOX_LOCK) { return Math.max(-1, preferences.getLong(inboxCursorKey(pairing), -1)); }
+    }
+    public void setInboxCursor(long cursor) { setInboxCursor(pairing(), cursor); }
+    public void setInboxCursor(PairingValidation.Pairing pairing, long cursor) {
+        if (cursor < 0) throw new IllegalArgumentException("Invalid inbox cursor");
+        synchronized (INBOX_LOCK) {
+            String key = inboxCursorKey(pairing);
+            commit(preferences.edit().putLong(key, Math.max(cursor, preferences.getLong(key, -1))));
+        }
     }
 
     public String rippleUrl() {
@@ -68,6 +83,7 @@ public final class Z0LiveStore {
 
     public void clearPairing() {
         commit(preferences.edit().remove("backend").remove("token").remove("inbox_cursor"));
+        Z0LiveInboxNotifications.cancel(appContext);
     }
 
     private void commit(SharedPreferences.Editor editor) {
