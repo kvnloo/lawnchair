@@ -43,10 +43,10 @@ fun Z0LivePreferences() {
     val store = remember { runCatching { Z0LiveStore(context) }.getOrNull() }
     var backend by remember { mutableStateOf<String?>(null) }
     var ripple by remember { mutableStateOf("") }
-    var message by remember { mutableStateOf<String?>(null) }
+    var message by remember { mutableStateOf<Int?>(null) }
     var editRipple by remember { mutableStateOf(false) }
     var rippleDraft by remember { mutableStateOf("") }
-    var rippleError by remember { mutableStateOf<String?>(null) }
+    var rippleError by remember { mutableStateOf<Int?>(null) }
     var navigationAllowed by remember { mutableStateOf(false) }
     var navigationConsent by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
@@ -58,7 +58,7 @@ fun Z0LivePreferences() {
         try {
             context.startActivity(intent)
         } catch (_: RuntimeException) {
-            message = context.getString(R.string.z0live_settings_unavailable)
+            message = R.string.z0live_settings_unavailable
         }
     }
 
@@ -69,7 +69,7 @@ fun Z0LivePreferences() {
             ripple = store.rippleUrl().orEmpty()
             navigationAllowed = Z0LivePhoneTools.accessibilityOptIn(context)
         } catch (_: RuntimeException) {
-            message = context.getString(R.string.z0live_storage_error)
+            message = R.string.z0live_storage_error
         }
         cameraGranted = context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         onPauseOrDispose {
@@ -81,7 +81,7 @@ fun Z0LivePreferences() {
 
     PreferenceLayout(label = stringResource(R.string.z0live_title)) {
         message?.let {
-            PreferenceGroup { WarningPreference(it) }
+            PreferenceGroup { WarningPreference(stringResource(it)) }
         }
         PreferenceGroup(heading = stringResource(R.string.z0live_voice)) {
             ClickablePreference(
@@ -127,7 +127,7 @@ fun Z0LivePreferences() {
                             Z0LivePhoneTools.setAccessibilityOptIn(context, false)
                             navigationAllowed = false
                         } catch (_: RuntimeException) {
-                            message = context.getString(R.string.z0live_save_error)
+                            message = R.string.z0live_save_error
                         }
                     }
                 },
@@ -167,7 +167,7 @@ fun Z0LivePreferences() {
                         navigationAllowed = true
                         launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
                     } catch (_: RuntimeException) {
-                        message = context.getString(R.string.z0live_save_error)
+                        message = R.string.z0live_save_error
                     }
                 }) { Text(stringResource(R.string.z0live_navigation_allow)) }
             },
@@ -192,7 +192,7 @@ fun Z0LivePreferences() {
                         rippleError = null
                     },
                     isError = rippleError != null,
-                    supportingText = rippleError?.let { { Text(it) } },
+                    supportingText = rippleError?.let { { Text(stringResource(it)) } },
                     label = { Text(stringResource(R.string.z0live_ripple_hint)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Uri),
@@ -208,9 +208,9 @@ fun Z0LivePreferences() {
                         rippleDraft = ""
                         message = null
                     } catch (_: IllegalArgumentException) {
-                        rippleError = context.getString(R.string.z0live_ripple_invalid)
+                        rippleError = R.string.z0live_ripple_invalid
                     } catch (_: RuntimeException) {
-                        rippleError = context.getString(R.string.z0live_save_error)
+                        rippleError = R.string.z0live_save_error
                     }
                 }) { Text(stringResource(R.string.z0live_ripple_save)) }
             },

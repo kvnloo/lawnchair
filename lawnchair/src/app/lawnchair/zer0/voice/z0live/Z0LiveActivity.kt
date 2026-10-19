@@ -116,7 +116,8 @@ class Z0LiveActivity :
             } catch (_: RuntimeException) {
                 // A validated request stays process-local until the next visible opening.
             } finally {
-                if (isTaskRoot) finishAndRemoveTask() else finish()
+                // The controls may share this task; remove only the no-history trampoline.
+                finish()
             }
         }
     }
