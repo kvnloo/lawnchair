@@ -15,6 +15,7 @@ public final class Z0LiveEvents {
                 case "response.audio_transcript.done":
                 case "response.output_audio_transcript.done":
                 case "response.output_text.done": type = "assistant_transcript"; break;
+                case "user_transcript": case "assistant_transcript":
                 case "tool_call": case "tool_result": case "feedback": case "summary": type = source; break;
                 default: type = "app_state";
             }

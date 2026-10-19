@@ -160,6 +160,12 @@ public final class Z0LiveProtocolTest {
             equal(toolBody.getString("session_id"), "sess-1", "tool session id");
             equal(toolBody.getString("call_id"), "call-1", "tool call id");
             equal(toolBody.getJSONObject("arguments").getString("task"), "hello", "tool argument object");
+            for (String builtin : new String[] {"get_context", "summarize", "ask_hermes", "work_search", "start_task", "task_status"}) {
+                backend.reply(200, "{\"ok\":true}");
+                equal(protocol.tool("sess-1", "call-extended", builtin, "{}").getBoolean("ok"), true, "extended builtin result");
+                equal(backend.last().path, "/v1/tools/" + builtin, "extended builtin route");
+                equal(new JSONObject(backend.last().body).getJSONObject("arguments").length(), 0, "extended parsed argument object");
+            }
             for (String raw : new String[] {"not JSON", "[]", "{\"x\":1} trailing"}) {
                 int before = backend.requests.size();
                 io(() -> protocol.tool("sess-1", "call-2", "tell_hermes", raw), "non-object arguments rejected");

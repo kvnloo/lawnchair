@@ -34,7 +34,10 @@ javac --release 17 --add-modules jdk.httpserver -encoding UTF-8 -cp "$classpath"
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveEvents.java" \
   "$root/tools/zer0/Z0LiveProtocolTest.java" \
   "$root/tools/zer0/Z0LiveTelemetryTest.java" \
-  "$root/tools/zer0/Z0LiveBackendContractTest.java"
+  "$root/tools/zer0/Z0LiveBackendContractTest.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveAppMatcher.java" \
+  "$root/tools/zer0/Z0LiveAppMatcherTest.java"
+java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveAppMatcherTest
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveProtocolTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveTelemetryTest
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveBackendContractTest

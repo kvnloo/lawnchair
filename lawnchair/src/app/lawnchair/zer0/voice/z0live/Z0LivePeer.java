@@ -186,6 +186,22 @@ final class Z0LivePeer {
             }
         });
     }
+    void logDebugAudioStats() {
+        if (!com.android.launcher3.BuildConfig.DEBUG) return;
+        handler.post(() -> {
+            if (closed.get() || peer == null) return;
+            peer.getStats(report -> {
+                for (org.webrtc.RTCStats stats : report.getStatsMap().values()) {
+                    java.util.Map<String, Object> members = stats.getMembers();
+                    if ("inbound-rtp".equals(stats.getType()) && "audio".equals(members.get("kind"))) {
+                        android.util.Log.i("z0live", "audio_rtp bytes=" + members.get("bytesReceived")
+                                + " packets=" + members.get("packetsReceived") + " energy=" + members.get("totalAudioEnergy"));
+                    }
+                }
+            });
+        });
+    }
+
     void close(Runnable completed) {
         if (!closed.compareAndSet(false, true)) return;
         handler.post(() -> {

@@ -164,15 +164,20 @@ public final class Z0LiveProtocol {
         if (sessionId == null || callId == null || name == null || arguments == null) {
             throw new IOException("Missing tool inputs");
         }
-        if (!("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name))) {
+        if (!("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name)
+                || "ask_hermes".equals(name) || "work_search".equals(name)
+                || "start_task".equals(name) || "task_status".equals(name))) {
             throw new IOException("Unsupported broker tool");
         }
         JSONObject argumentValue = object(arguments);
         try {
             JSONObject payload = new JSONObject().put("session_id", sessionId).put("call_id", callId)
                     .put("arguments", argumentValue);
-            return object(execute(backendRequest("/v1/tools/" + name)
-                    .post(body(payload.toString(), JSON)).build()));
+            Request request = backendRequest("/v1/tools/" + name).post(body(payload.toString(), JSON)).build();
+            // ask_hermes waits up to 25 seconds before falling back to inbox delivery.
+            OkHttpClient toolClient = "ask_hermes".equals(name) ? client.newBuilder()
+                    .readTimeout(35, TimeUnit.SECONDS).callTimeout(40, TimeUnit.SECONDS).build() : client;
+            return object(execute(request, toolClient));
         } catch (JSONException ignored) {
             throw new IOException("Invalid tool JSON");
         }
@@ -182,10 +187,12 @@ public final class Z0LiveProtocol {
         return new Request.Builder().url(backend + route).header("Authorization", "Bearer " + token);
     }
 
-    private String execute(Request request) throws IOException {
+    private String execute(Request request) throws IOException { return execute(request, client); }
+
+    private String execute(Request request, OkHttpClient transport) throws IOException {
         Response response;
         try {
-            response = client.newCall(request).execute();
+            response = transport.newCall(request).execute();
         } catch (IOException | RuntimeException ignored) {
             throw new IOException("z0live connection failed");
         }

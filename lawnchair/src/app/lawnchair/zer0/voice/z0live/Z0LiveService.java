@@ -18,6 +18,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
+import android.util.Log;
+import com.android.launcher3.R;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import java.io.IOException;
@@ -51,6 +53,7 @@ public final class Z0LiveService extends Service {
     private final AtomicInteger telemetryFailed = new AtomicInteger();
     private final Z0LiveAudioState audio = new Z0LiveAudioState();
     private final Set<String> toolCalls = new HashSet<>();
+    private final java.util.Map<String, String> toolNames = new java.util.HashMap<>();
     private Z0LiveProtocol backend;
     private Z0LivePeer peer;
     private TextToSpeech tts;
@@ -61,12 +64,12 @@ public final class Z0LiveService extends Service {
     private int generation, reachabilityAttempts, pendingTools;
     private Z0LiveStore store;
     private long inboxCursor;
-    private String sessionId = "", status = "Connecting", caption = "", error = "";
+    private String sessionId = "", status = "", caption = "", error = "";
     private String speakingInboxId;
     private volatile String brokerSessionToEnd = "";
     private JSONObject inboxItem;
     private final Runnable healthRetry = () -> checkBackend();
-    private final Runnable connectionTimeout = () -> fail("Voice connection timed out. End and start again.");
+    private final Runnable connectionTimeout = () -> fail(getString(R.string.z0live_service_connection_timeout));
     private final Runnable inboxTimeout = () -> finishInbox(false);
     private final Runnable telemetryTick = new Runnable() {
         public void run() {
@@ -113,8 +116,9 @@ public final class Z0LiveService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         current = this;
-        NotificationChannel channel = new NotificationChannel(CHANNEL, "z0live microphone", NotificationManager.IMPORTANCE_LOW);
-        channel.setDescription("Ongoing native voice session with mute and end controls");
+        status = getString(R.string.z0live_service_connecting);
+        NotificationChannel channel = new NotificationChannel(CHANNEL, getString(R.string.z0live_notification_channel), NotificationManager.IMPORTANCE_LOW);
+        channel.setDescription(getString(R.string.z0live_notification_description));
         getSystemService(NotificationManager.class).createNotificationChannel(channel);
     }
     @Override public IBinder onBind(Intent intent) { return null; }
@@ -132,8 +136,8 @@ public final class Z0LiveService extends Service {
                 startForeground(NOTIFICATION, notification());
             }
         } catch (RuntimeException e) {
-            error = "Android could not start the microphone foreground service. Open z0live and try again.";
-            status = "Error";
+            error = getString(R.string.z0live_service_foreground_failed);
+            status = getString(R.string.z0live_service_error);
             publish();
             stopSelf();
             return START_NOT_STICKY;
@@ -145,13 +149,13 @@ public final class Z0LiveService extends Service {
             store = new Z0LiveStore(this);
             PairingValidation.Pairing pairing = store.pairing();
             inboxCursor = store.inboxCursor();
-            if (pairing == null) { fail("Pair this device before starting voice"); return START_NOT_STICKY; }
+            if (pairing == null) { fail(getString(R.string.z0live_service_pair_required)); return START_NOT_STICKY; }
             backend = new Z0LiveProtocol(http, pairing.backendUrl, pairing.token);
             event("session_start", "", object("client", "lawnchair"));
             main.post(telemetryTick);
             checkBackend();
         } catch (RuntimeException e) {
-            fail("Encrypted pairing could not be read. Open settings and pair again.");
+            fail(getString(R.string.z0live_service_pairing_unreadable));
         }
         return START_NOT_STICKY;
     }
@@ -165,12 +169,12 @@ public final class Z0LiveService extends Service {
                 new Intent(this, Z0LiveService.class).setAction(MUTE), PendingIntent.FLAG_IMMUTABLE);
         return new Notification.Builder(this, CHANNEL)
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
-                .setContentTitle("z0live · " + status + (audio.isMuted() ? " · muted" : ""))
-                .setContentText(error.isEmpty() ? "Microphone session · tap to view captions" : error)
+                .setContentTitle(getString(R.string.z0live_notification_title, status, audio.isMuted() ? getString(R.string.z0live_notification_muted) : ""))
+                .setContentText(error.isEmpty() ? getString(R.string.z0live_notification_detail) : error)
                 .setContentIntent(open).setOngoing(true).setOnlyAlertOnce(true)
                 .setCategory(Notification.CATEGORY_SERVICE)
-                .addAction(new Notification.Action.Builder(null, audio.isMuted() ? "Unmute" : "Mute", mute).build())
-                .addAction(new Notification.Action.Builder(null, "End", end).build()).build();
+                .addAction(new Notification.Action.Builder(null, getString(audio.isMuted() ? R.string.z0live_unmute : R.string.z0live_mute), mute).build())
+                .addAction(new Notification.Action.Builder(null, getString(R.string.z0live_end), end).build()).build();
     }
     private void publish() {
         if (current != null && current != this) return;
@@ -195,7 +199,7 @@ public final class Z0LiveService extends Service {
         int id = generation;
         reachabilityAttempts++;
         connecting = true;
-        status = "Connecting";
+        status = getString(R.string.z0live_service_connecting);
         publish();
         network.execute(() -> {
             try {
@@ -213,11 +217,11 @@ public final class Z0LiveService extends Service {
                     if (!valid(id)) return;
                     connecting = false;
                     pendingNetwork = true;
-                    status = "Error";
-                    error = "Backend unreachable or unhealthy. Check Tailscale and pairing. Attempt " + reachabilityAttempts + "/6.";
+                    status = getString(R.string.z0live_service_error);
+                    error = getString(R.string.z0live_service_backend_retry) + reachabilityAttempts + "/6.";
                     publish();
                     if (reachabilityAttempts < 6) main.postDelayed(healthRetry, Math.min(30000, 3000L << (reachabilityAttempts - 1)));
-                    else fail("Backend did not become reachable after 6 attempts. Check Tailscale and pairing, then Start again.");
+                    else fail(getString(R.string.z0live_service_backend_unreachable));
                 });
             }
         });
@@ -228,16 +232,15 @@ public final class Z0LiveService extends Service {
         main.postDelayed(connectionTimeout, 45000);
         network.execute(() -> {
             try {
-                // No screen capture, hidden app names, remote phone commands, or local tools.
-                Z0LiveProtocol.Session session = backend.session(object("app", getPackageName(), "screen", "z0live voice"), new JSONArray());
+                Z0LiveProtocol.Session session = backend.session(object("app", getPackageName(), "screen", "z0live voice"), Z0LivePhoneTools.schemas(this));
                 brokerSessionToEnd = session.sessionId;
                 main.post(() -> {
                     if (!valid(id)) return;
-                    if (session.sessionId == null || session.sessionId.isEmpty()) { fail("Backend did not return a broker session identity"); return; }
+                    if (session.sessionId == null || session.sessionId.isEmpty()) { fail(getString(R.string.z0live_service_missing_session)); return; }
                     sessionId = session.sessionId;
                     event("session_ready", "", object("model", session.model, "voice", session.voice));
                     try {
-                        if (!requestAudioFocus()) { fail("Audio focus is unavailable. End other audio and try again."); return; }
+                        if (!requestAudioFocus()) { fail(getString(R.string.z0live_service_audio_focus_unavailable)); return; }
                         createTts(id);
                         peer = new Z0LivePeer(this, main, new Z0LivePeer.Listener() {
                             public void onOffer(String sdp) {
@@ -247,7 +250,7 @@ public final class Z0LiveService extends Service {
                                         String answer = backend.exchangeSdp(session.secret, sdp);
                                         main.post(() -> { if (valid(id) && peer != null) peer.answer(answer); });
                                     } catch (IOException e) {
-                                        main.post(() -> { if (valid(id)) fail("Realtime SDP exchange failed. Check backend credentials and connectivity."); });
+                                        main.post(() -> { if (valid(id)) fail(getString(R.string.z0live_service_sdp_failed)); });
                                     }
                                 });
                             }
@@ -255,9 +258,10 @@ public final class Z0LiveService extends Service {
                                 if (!valid(id)) return;
                                 main.removeCallbacks(connectionTimeout);
                                 audio.setConnected(true);
-                                status = "Listening";
+                                status = getString(R.string.z0live_service_listening);
                                 error = "";
                                 applyAudio();
+                                Log.i("z0live", "connected model=" + session.model + " voice=" + session.voice);
                                 event("connected", "", object("model", session.model, "voice", session.voice));
                                 publish();
                                 main.post(inboxTick);
@@ -265,10 +269,10 @@ public final class Z0LiveService extends Service {
                             public void onEvent(String json) { if (valid(id)) realtimeEvent(json); }
                             public void onError(String message) { if (valid(id)) fail(message); }
                         });
-                    } catch (RuntimeException e) { fail("Native audio could not start"); }
+                    } catch (RuntimeException e) { fail(getString(R.string.z0live_service_audio_start_failed)); }
                 });
             } catch (IOException e) {
-                main.post(() -> { if (valid(id)) fail("Backend session request failed. Check pairing, server version and credentials."); });
+                main.post(() -> { if (valid(id)) fail(getString(R.string.z0live_service_session_failed)); });
             }
         });
     }
@@ -287,14 +291,35 @@ public final class Z0LiveService extends Service {
                         finishInbox(false);
                     }
                     applyAudio();
-                    if (!gained) { error = "Voice paused because another app has audio focus"; status = "Error"; }
-                    else { error = ""; status = speaking ? "Speaking" : "Listening"; }
+                    if (!gained) { error = getString(R.string.z0live_service_audio_focus_lost); status = getString(R.string.z0live_service_error); }
+                    else { error = ""; status = getString(speaking ? R.string.z0live_service_speaking : R.string.z0live_service_listening); }
                     publish();
                 }, main).build();
         boolean granted = audioManager.requestAudioFocus(focusRequest) == AudioManager.AUDIOFOCUS_REQUEST_GRANTED;
         audio.setFocus(granted);
         if (granted) audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
         return granted;
+    }
+
+    /** Only reachable by the debug source-set receiver; never starts a microphone session. */
+    public static void debugAudioStats() {
+        Z0LiveService service = current;
+        if (service != null && service.peer != null) service.peer.logDebugAudioStats();
+    }
+    public static boolean injectDebugText(String text) {
+        Z0LiveService service = current;
+        if (service == null || !service.running || service.peer == null || text == null || text.isBlank() || text.length() > 2000) return false;
+        service.main.post(() -> {
+            if (!service.running || service.peer == null) return;
+            if (!service.turn.canSpeakInbox()) { Log.w("z0live", "debug_turn rejected: busy"); return; }
+            service.caption = "You: " + text;
+            service.event("user_transcript", text, object("source", "debug_text"));
+            service.peer.send(object("type", "conversation.item.create", "item", object("type", "message", "role", "user", "content", new JSONArray().put(object("type", "input_text", "text", text)))).toString());
+            service.peer.send(object("type", "response.create").toString());
+            Log.i("z0live", "debug_turn injected");
+            service.publish();
+        });
+        return true;
     }
 
     private void realtimeEvent(String raw) {
@@ -335,7 +360,7 @@ public final class Z0LiveService extends Service {
                 case "output_audio_buffer.started":
                     speaking = true;
                     turn.playback(true);
-                    status = "Speaking";
+                    status = getString(R.string.z0live_service_speaking);
                     event(type, "", new JSONObject());
                     publish();
                     break;
@@ -344,7 +369,7 @@ public final class Z0LiveService extends Service {
                     speaking = false;
                     turn.playback(false);
                     drainTurn();
-                    status = inboxItem == null ? "Listening" : "Speaking";
+                    status = getString(inboxItem == null ? R.string.z0live_service_listening : R.string.z0live_service_speaking);
                     event(type, "", new JSONObject());
                     publish();
                     break;
@@ -356,13 +381,13 @@ public final class Z0LiveService extends Service {
                     if (item != null && "function_call".equals(item.optString("type"))) tool(item);
                     break;
                 case "conversation.item.input_audio_transcription.failed":
-                    error = "Input transcription failed";
+                    error = getString(R.string.z0live_service_transcription_failed);
                     event("transcription_error", "", new JSONObject());
                     publish();
                     break;
                 case "error":
                     event("realtime_error", "", new JSONObject());
-                    fail("Realtime reported an error. End and start again.");
+                    fail(getString(R.string.z0live_service_realtime_failed));
                     break;
                 case "response.done":
                     turn.responseDone();
@@ -370,7 +395,7 @@ public final class Z0LiveService extends Service {
                     JSONObject response = message.optJSONObject("response");
                     if (response != null && ("failed".equals(response.optString("status"))
                             || "incomplete".equals(response.optString("status")))) {
-                        error = "Realtime response " + response.optString("status");
+                        error = getString(R.string.z0live_service_response_status) + response.optString("status");
                         event("response_error", error, new JSONObject());
                         publish();
                     }
@@ -378,26 +403,34 @@ public final class Z0LiveService extends Service {
                 default:
                     break;
             }
-        } catch (JSONException e) { fail("Malformed realtime event"); }
+        } catch (JSONException e) { fail(getString(R.string.z0live_service_malformed_event)); }
     }
 
     private void tool(JSONObject call) {
         String callId = call.optString("call_id"), name = call.optString("name"), arguments = call.optString("arguments", "{}");
-        if (callId.isEmpty() || callId.length() > 160) { fail("Invalid realtime tool call ID"); return; }
+        if (callId.isEmpty() || callId.length() > 160) { fail(getString(R.string.z0live_service_invalid_call)); return; }
         if (toolCalls.contains(callId)) return;
         if (toolCalls.size() >= 256) {
             toolOutput(callId, object("error", "Session tool limit reached"));
             return;
         }
         toolCalls.add(callId);
-        event("tool_call", "", object("call_id", callId, "name", bounded(name, 80)));
-        if (toolCalls.size() > 256 || pendingTools >= 4 || arguments.length() > 16384
-                || !("tell_hermes".equals(name) || "get_context".equals(name) || "summarize".equals(name))) {
+        toolNames.put(callId, name);
+        if (toolCalls.size() > 256 || pendingTools >= 4 || arguments.length() > 16384) {
             toolOutput(callId, object("error", "Tool is not allowed or session limit reached"));
             return;
         }
-        try { new JSONObject(arguments); } catch (JSONException e) {
-            toolOutput(callId, object("error", "Tool arguments must be a JSON object")); return;
+        JSONObject parsed;
+        try { parsed = new JSONObject(arguments); } catch (JSONException e) {
+            toolOutput(callId, object("ok", false, "error", "Tool arguments must be a JSON object")); return;
+        }
+        event("tool_call", "", object("call_id", callId, "name", bounded(name, 80), "arguments", parsed));
+        Log.i("z0live", "tool_call name=" + name + " call_id=" + callId);
+        if (Z0LivePhoneTools.supports(this, name)) {
+            JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
+            toolOutput(callId, result);
+            if ("z0live_end".equals(name) && result.optBoolean("ok")) main.postDelayed(() -> finishSession("", true), 1000);
+            return;
         }
         pendingTools++;
         int id = generation;
@@ -409,7 +442,7 @@ public final class Z0LiveService extends Service {
                 main.post(() -> {
                     if (!valid(id)) return;
                     pendingTools--;
-                    error = "Server tool failed. Check the documented builtin tool routes.";
+                    error = getString(R.string.z0live_service_tool_failed);
                     publish();
                     toolOutput(callId, object("error", "Backend tool unavailable"));
                 });
@@ -419,7 +452,10 @@ public final class Z0LiveService extends Service {
     private void toolOutput(String callId, JSONObject result) {
         if (!running || peer == null) return;
         if (result.toString().length() > 32768) result = object("error", "Backend tool result exceeded the client limit");
-        event("tool_result", "", object("call_id", callId, "result", result));
+        String name = toolNames.getOrDefault(callId, "unknown");
+        boolean success = result.optBoolean("ok", !result.has("error"));
+        event("tool_result", "", object("call_id", callId, "name", name, "result", result, "success", success));
+        Log.i("z0live", "tool_result name=" + name + " call_id=" + callId + " success=" + success + " status=" + result.optString("status"));
         peer.send(object("type", "conversation.item.create", "item", object("type", "function_call_output", "call_id", callId, "output", result.toString())).toString());
         turn.toolCompleted();
         drainTurn();
@@ -445,7 +481,7 @@ public final class Z0LiveService extends Service {
                 int language = tts.setLanguage(Locale.getDefault());
                 ttsReady = language != TextToSpeech.LANG_MISSING_DATA && language != TextToSpeech.LANG_NOT_SUPPORTED;
             }
-            if (!ttsReady) { error = "Android TextToSpeech is unavailable; inbox speech will be reported as failed"; publish(); }
+            if (!ttsReady) { error = getString(R.string.z0live_service_tts_unavailable); publish(); }
         }));
         tts.setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH).build());
@@ -475,7 +511,7 @@ public final class Z0LiveService extends Service {
                     for (int i = 0; i < items.length(); i++) {
                         JSONObject item = items.optJSONObject(i);
                         if (item == null || !(item.opt("id") instanceof Number)) {
-                            error = "Inbox returned an invalid item; cursor has not advanced";
+                            error = getString(R.string.z0live_service_invalid_inbox);
                             publish();
                             return;
                         }
@@ -494,7 +530,7 @@ public final class Z0LiveService extends Service {
                 main.post(() -> {
                     if (!valid(id)) return;
                     inboxBusy = false;
-                    error = "Inbox polling failed; retrying while the session is open";
+                    error = getString(R.string.z0live_service_inbox_retry);
                     publish();
                 });
             }
@@ -504,9 +540,14 @@ public final class Z0LiveService extends Service {
         inboxItem = item;
         String action = item.isNull("action") ? "" : item.optString("action", "");
         if (!action.isEmpty() && !"none".equals(action) && !"say".equals(action)) {
-            event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", false, "result", object("error", "No local phone tools are declared by this client")));
-            error = "Rejected unknown inbox action: " + bounded(action, 80);
-            publish();
+            // Hermes cannot use a stale/broadcast inbox item as fresh phone authority.
+            boolean sameSession = sessionId.equals(item.optString("session_id", ""));
+            JSONObject params = item.optJSONObject("params");
+            JSONObject result = sameSession && params != null && Z0LivePhoneTools.supports(this, action)
+                    ? Z0LivePhoneTools.execute(this, action, params)
+                    : object("ok", false, "error", "Unknown tool, invalid params or stale-session action");
+            event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
+            if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
         }
         String say = item.optString("say", "");
         if (say.isEmpty()) { finishInbox(true); return; }
@@ -517,7 +558,7 @@ public final class Z0LiveService extends Service {
         audio.setPlayingInbox(true);
         applyAudio();
         caption = "Inbox: " + say;
-        status = "Speaking";
+        status = getString(R.string.z0live_service_speaking);
         publish();
         main.postDelayed(inboxTimeout, 60000);
         if (tts.speak(say, TextToSpeech.QUEUE_FLUSH, null, speakingInboxId) == TextToSpeech.ERROR) finishInbox(false);
@@ -531,20 +572,21 @@ public final class Z0LiveService extends Service {
         if (!success && tts != null) tts.stop();
         audio.setPlayingInbox(false);
         applyAudio();
+        Log.i("z0live", "inbox_speech id=" + handled.optLong("id") + " success=" + success);
         event(success ? "inbox_handled" : "inbox_failed", "", object("id", handled.optLong("id"), "action", handled.optString("action", "")));
         // Failure/rejection is handled explicitly and reported before advancing; never skip an unhandled item.
         inboxCursor = handled.optLong("id", inboxCursor);
         persistCursor();
         drainTurn();
         main.post(this::pollInbox);
-        status = "Listening";
-        if (!success) error = "Android could not speak an inbox item; failure reported";
+        status = getString(R.string.z0live_service_listening);
+        if (!success) error = getString(R.string.z0live_service_tts_failed);
         publish();
     }
 
     private void persistCursor() {
         try { if (store != null) store.setInboxCursor(inboxCursor); }
-        catch (RuntimeException ignored) { error = "Inbox cursor could not be saved; replies may repeat after restart"; }
+        catch (RuntimeException ignored) { error = getString(R.string.z0live_service_cursor_failed); }
     }
 
     private void event(String type, String text, JSONObject data) {
@@ -605,12 +647,12 @@ public final class Z0LiveService extends Service {
             audioManager.setMode(AudioManager.MODE_NORMAL);
         }
         if (wasRunning) event("session_end", "", object("reason", userEnd ? "user" : "error", "telemetry_failed", telemetryFailed.get()));
-        status = closingResources ? "Ending" : (reason.isEmpty() ? "Ended" : "Error");
+        status = getString(closingResources ? R.string.z0live_service_ending : (reason.isEmpty() ? R.string.z0live_service_ended : R.string.z0live_service_error));
         error = reason;
         publish();
         if (oldPeer != null) oldPeer.close(() -> {
             closingResources = false;
-            status = reason.isEmpty() ? "Ended" : "Error";
+            status = getString(reason.isEmpty() ? R.string.z0live_service_ended : R.string.z0live_service_error);
             publish();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
