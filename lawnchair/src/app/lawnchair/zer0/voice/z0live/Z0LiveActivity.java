@@ -403,7 +403,7 @@ public final class Z0LiveActivity extends Activity implements Z0LiveStatus.Obser
     /** Optional z0live onboarding: only an existing active session receives gesture control. */
     private void openOuraSetup() {
         Intent target = new Intent().setClassName(
-                "com.noop.whoop.debug", "com.noop.oura.OuraGestureSetupActivity");
+                "com.noop.whoop.debug", "com.noop.ui.OuraGestureSetupActivity");
         PendingIntent capability = OuraGestureReceiver.arm(this);
         if (capability != null) target.putExtra(OuraGestureReceiver.EXTRA_CAPABILITY, capability);
         try {
