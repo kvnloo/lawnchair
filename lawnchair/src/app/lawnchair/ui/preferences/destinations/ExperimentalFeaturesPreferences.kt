@@ -14,6 +14,7 @@ import app.lawnchair.preferences.getAdapter
 import app.lawnchair.preferences.preferenceManager
 import app.lawnchair.preferences2.preferenceManager2
 import app.lawnchair.ui.preferences.LocalIsExpandedScreen
+import app.lawnchair.ui.preferences.components.NavigationActionPreference
 import app.lawnchair.ui.preferences.components.WallpaperAccessPermissionDialog
 import app.lawnchair.ui.preferences.components.controls.ListPreference
 import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
@@ -23,6 +24,7 @@ import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.ExpandAndShrink
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
+import app.lawnchair.ui.preferences.navigation.Z0Live
 import app.lawnchair.util.FileAccessManager
 import app.lawnchair.util.FileAccessState
 import app.lawnchair.util.isGestureNavContractCompatible
@@ -42,6 +44,14 @@ fun ExperimentalFeaturesPreferences(
         backArrowVisible = !LocalIsExpandedScreen.current,
         modifier = modifier,
     ) {
+        PreferenceGroup(heading = stringResource(R.string.z0live_integrations)) {
+            NavigationActionPreference(
+                label = stringResource(R.string.z0live_title),
+                subtitle = stringResource(R.string.z0live_integration_description),
+                destination = Z0Live,
+            )
+        }
+
         val enableWallpaperBlur = prefs.enableWallpaperBlur.getAdapter()
         val context = LocalContext.current
         val fileAccessManager = remember { FileAccessManager.getInstance(context) }

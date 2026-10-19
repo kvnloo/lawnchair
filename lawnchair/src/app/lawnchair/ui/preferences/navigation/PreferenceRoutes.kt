@@ -103,6 +103,9 @@ data object ExperimentalFeatures : PreferenceRootRoute, PreferenceDeepLink {
 }
 
 @Serializable
+data object Z0Live : PreferenceRoute
+
+@Serializable
 data object Predictions : PreferenceRoute, PreferenceDeepLink {
     override val deepLink = "$URI/predictions"
 }

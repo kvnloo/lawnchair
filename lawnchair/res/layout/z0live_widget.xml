@@ -1,12 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent" android:layout_height="match_parent"
-    android:orientation="horizontal" android:gravity="center" android:padding="8dp"
-    android:background="@drawable/z0live_glass">
-    <Button android:id="@+id/z0live_widget_voice" android:layout_width="0dp" android:layout_height="match_parent"
-        android:layout_weight="1" android:minHeight="48dp" android:text="@string/z0live_voice"
-        android:textColor="#FFFFFFFF" android:contentDescription="@string/z0live_start" />
-    <Button android:id="@+id/z0live_widget_ripple" android:layout_width="0dp" android:layout_height="match_parent"
-        android:layout_weight="1" android:minHeight="48dp" android:text="@string/z0live_ripple"
-        android:textColor="#FFFFFFFF" />
-</LinearLayout>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageView
+        android:id="@+id/z0live_widget_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no"
+        android:scaleType="fitXY"
+        android:src="@drawable/z0live_glass" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="8dp">
+        <LinearLayout
+            android:id="@+id/z0live_widget_voice"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/z0live_voice"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/z0live_widget_voice_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_mic_flat" />
+            <TextView
+                android:id="@+id/z0live_widget_voice_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:importantForAccessibility="no"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="14sp"
+                android:text="@string/z0live_voice" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/z0live_widget_ripple"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:minHeight="48dp"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/z0live_ripple"
+            android:focusable="true">
+            <ImageView
+                android:id="@+id/z0live_widget_ripple_icon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_website" />
+            <TextView
+                android:id="@+id/z0live_widget_ripple_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:importantForAccessibility="no"
+                android:fontFamily="sans-serif-medium"
+                android:textSize="14sp"
+                android:text="@string/z0live_ripple" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
