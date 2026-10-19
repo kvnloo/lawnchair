@@ -40,7 +40,10 @@ javac --release 17 --add-modules jdk.httpserver -encoding UTF-8 -cp "$classpath"
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxDelivery.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxPlayback.java" \
   "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveBargeIn.java" \
+  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveBrokerSession.java" \
+  "$root/tools/zer0/Z0LiveMultiAgentContractTest.java" \
   "$root/tools/zer0/Z0LiveInboxDeliveryTest.java"
+java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveMultiAgentContractTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveInboxDeliveryTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveAppMatcherTest
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveProtocolTest

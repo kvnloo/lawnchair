@@ -88,7 +88,11 @@ The canonical contract is the z0live backend's `docs/API.md`:
 - back/recents/notification shade are declared only with the separate explicit z0live
   navigation opt-in AND the existing Lawnchair Accessibility service enabled. No screen
   reading or Accessibility gesture/click automation is added;
-- builtin `/v1/tools/tell_hermes`, `/v1/tools/get_context`, `/v1/tools/summarize`, plus the broker's live work tools (`work_search`, `ask_hermes`, `start_task`, `task_status`, `what_changed`). The session mint's validated `builtin_tools` catalog is authoritative; older brokers use a compatibility fallback. `ask_hermes` gets a bounded 40-second client deadline for its 25-second synchronous wait;
+- builtin `/v1/tools/NAME` dispatch uses every entry of the session mint's validated `builtin_tools` catalog, including `ask_z0`, `cancel_work` and future additive names. Broker builtins take precedence over phone-local tool names; older brokers retain the legacy fallback. `ask_hermes` gets a bounded 40-second client deadline for its legacy synchronous wait;
+- PR #27 desktop multi-agent observations use `floor.data.state: user|assistant|quiet`, explicit `barge_in` and `cancel.data.topic_changed:true` for literal “never mind”/“cancel that”/“stop that”. VAD start/stop and response create/done are forwarded; quiet is withheld until both the user and actual WebRTC output buffer are quiet. Muted/focus-lost VAD cannot cancel work;
+- a 20-second `app_state` active-session heartbeat includes the current `floor`, even when quietly listening or muted. It starts only after a human-started mint and stops on End/error/service destruction. Events use a separate serial control executor, so an outstanding legacy work-tool HTTP wait cannot block cancellation;
+- barge-in/cancel drops queued and late-arriving inbox speech for interrupted `params.turn_id` values, advances the durable cursor and emits a non-spoken cancellation receipt. Cancelled replies are not re-notified. Admission racing an interruption is cancelled via exact-turn `/v1/cancel`, without cancelling a newer work tree;
+- `response.done` supplied usage is forwarded as `model_usage.data:{turn_id,response_id,usage}` only after association with a broker-returned, session-owned turn. Early usage waits for tool admission; continuations/inbox relay retain that turn. Ordinary chat without a broker turn is not sent as invalid usage. No token/cost values are invented;
 - bare batched event arrays with canonical types, Unix seconds and UUID `data.event_id`;
 - broker-generated session identity, explicit `/v1/sessions/ID/end` on hangup;
 - tool continuation waits for `response.done` and pending tool work. Android TextToSpeech
@@ -127,9 +131,20 @@ bash tools/zer0/test-voice-commands.sh
 bash tools/zer0/test-z0live-protocol.sh
 bash tools/zer0/test-z0live-audio.sh
 ./gradlew spotlessCheck
+./gradlew testLawnWithQuickstepPlayDebugUnitTest
 ./gradlew lintLawnWithQuickstepPlayDebug
 ./gradlew assembleLawnWithQuickstepPlayDebug
 ```
+
+`test-z0live-protocol.sh` compiles the actual HTTP client and portable broker-session
+state against a strict PR #27-shaped loopback fake. It exercises every minted builtin
+(including additive future names), floor/audio boundaries, quiet/muted heartbeat,
+barge/topic cancellation, queued/late inbox suppression, audible and quiet pending-HTTP
+admission races (including failed-request cleanup), usage
+association/deduplication and session End. `test-z0live-backend-contract.sh` runs that
+suite plus the legacy broker contract. These JVM tests—not the variant's currently
+`NO-SOURCE` Gradle unit-test task—provide the protocol regression evidence; they do
+not certify a physical microphone, native worker stop or Android service lifecycle.
 
 Full-project lint initially failed with thousands of existing upstream/fork diagnostics.
 The native baseline was generated against detached pre-feature source `ba091219e2`;
@@ -165,6 +180,17 @@ CI builds on push to this branch and publishes an immutable `z0live-build-*` pre
 plus the moving `z0live-latest` download, metadata, checksum and certificate. Metadata
 records commit, run, versionName, package and byte size. CI never embeds desktop/device
 credentials and does not need a running broker.
+
+## Owner multi-agent acceptance (manual; no agent device access)
+
+1. Install/update the verified `z0live-latest` APK with Android's normal installer (do not uninstall to bypass a signer mismatch). End any existing voice session, then tap Start to mint the new catalog. Ask “What model are you using?” and “What changed today?”; confirm audible/captioned replies and the broker's `ask_z0`/work-tool receipts. No re-pairing or new permission is needed for desktop tools.
+2. Ask for a read-only comparison that needs desktop workers. While the acknowledgement/reply is speaking, interrupt with “never mind”. Repeat once while the audio is quiet but desktop work is still running. Audio must stop promptly; no queued progress/final speech from that turn may play afterward. Broker trace must contain cancellation for the exact turn and terminal `cancel_confirmed` receipts for recorded meta/child run IDs; `cancelling` alone is not confirmation.
+3. Start another read-only request, then say “Cancel the desktop work using cancel_work”. Confirm `/v1/tools/cancel_work`, the cancellation event and honest pending/confirmed stop status. Start a different request afterward: its reply must still work and must not inherit the previous turn's suppression.
+4. Leave the session quietly listening for over two minutes, then request work. Verify 20-second `app_state` heartbeats keep the current floor/session active. Repeat muted: no synthetic speech-start/barge events or automatic unmute. End via the sheet/notification and confirm heartbeats stop and the broker session is ended. Start again: no historical reply should replay.
+5. During an inbox reply, speak over it; then try mute/unmute and an incoming-call/audio-focus interruption. The actual speaker buffer must clear, floor must not become quiet while either side is audible, and already claimed interrupted replies must not repeat. Test speaker/headphones/Bluetooth and screen-off separately.
+6. Inspect the broker's trace for the work turn: L0 `provider_usage` must carry the actual provider `response_id` and supplied token/cache counters (including tool continuation/inbox relay when supplied). Ordinary chat without an admitted broker turn has no turn-scoped usage; unknown dollars remain unknown.
+
+These are owner checks to perform, **not current hardware acceptance results**. No phone query, install, microphone turn or device cleanup is authorized for this delivery agent.
 
 ## Owner device acceptance checklist / known gaps
 

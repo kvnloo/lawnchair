@@ -192,7 +192,18 @@ public final class Z0LiveProtocol {
         execute(backendRequest("/v1/sessions/" + sessionId + "/end").post(body("{}", JSON)).build());
     }
 
-    /** Dispatch only the broker's documented builtins; never grant remote phone authority. */
+    public boolean isBuiltin(String sessionId, String name) {
+        return sessionBuiltins.getOrDefault(sessionId, LEGACY_BUILTINS).contains(name);
+    }
+
+    public void cancelTurn(String sessionId, String turnId) throws IOException {
+        try {
+            JSONObject payload = new JSONObject().put("session_id", sessionId).put("turn_id", turnId);
+            execute(backendRequest("/v1/cancel").post(body(payload.toString(), JSON)).build());
+        } catch (JSONException ignored) { throw new IOException("Invalid cancellation JSON"); }
+    }
+
+    /** Dispatch the session's validated mint catalog; never grant remote phone authority. */
     public JSONObject tool(String sessionId, String callId, String name, String arguments) throws IOException {
         if (sessionId == null || callId == null || name == null || arguments == null) {
             throw new IOException("Missing tool inputs");
