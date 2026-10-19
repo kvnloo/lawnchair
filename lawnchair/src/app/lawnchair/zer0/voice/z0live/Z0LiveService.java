@@ -699,10 +699,11 @@ public final class Z0LiveService extends Service {
         telemetryBusy = true;
         Runnable send = () -> {
             boolean failed = false;
-            int budget = 6;
-            do {
+            for (int batchIndex = 0; batchIndex < 6; batchIndex++) {
                 JSONArray batch = telemetry.batch(24);
-                if (batch.length() == 0) break;
+                if (batch.length() == 0) {
+                    break;
+                }
                 try {
                     backend.events(batch);
                     telemetry.delivered(batch);
@@ -712,7 +713,7 @@ public final class Z0LiveService extends Service {
                     failed = true;
                     if (!finalFlush) break;
                 }
-            } while (--budget > 0);
+            }
             if (finalFlush && !brokerSessionToEnd.isEmpty()) {
                 try { backend.endSession(brokerSessionToEnd); }
                 catch (IOException ignored) { telemetryFailed.incrementAndGet(); }
