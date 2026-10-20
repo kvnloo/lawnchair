@@ -470,9 +470,14 @@ class LawnchairLauncher : QuickstepLauncher() {
         return ActivityOptionsWrapper(options, callback)
     }
 
+    override fun onPause() {
+        app.lawnchair.zer0.voice.z0live.Z0LiveService.noteInactive(this)
+        super.onPause()
+    }
+
     override fun onResume() {
         super.onResume()
-        app.lawnchair.zer0.voice.z0live.Z0LiveService.noteActivity()
+        app.lawnchair.zer0.voice.z0live.Z0LiveService.noteActivity(this)
         restartIfPending()
         refreshPredictionContainersFromModel()
         consumePendingSpacePageNavigation()

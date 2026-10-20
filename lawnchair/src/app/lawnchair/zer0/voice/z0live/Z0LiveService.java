@@ -105,7 +105,11 @@ public final class Z0LiveService extends Service {
         if (current != null && (current.running || current.closingResources)) return;
         activity.startForegroundService(new Intent(activity, Z0LiveService.class).setAction(START));
     }
-    public static void noteActivity() { Z0LiveGestureChannel.touch(); }
+    public static void noteActivity(Context context) {
+        Z0LiveGestureChannel.touch();
+        Z0LiveGestureChannel.visible(context, true);
+    }
+    public static void noteInactive(Context context) { Z0LiveGestureChannel.visible(context, false); }
     public static boolean standbyEnabled() { return current != null && current.standby; }
     public static void standby(Activity activity) {
         if (activity.isFinishing() || activity.isDestroyed()
