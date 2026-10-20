@@ -20,6 +20,18 @@ import org.json.JSONObject;
 /** Authenticated, at-most-once command polling. Never initializes WebRTC or opens the microphone. */
 final class Z0LiveGestureChannel implements AutoCloseable {
     private static volatile double lastActivity = System.currentTimeMillis() / 1000.0;
+    private static final java.util.Set<Context> visibleOwners = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+    private static Z0LiveGestureChannel visiblePresence;
+    static synchronized void visible(Context owner, boolean visible) {
+        if (visible) visibleOwners.add(owner); else visibleOwners.remove(owner);
+        if (!visibleOwners.isEmpty() && visiblePresence == null) {
+            visiblePresence = new Z0LiveGestureChannel(owner, true);
+            visiblePresence.start();
+        } else if (visibleOwners.isEmpty() && visiblePresence != null) {
+            visiblePresence.close();
+            visiblePresence = null;
+        }
+    }
     private final Context context;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
@@ -27,9 +39,14 @@ final class Z0LiveGestureChannel implements AutoCloseable {
             .followRedirects(false).followSslRedirects(false).build();
     private volatile boolean closed;
     private boolean screen;
-    private final boolean assistant;
+    private final boolean assistant, presenceOnly;
     private int ticks;
-    Z0LiveGestureChannel(Context context) { this.context = context.getApplicationContext(); assistant = context instanceof Z0LiveAssistantService; }
+    Z0LiveGestureChannel(Context context) { this(context, false); }
+    private Z0LiveGestureChannel(Context context, boolean presenceOnly) {
+        this.context = context.getApplicationContext();
+        this.assistant = context instanceof Z0LiveAssistantService;
+        this.presenceOnly = presenceOnly;
+    }
     static void pin(Context context) {
         Z0LiveGestureChannel channel = new Z0LiveGestureChannel(context);
         channel.executor.execute(() -> {
@@ -41,7 +58,7 @@ final class Z0LiveGestureChannel implements AutoCloseable {
         });
     }
     static void touch() { lastActivity = System.currentTimeMillis() / 1000.0; }
-    void start() { executor.scheduleWithFixedDelay(this::tick, 0, 500, TimeUnit.MILLISECONDS); }
+    void start() { executor.scheduleWithFixedDelay(this::tick, 0, presenceOnly ? 3000 : 500, TimeUnit.MILLISECONDS); }
     private JSONObject request(PairingValidation.Pairing pair, String path, JSONObject body) throws Exception {
         Request.Builder builder = new Request.Builder().url(pair.backendUrl + path)
                 .header("Authorization", "Bearer " + pair.token);
@@ -54,7 +71,7 @@ final class Z0LiveGestureChannel implements AutoCloseable {
         }
     }
     private void tick() {
-        if ((assistant && Z0LiveService.standbyEnabled()) || closed || !context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false)) return;
+        if (((assistant || presenceOnly) && Z0LiveService.standbyEnabled()) || closed || !context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false)) return;
         try {
             PairingValidation.Pairing pair = new Z0LiveStore(context).pairing();
             if (pair == null) return;
@@ -62,12 +79,15 @@ final class Z0LiveGestureChannel implements AutoCloseable {
                     && !context.getSystemService(KeyguardManager.class).isKeyguardLocked();
             if (unlocked && !screen) touch();
             screen = unlocked;
-            if (ticks++ % 6 == 0) {
+            if (presenceOnly || ticks++ % 6 == 0) {
                 double now = System.currentTimeMillis() / 1000.0;
                 request(pair, "/v1/gesture/activity", Z0LiveService.object("kind", "phone",
                         "activity_ts", lastActivity, "available", true,
                         "ready", Z0LiveService.standbyEnabled() || Z0LiveAssistantService.mayStart(context)));
             }
+            // Visible-only presence can advertise ready=false after process loss, enabling the
+            // separately opted-in ADB fallback. It never claims commands or starts a service.
+            if (presenceOnly) return;
             JSONArray commands = request(pair, "/v1/gesture/commands", null).optJSONArray("commands");
             if (commands == null) return;
             for (int i = 0; i < commands.length(); i++) {
