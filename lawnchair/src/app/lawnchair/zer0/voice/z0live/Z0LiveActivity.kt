@@ -185,7 +185,7 @@ class Z0LiveActivity :
     override fun onResume() {
         super.onResume()
         resumed = true
-        Z0LiveGestureChannel.touch()
+        Z0LiveService.noteActivity(this)
         consumePairing()
         onChanged(Z0LiveStatus.get())
         if (snapshot.pendingNetwork && snapshot.active) Z0LiveService.retry(this)
@@ -198,6 +198,7 @@ class Z0LiveActivity :
     }
 
     override fun onPause() {
+        Z0LiveService.noteInactive(this)
         resumed = false
         super.onPause()
     }
