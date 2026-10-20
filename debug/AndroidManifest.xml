@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
     <application>
+        <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity"
+            android:exported="true" android:permission="android.permission.DUMP" tools:replace="android:exported" />
         <!-- adb shell holds DUMP; ordinary installed apps cannot inject voice commands. Never packaged in release. -->
         <receiver android:name="app.lawnchair.zer0.voice.z0live.Z0LiveDebugReceiver"
             android:exported="true" android:permission="android.permission.DUMP" />
