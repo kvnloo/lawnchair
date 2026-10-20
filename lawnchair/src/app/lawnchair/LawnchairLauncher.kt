@@ -472,6 +472,7 @@ class LawnchairLauncher : QuickstepLauncher() {
 
     override fun onResume() {
         super.onResume()
+        app.lawnchair.zer0.voice.z0live.Z0LiveService.noteActivity()
         restartIfPending()
         refreshPredictionContainersFromModel()
         consumePendingSpacePageNavigation()
