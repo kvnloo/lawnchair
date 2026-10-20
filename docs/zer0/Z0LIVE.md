@@ -103,14 +103,21 @@ The canonical contract is the z0live backend's `docs/API.md`:
   network required, Android/OEM scheduling and notification permission apply). It never
   starts a microphone session or executes phone tools. Interrupted replies also remain
   in silent notifications; the local cursor prevents automatic replay;
-- barge-in explicitly enables server VAD `interrupt_response` and `create_response`.
+- turn detection is `semantic_vad` (eagerness high, far-field noise reduction) with
+  `interrupt_response:false, create_response:false`; `Z0LiveSpeechGate` interrupts and replies only on
+  transcript words. Over assistant speech it commits the first 250 ms of the owner's speech early
+  (barge probe) so words arrive within ~0.6 s; a reply starts at the first two-word delta.
+- historically barge-in enabled server VAD `interrupt_response` and `create_response`.
   User speech cancels an active response and clears the WebRTC output audio buffer;
   OpenAI's WebRTC buffer-clear also truncates unheard conversation audio. The mic stays
   available for interruption unless the owner manually mutes it or audio focus is lost.
 
 ### Frameless Bidi transport (OMP `/live` architecture)
 
-The APK offers `transports:["bidi","realtime"]` at mint. A broker with `Z0LIVE_LIVE_TRANSPORT=bidi`
+Settings > z0live > **Voice connection** chooses the transport: **Auto** (default) offers
+`transports:["bidi","realtime"]` and falls back to gpt-realtime if Live call setup fails; **Realtime**
+offers only `["realtime"]`; **Live** offers bidi and reports a failed setup instead of switching
+voices. With Auto or Live the APK offers `transports:["bidi","realtime"]` at mint. A broker with `Z0LIVE_LIVE_TRANSPORT=bidi`
 (its default) answers with a `gpt-live-1-codex` session and **no client secret**; the phone posts
 its SDP offer to the broker's authenticated `/v1/live/calls`, which signals Codex with the desktop's
 ChatGPT login, owns the call's sideband, and returns the SDP answer. Media is still direct
@@ -129,8 +136,9 @@ phone ↔ OpenAI WebRTC. Older brokers ignore the offer and keep minting gpt-rea
   `error` event ends the call honestly. Transcripts are recorded by the broker, not re-posted.
 - Barge-in: the model does its own full-duplex turn-taking. `Z0LiveBidiBarge` additionally mutes
   playback (`setSpeakerMute`) the moment the live owner transcript shows real words
-  (`Z0LiveSpeechGate.isSpeech`) while an assistant turn is open, and restores it for the model's next
-  turn. Noise and grunts never duck. Echo is handled by the platform AEC on the
+  (`Z0LiveSpeechGate.isSpeech`) while an assistant turn is open or ended less than 1.5 s ago (its
+  buffered tail), and restores it for the model's next turn. The model yields at about the moment its
+  transcript of the owner arrives (~1.1 s), so this cuts the buffered tail, not the model's yield. Noise and grunts never duck. Echo is handled by the platform AEC on the
   `VOICE_COMMUNICATION` source; the desktop OMP-style level gate is not used on Android.
 - If `/v1/live/calls` fails, the same offer is sent to OpenAI with a freshly minted gpt-realtime
   session (`transports:["realtime"]`) and the old broker session is ended, so the phone keeps working.
