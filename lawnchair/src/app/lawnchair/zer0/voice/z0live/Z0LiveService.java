@@ -648,7 +648,7 @@ public final class Z0LiveService extends Service {
         }
         try {
             broker.speakingInbox(item);
-            JSONArray commands = Z0LiveInboxDelivery.realtimeReply(say);
+            JSONArray commands = Z0LiveInboxDelivery.realtimeReply(say, item.optString("source", ""));
             turn.responseStarted();
             for (int i = 0; i < commands.length(); i++) peer.send(commands.optJSONObject(i).toString());
             caption = "Hermes: " + say;
