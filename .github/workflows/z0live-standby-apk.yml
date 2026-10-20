@@ -1,7 +1,7 @@
 name: z0live Standby APK
 on:
   push:
-    branches: [feat/z0live-gesture-standby]
+    branches: [feat/z0live-gesture-standby, feat/z0live-standby-realtime]
   workflow_dispatch:
 permissions:
   contents: read
