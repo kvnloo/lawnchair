@@ -1,0 +1,83 @@
+name: z0live Standby APK
+on:
+  push:
+    branches: [feat/z0live-gesture-standby, feat/z0live-standby-realtime]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: standby-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  apk:
+    if: github.repository == 'kvnloo/lawnchair'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+          persist-credentials: false
+      - uses: actions/setup-java@v6
+        with:
+          distribution: zulu
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v6
+      - name: Stable debug signer
+        env:
+          KEY: ${{ secrets.Z0LIVE_DEBUG_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          test -n "$KEY"
+          umask 077
+          mkdir -p ~/.android
+          printf '%s' "$KEY" | base64 --decode > ~/.android/debug.keystore
+      - name: Offline contracts
+        run: |
+          bash tools/zer0/test-voice-commands.sh
+          bash tools/zer0/test-z0live-backend-contract.sh
+          bash tools/zer0/test-z0live-audio.sh
+          bash tools/zer0/test-z0live-gesture-policy.sh
+      - name: Pinned inherited lint debt
+        run: |
+          git fetch --no-tags --depth=1 origin ba091219e2d7c4cac8f173754d0c234f9ff866f0
+          python3 tools/zer0/check-z0live-lint-baseline.py
+      - name: Formatting, lint and APK
+        run: ./gradlew spotlessCheck lintLawnWithQuickstepPlayDebug assembleLawnWithQuickstepPlayDebug --max-workers=2 -Dorg.gradle.jvmargs=-Xmx3g
+      - name: Exact APK metadata
+        run: python3 tools/zer0/standby-apk-metadata.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Lawnchair-standby-${{ github.sha }}
+          path: standby-dist/*
+          if-no-files-found: error
+          retention-days: 30
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: standby-lint-${{ github.sha }}
+          path: build/reports/lint-results-*
+          if-no-files-found: warn
+  publish:
+    needs: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: Lawnchair-standby-${{ github.sha }}
+          path: dist
+      - name: Publish exact-commit Standby beta (no moving tags)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          COMMIT: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          tag="z0live-standby-${COMMIT:0:12}"
+          gh release create "$tag" dist/* --repo "$REPO" --target "$COMMIT" \
+            --title "z0live Standby beta ${COMMIT:0:12}" --prerelease --latest=false \
+            --notes "Fork-only opt-in idle microphone FGS and authenticated Oura gesture commands. Source: $COMMIT. No phone, One UI, ring or delayed microphone capture acceptance has been performed. See docs/zer0/Z0LIVE-GESTURES.md. APK and signer SHA metadata attached."
+          gh release view "$tag" --repo "$REPO" --json tagName,targetCommitish,assets

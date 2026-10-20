@@ -36,7 +36,7 @@ import org.json.JSONObject;
 public final class Z0LiveService extends Service {
     private static final String CHANNEL = "z0live_voice";
     private static final int NOTIFICATION = 8791;
-    private static final String START = "z0live.START", END = "z0live.END", MUTE = "z0live.MUTE";
+    private static final String START = "z0live.START", END = "z0live.END", MUTE = "z0live.MUTE", READY = "z0live.READY", OFF = "z0live.OFF";
     private static volatile Z0LiveService current;
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService network = Executors.newSingleThreadExecutor();
@@ -46,16 +46,17 @@ public final class Z0LiveService extends Service {
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
             .callTimeout(20, java.util.concurrent.TimeUnit.SECONDS)
             .followRedirects(false).followSslRedirects(false).build();
-    private final Z0LiveTelemetry telemetry = new Z0LiveTelemetry();
-    private final Z0LiveBrokerSession broker = new Z0LiveBrokerSession(telemetry::offer, android.os.SystemClock::elapsedRealtime);
-    private final Z0LiveTurnState turn = new Z0LiveTurnState();
-    private final Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
-    private final Z0LiveSpeechGate speechGate = new Z0LiveSpeechGate();
+    private Z0LiveTelemetry telemetry = new Z0LiveTelemetry();
+    // Standby reuses this service across sessions, so per-session state is rebuilt in beginSession().
+    private Z0LiveBrokerSession broker = newBrokerSession();
+    private Z0LiveTurnState turn = new Z0LiveTurnState();
+    private Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
+    private Z0LiveSpeechGate speechGate = new Z0LiveSpeechGate();
     private Runnable bargeProbe = () -> {};
     private long sessionInboxFloor;
     private final AtomicInteger telemetryFailed = new AtomicInteger();
-    private final Z0LiveAudioState audio = new Z0LiveAudioState();
-    private final Z0LiveInboxPlayback inboxPlayback = new Z0LiveInboxPlayback();
+    private Z0LiveAudioState audio = new Z0LiveAudioState();
+    private Z0LiveInboxPlayback inboxPlayback = new Z0LiveInboxPlayback();
     private final Set<String> toolCalls = new HashSet<>();
     private final java.util.Map<String, String> toolNames = new java.util.HashMap<>();
     private Z0LiveProtocol backend;
@@ -63,7 +64,8 @@ public final class Z0LiveService extends Service {
     private AudioManager audioManager;
     private AudioFocusRequest focusRequest;
     private boolean running, pendingNetwork, connecting, telemetryBusy, inboxBusy;
-    private boolean speaking, ending, closingResources;
+    private boolean speaking, ending, closingResources, standby, finalSent;
+    private Z0LiveGestureChannel gestures;
     /** True while connected through the broker-signaled Frameless Bidi call (OMP /live architecture). */
     private boolean bidi;
     private final StringBuilder bidiCaption = new StringBuilder();
@@ -105,6 +107,46 @@ public final class Z0LiveService extends Service {
         if (current != null && (current.running || current.closingResources)) return;
         activity.startForegroundService(new Intent(activity, Z0LiveService.class).setAction(START));
     }
+    public static void noteActivity(Context context) {
+        Z0LiveGestureChannel.touch();
+        Z0LiveGestureChannel.visible(context, true);
+    }
+    public static void noteInactive(Context context) { Z0LiveGestureChannel.visible(context, false); }
+    public static boolean standbyEnabled() { return current != null && current.standby; }
+    public static void standby(Activity activity) {
+        if (activity.isFinishing() || activity.isDestroyed()
+                || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
+            throw new IllegalStateException("Visible microphone permission required");
+        activity.getSharedPreferences("z0live_gestures", MODE_PRIVATE).edit().putBoolean("enabled", true).apply();
+        activity.startForegroundService(new Intent(activity, Z0LiveService.class).setAction(READY));
+    }
+    public static void off(Context context) {
+        context.getSharedPreferences("z0live_gestures", MODE_PRIVATE).edit().putBoolean("enabled", false).apply();
+        Z0LiveService service = current;
+        if (service != null) service.main.post(() -> {
+            service.standby = false;
+            if (service.gestures != null) service.gestures.close();
+            if (service.running) service.finishSession("", true);
+            else { service.stopForeground(STOP_FOREGROUND_REMOVE); service.stopSelf(); }
+        });
+    }
+    public static void gesture(Context context, String gesture) {
+        Z0LiveService service = current;
+        if (service != null) service.main.post(() -> {
+            Z0LiveGesturePolicy.Action action = Z0LiveGesturePolicy.decide(service.standby,
+                    service.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
+                    service.running, service.ending, gesture);
+            if (action == Z0LiveGesturePolicy.Action.START) service.beginSession();
+            else if (action == Z0LiveGesturePolicy.Action.MUTE) service.mute();
+            else if (action == Z0LiveGesturePolicy.Action.END) service.finishSession("", true);
+        });
+        else if (Z0LiveAssistantService.mayStart(context)
+                && context.getSharedPreferences("z0live_gestures", MODE_PRIVATE).getBoolean("enabled", false)
+                && "double_tap".equals(gesture)) {
+            try { context.startForegroundService(new Intent(context, Z0LiveService.class).setAction(START).putExtra("assistant_gesture", true)); }
+            catch (RuntimeException denied) { /* OEM/permission denial is not capture success. */ }
+        }
+    }
     public static boolean hasActiveSession() { return Z0LiveStatus.get().active; }
     public static void end(Context context) {
         Z0LiveService service = current;
@@ -136,9 +178,16 @@ public final class Z0LiveService extends Service {
     @Override public IBinder onBind(Intent intent) { return null; }
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         String action = intent == null ? "" : intent.getAction();
+        if (OFF.equals(action)) { off(this); return START_NOT_STICKY; }
         if (END.equals(action)) { finishSession("", true); return START_NOT_STICKY; }
         if (MUTE.equals(action)) { if (running) mute(); else stopSelf(); return START_NOT_STICKY; }
-        if (!START.equals(action)) { stopSelf(); return START_NOT_STICKY; }
+        if (!START.equals(action) && !READY.equals(action)) { stopSelf(); return START_NOT_STICKY; }
+        if (READY.equals(action) && running) {
+            standby = true;
+            if (gestures == null) { gestures = new Z0LiveGestureChannel(this); gestures.start(); }
+            publish();
+            return START_NOT_STICKY;
+        }
         if (running || ending) return START_NOT_STICKY;
         // This must precede crypto initialization, backend calls and native audio startup.
         try {
@@ -154,6 +203,28 @@ public final class Z0LiveService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+        if (READY.equals(action) || intent.getBooleanExtra("assistant_gesture", false)) {
+            standby = true;
+            if (gestures == null) { gestures = new Z0LiveGestureChannel(this); gestures.start(); }
+        }
+        if (READY.equals(action)) { status = getString(R.string.z0live_standby_ready); publish(); return START_NOT_STICKY; }
+        beginSession();
+        return START_NOT_STICKY;
+    }
+    private Z0LiveBrokerSession newBrokerSession() {
+        // Read the field on each event: telemetry is replaced for every Standby session.
+        return new Z0LiveBrokerSession(event -> telemetry.offer(event), android.os.SystemClock::elapsedRealtime);
+    }
+    private void beginSession() {
+        if (running || ending || closingResources) return;
+        telemetry = new Z0LiveTelemetry(); turn = new Z0LiveTurnState(); bargeIn = new Z0LiveBargeIn();
+        broker = newBrokerSession(); speechGate = new Z0LiveSpeechGate(); bargeProbe = () -> {};
+        bidi = false; bidiCaption.setLength(0); bidiBarge.reset();
+        audio = new Z0LiveAudioState(); inboxPlayback = new Z0LiveInboxPlayback();
+        pendingNetwork = false; connecting = false; inboxBusy = false; speaking = false;
+        pendingTools = 0; reachabilityAttempts = 0; telemetryFailed.set(0);
+        toolCalls.clear(); toolNames.clear(); pendingInbox = null; brokerSessionToEnd = "";
+        caption = ""; error = ""; finalSent = false;
         running = true;
         generation++;
         sessionId = "";
@@ -162,7 +233,7 @@ public final class Z0LiveService extends Service {
             PairingValidation.Pairing pairing = store.pairing();
             activePairing = pairing;
             inboxCursor = pairing == null ? -1 : store.inboxCursor(pairing);
-            if (pairing == null) { fail(getString(R.string.z0live_service_pair_required)); return START_NOT_STICKY; }
+            if (pairing == null) { fail(getString(R.string.z0live_service_pair_required)); return; }
             backend = new Z0LiveProtocol(http, pairing.backendUrl, pairing.token);
             event("session_start", "", object("client", "lawnchair"));
             main.post(telemetryTick);
@@ -170,7 +241,6 @@ public final class Z0LiveService extends Service {
         } catch (RuntimeException e) {
             fail(getString(R.string.z0live_service_pairing_unreadable));
         }
-        return START_NOT_STICKY;
     }
 
     private Notification notification() {
@@ -180,6 +250,15 @@ public final class Z0LiveService extends Service {
                 new Intent(this, Z0LiveService.class).setAction(END), PendingIntent.FLAG_IMMUTABLE);
         PendingIntent mute = PendingIntent.getService(this, 8793,
                 new Intent(this, Z0LiveService.class).setAction(MUTE), PendingIntent.FLAG_IMMUTABLE);
+        if (standby && !running && !closingResources) {
+            PendingIntent off = PendingIntent.getService(this, 8794,
+                    new Intent(this, Z0LiveService.class).setAction(OFF), PendingIntent.FLAG_IMMUTABLE);
+            return new Notification.Builder(this, CHANNEL).setSmallIcon(R.drawable.z0live_mic)
+                    .setContentTitle(getString(R.string.z0live_standby_ready))
+                    .setContentText(getString(R.string.z0live_standby_detail)).setContentIntent(open)
+                    .setOngoing(true).setOnlyAlertOnce(true)
+                    .addAction(new Notification.Action.Builder(null, getString(R.string.z0live_standby_off), off).build()).build();
+        }
         return new Notification.Builder(this, CHANNEL)
                 .setSmallIcon(R.drawable.z0live_mic)
                 .setContentTitle(getString(R.string.z0live_notification_title, status, audio.isMuted() ? getString(R.string.z0live_notification_muted) : ""))
@@ -193,7 +272,7 @@ public final class Z0LiveService extends Service {
         if (current != null && current != this) return;
         Z0LiveStatus.publish(new Z0LiveStatus.Snapshot(status, caption, error, audio.isMuted(),
                 running || closingResources, pendingNetwork, telemetryFailed.get() + telemetry.failedCount()));
-        if (running) getSystemService(NotificationManager.class).notify(NOTIFICATION, notification());
+        if (running || standby) getSystemService(NotificationManager.class).notify(NOTIFICATION, notification());
     }
     private boolean valid(int id) { return running && generation == id; }
     private void mute() {
@@ -865,8 +944,8 @@ public final class Z0LiveService extends Service {
                 telemetryBusy = false;
                 if (finalFlush) {
                     telemetryFailed.addAndGet(telemetry.size());
-                    network.shutdown();
-                    control.shutdown();
+                    finalSent = true;
+                    settled();
                 } else if (ending) flush(true);
                 else if (!retryOnTick && telemetry.size() > 0) flush(false);
                 publish();
@@ -911,18 +990,31 @@ public final class Z0LiveService extends Service {
             closingResources = false;
             status = getString(reason.isEmpty() ? R.string.z0live_service_ended : R.string.z0live_service_error);
             publish();
-            stopForeground(STOP_FOREGROUND_REMOVE);
-            stopSelf();
+            settled();
         });
         if (telemetryBusy) { /* The in-flight flush schedules the final bounded flush. */ }
         else if (backend != null) flush(true);
-        else network.shutdown();
-        if (!closingResources) {
+        else finalSent = true;
+        settled();
+    }
+    private void settled() {
+        if (!ending || closingResources || !finalSent) return;
+        if (standby) {
+            ending = false;
+            backend = null;
+            sessionId = "";
+            status = getString(R.string.z0live_standby_ready);
+            publish();
+        } else {
+            network.shutdown();
+            control.shutdown();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
         }
     }
     @Override public void onDestroy() {
+        standby = false;
+        if (gestures != null) gestures.close();
         if (!ending) finishSession("Voice service stopped by Android", false);
         if (current == this) current = null;
         // Closing pooled TLS sockets can perform network writes; never do it on Android's main thread.
