@@ -417,6 +417,14 @@ class Z0LiveActivity :
                     }
                     OutlinedButton(onClick = { Z0LiveGestureChannel.pin(this@Z0LiveActivity) }) { Text(stringResource(R.string.z0live_voice_here)) }
                     OutlinedButton(onClick = {
+                        // NOOP's ring gesture setup has no launcher entry; open its exported Activity explicitly.
+                        try {
+                            startActivity(Intent().setClassName("com.noop.whoop.debug", "com.noop.ui.OuraGestureSetupActivity"))
+                        } catch (_: RuntimeException) {
+                            showMessage(R.string.z0live_oura_missing)
+                        }
+                    }) { Text(stringResource(R.string.z0live_oura_setup)) }
+                    OutlinedButton(onClick = {
                         if (Z0LiveService.standbyEnabled()) {
                             Z0LiveService.off(this@Z0LiveActivity)
                         } else {

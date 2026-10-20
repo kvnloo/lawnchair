@@ -4,4 +4,6 @@
     <string translatable="false" name="z0live_standby_on">Enable Standby (no audio capture)</string>
     <string translatable="false" name="z0live_standby_off">Standby OFF</string>
     <string translatable="false" name="z0live_voice_here">Voice here (5 minutes)</string>
+    <string translatable="false" name="z0live_oura_setup">Oura ring setup (NOOP)</string>
+    <string translatable="false" name="z0live_oura_missing">Install the NOOP Oura APK first.</string>
 </resources>
