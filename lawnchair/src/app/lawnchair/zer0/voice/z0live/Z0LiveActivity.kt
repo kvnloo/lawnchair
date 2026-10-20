@@ -84,6 +84,7 @@ class Z0LiveActivity :
     private var clearAfterEnd = false
     private var resumed = false
     private var autoStart = false
+    private var wantsStandby = false
     private var wantsStart = false
     private var permissionInFlight = false
     private var notificationAsked = false
@@ -156,7 +157,14 @@ class Z0LiveActivity :
         val data = incoming.data
         val internal = data == null && incoming.component?.className == javaClass.name && incoming.action == INTERNAL_ACTION
         val badLink = incoming.getBooleanExtra(EXTRA_BAD_LINK, false)
-        autoStart = allowInternalStart && internal && incoming.getBooleanExtra(EXTRA_START_NOW, false)
+        val shellStart = com.android.launcher3.BuildConfig.DEBUG && data == null &&
+            incoming.getBooleanExtra("autostart", false)
+        if (shellStart && incoming.getStringExtra("gesture") == "triple_tap") Z0LiveService.end(this)
+        if (shellStart && incoming.getStringExtra("gesture") != "triple_tap" && snapshot.active) Z0LiveService.toggleMute(this)
+        autoStart = !snapshot.active && allowInternalStart && ((internal
+            (internal && incoming.getBooleanExtra(EXTRA_START_NOW, false)) ||
+                (shellStart && incoming.getStringExtra("gesture") != "triple_tap")
+            )
         if (internal && incoming.getBooleanExtra(EXTRA_PAIR, false)) pairingVisible = true
         incoming.data = null
         incoming.clipData = null
@@ -177,6 +185,7 @@ class Z0LiveActivity :
     override fun onResume() {
         super.onResume()
         resumed = true
+        Z0LiveGestureChannel.touch()
         consumePairing()
         onChanged(Z0LiveStatus.get())
         if (snapshot.pendingNetwork && snapshot.active) Z0LiveService.retry(this)
@@ -244,7 +253,8 @@ class Z0LiveActivity :
         wantsStart = false
         localMessage = null
         try {
-            Z0LiveService.start(this)
+            if (wantsStandby) Z0LiveService.standby(this) else Z0LiveService.start(this)
+            wantsStandby = false
         } catch (_: RuntimeException) {
             showMessage(R.string.z0live_start_failed)
         }
@@ -319,6 +329,7 @@ class Z0LiveActivity :
         clearAfterEnd = clear
         changingPairing = true
         showMessage(R.string.z0live_pair_stopping)
+        Z0LiveService.off(this)
         Z0LiveService.end(this)
         onChanged(Z0LiveStatus.get())
     }
@@ -403,6 +414,24 @@ class Z0LiveActivity :
                     if (snapshot.telemetryFailed > 0) {
                         Text(stringResource(R.string.z0live_telemetry_failed, snapshot.telemetryFailed), style = MaterialTheme.typography.bodySmall)
                     }
+                    OutlinedButton(onClick = { Z0LiveGestureChannel.pin(this@Z0LiveActivity) }) { Text(stringResource(R.string.z0live_voice_here)) }
+                    OutlinedButton(onClick = {
+                        if (Z0LiveService.standbyEnabled()) {
+                            Z0LiveService.off(this@Z0LiveActivity)
+                        } else {
+                            wantsStandby = true
+                            if (snapshot.active) {
+                                try {
+                                    Z0LiveService.standby(this@Z0LiveActivity)
+                                } catch (_: RuntimeException) {
+                                    showMessage(R.string.z0live_start_failed)
+                                }
+                            } else {
+                                requestStart()
+                            }
+                        }
+                    }) { Text(stringResource(if (Z0LiveService.standbyEnabled()) R.string.z0live_standby_off else R.string.z0live_standby_on)) }
+                    Text(stringResource(R.string.z0live_standby_detail), style = MaterialTheme.typography.bodySmall)
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         if (snapshot.active) {
                             OutlinedButton(onClick = { Z0LiveService.toggleMute(this@Z0LiveActivity) }, modifier = Modifier.weight(1f)) {
@@ -418,7 +447,7 @@ class Z0LiveActivity :
                                 Text(stringResource(R.string.z0live_end), Modifier.padding(start = 8.dp))
                             }
                         } else {
-                            Button(onClick = ::requestStart, enabled = store != null && !changingPairing, modifier = Modifier.fillMaxWidth()) {
+                            Button(onClick = { wantsStandby = false; requestStart() }, enabled = store != null && !changingPairing, modifier = Modifier.fillMaxWidth()) {
                                 Icon(Icons.Rounded.Mic, contentDescription = null)
                                 Text(stringResource(R.string.z0live_start), Modifier.padding(start = 8.dp))
                             }
