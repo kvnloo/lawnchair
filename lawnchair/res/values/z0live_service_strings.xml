@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="z0live_service_connecting" translatable="false">Connecting</string>
+    <string name="z0live_service_connection_timeout" translatable="false">Voice connection timed out. End and start again.</string>
+    <string name="z0live_service_foreground_failed" translatable="false">Android could not start the microphone foreground service. Open z0live and try again.</string>
+    <string name="z0live_service_error" translatable="false">Error</string>
+    <string name="z0live_service_pair_required" translatable="false">Pair this device before starting voice</string>
+    <string name="z0live_service_pairing_unreadable" translatable="false">Encrypted pairing could not be read. Open settings and pair again.</string>
+    <string name="z0live_service_backend_retry" translatable="false">Backend unreachable or unhealthy. Check Tailscale and pairing. Attempt </string>
+    <string name="z0live_service_backend_unreachable" translatable="false">Backend did not become reachable after 6 attempts. Check Tailscale and pairing, then Start again.</string>
+    <string name="z0live_service_missing_session" translatable="false">Backend did not return a broker session identity</string>
+    <string name="z0live_service_audio_focus_unavailable" translatable="false">Audio focus is unavailable. End other audio and try again.</string>
+    <string name="z0live_service_sdp_failed" translatable="false">Realtime SDP exchange failed. Check backend credentials and connectivity.</string>
+    <string name="z0live_service_listening" translatable="false">Listening</string>
+    <string name="z0live_service_audio_start_failed" translatable="false">Native audio could not start</string>
+    <string name="z0live_service_session_failed" translatable="false">Backend session request failed. Check pairing, server version and credentials.</string>
+    <string name="z0live_service_audio_focus_lost" translatable="false">Voice paused because another app has audio focus</string>
+    <string name="z0live_service_speaking" translatable="false">Speaking</string>
+    <string name="z0live_service_transcription_failed" translatable="false">Input transcription failed</string>
+    <string name="z0live_service_realtime_failed" translatable="false">Realtime reported an error. End and start again.</string>
+    <string name="z0live_service_response_status" translatable="false">Realtime response </string>
+    <string name="z0live_service_malformed_event" translatable="false">Malformed realtime event</string>
+    <string name="z0live_service_invalid_call" translatable="false">Invalid realtime tool call ID</string>
+    <string name="z0live_service_tool_failed" translatable="false">Server tool failed. Check the documented builtin tool routes.</string>
+    <string name="z0live_service_invalid_inbox" translatable="false">Inbox returned an invalid item; cursor has not advanced</string>
+    <string name="z0live_service_inbox_retry" translatable="false">Inbox polling failed; retrying while the session is open</string>
+    <string name="z0live_service_inbox_action_failed" translatable="false">Inbox action failed: </string>
+    <string name="z0live_service_cursor_failed" translatable="false">Inbox cursor could not be saved; replies may repeat after restart</string>
+    <string name="z0live_notification_channel" translatable="false">z0live microphone</string>
+    <string name="z0live_notification_description" translatable="false">Ongoing voice session with mute and end controls</string>
+    <string name="z0live_notification_detail" translatable="false">Microphone session · tap to view captions</string>
+    <string name="z0live_notification_muted" translatable="false"> · muted</string>
+    <string name="z0live_notification_title" translatable="false">z0live · %1$s%2$s</string>
+    <string name="z0live_service_ending" translatable="false">Ending</string>
+    <string name="z0live_service_ended" translatable="false">Ended</string>
+    <string name="z0live_service_inbox_speech_failed" translatable="false">Hermes reply was interrupted. A silent notification keeps the reply available.</string>
+    <string name="z0live_inbox_notification_channel" translatable="false">Hermes replies (silent)</string>
+    <string name="z0live_inbox_notification_title" translatable="false">Hermes reply</string>
+</resources>

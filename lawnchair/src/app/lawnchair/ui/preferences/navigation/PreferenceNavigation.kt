@@ -55,6 +55,7 @@ import app.lawnchair.ui.preferences.destinations.SelectAppsForDrawerFolder
 import app.lawnchair.ui.preferences.destinations.SelectIconPreference
 import app.lawnchair.ui.preferences.destinations.ShapePreference
 import app.lawnchair.ui.preferences.destinations.SmartspacePreferences
+import app.lawnchair.ui.preferences.destinations.Z0LivePreferences
 import com.android.launcher3.util.ComponentKey
 import soup.compose.material.motion.animation.materialSharedAxisXIn
 import soup.compose.material.motion.animation.materialSharedAxisXOut
@@ -222,6 +223,7 @@ fun PreferenceNavigation(
         composable<ExperimentalFeatures>(
             deepLinks = getDeepLink(ExperimentalFeatures),
         ) { ExperimentalFeaturesPreferences() }
+        composable<Z0Live> { Z0LivePreferences() }
         composable<Predictions>(
             deepLinks = getDeepLink(Predictions),
         ) { PredictionsPreferences() }

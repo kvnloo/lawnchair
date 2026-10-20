@@ -1,0 +1,645 @@
+{
+  "base_commit": "ba091219e2d7c4cac8f173754d0c234f9ff866f0",
+  "native_baseline_entries": 3994,
+  "native_baseline_sha256": "6166717db5c43451717be1c10941e4cfbcb0ac521ac319cf18fca557dab07154",
+  "generation": "Native updateLintBaseline on detached pre-feature source; same results with feature dependency classpath. Supplemental NewApi/WrongConstant diagnostics from actual lint on byte-identical inherited files only; no feature diagnostics baselined.",
+  "unchanged_files_sha256": {
+    "quickstep/src/com/android/quickstep/AbsSwipeUpHandler.java": "f869e1f160714112a34adfa9ce716e954407b2a322f3b34af8926ccad7b21c9c",
+    "quickstep/src/com/android/quickstep/util/BaseDepthController.java": "ea2698cb2759bf0bc8a1caa679fb33f2aaa98702ebe893ae91a41ea4d4c7726a",
+    "quickstep/src/com/android/quickstep/views/BlurUtils.kt": "77e615c3fd4cfe251ef1d0f7c4376ab0071c3e7ff89fde9494e4516a359e85f0",
+    "quickstep/src/com/android/launcher3/desktop/DesktopAppLaunchAnimatorHelper.kt": "d8b2f21f28a93b0ba285b68af701bd84efbc5950941ef6c2a8639728d5118eb6",
+    "quickstep/src/com/android/quickstep/util/ExternalDisplays.kt": "243fffc33cfdde1c85567b68027f48bfc5fa977e23a15b2f4ade1ec55e3e1f56",
+    "quickstep/src/com/android/quickstep/util/FadeOutRemoteTransition.kt": "c3d86b18514a3eaa70a57be507ad7f96b5b222f056934c0541e16746077af1c2",
+    "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java": "7e008a1da54232b0841b3e7ca4ecb5ba02031e9ea7a71f7e895178b26e9bb2b8",
+    "quickstep/src/com/android/launcher3/QuickstepTransitionManager.java": "7188636f25a83c511db652e8bc3014dbab0b3688390eaebe905926d9bee68fb7",
+    "quickstep/src/com/android/quickstep/RecentTasksList.java": "7eef642a86806630d8ca2d7da3a358a7c1e4ff0fe9fb381bea036c6678ddc86f",
+    "quickstep/src/com/android/quickstep/views/RecentsView.java": "176991187154ded2f0e7cc3344b786916ec787a718fc090e1b50a8c878c6754f",
+    "quickstep/src/com/android/quickstep/fallback/window/RecentsWindowManager.kt": "2280688427c01f321c6e6bca4b4304b48d2d95aa2c82011dcd1fab63d7b2c727",
+    "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt": "2f6e92287aa2e2f4e41b2c0728b369e7c1e949073ede2b70e61896d49876c23b",
+    "quickstep/src/com/android/quickstep/util/SlideInRemoteTransition.kt": "b15faad56f27d3b34c1dd00ae96a6bf5c58e6a7940f34b8a6b8efc5cc4cdf112",
+    "quickstep/src/com/android/quickstep/util/SplitAnimationController.kt": "783a39cb985506f17fcac4bdd8cb6605617c3b84ea17cf64f30064e2bd74ffd4",
+    "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java": "e172ac1b7e06275fe187ace3a35fb6cf6674b2820e7c3bb98e33cd93273b9e70",
+    "quickstep/src/com/android/quickstep/SystemUiProxy.kt": "8bf1e20cea2d8a07d6ef000d9f3842a28eabc515f24defc2a8a739843d5588a2",
+    "quickstep/src/com/android/quickstep/util/SystemWindowManagerProxy.java": "e28af0c058507905fbc97015c8df90f3fd9cc727cdf92e1c4f995ae8e1cb126c",
+    "quickstep/src/com/android/quickstep/TaskViewUtils.java": "f94ce1f0d8b481446a3ff0693c05b76c2721e50852e7475823d8ce112e71d071",
+    "quickstep/src/com/android/launcher3/taskbar/TaskbarDragController.java": "6f815f10b273db00cc8b3b06acc43310fd2824a0c059128f68532b21e4a49a05",
+    "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt": "55dac779d8e54baf6659333c811a50676c52edfd6d67dc77a53bce80c1e8f4ce",
+    "quickstep/src/com/android/launcher3/taskbar/overlay/TaskbarOverlayController.java": "a5bd431ebf79e60065f0ae2472f0f6a1a5ed8e22237ceb93820d0f196f7c5928",
+    "quickstep/src/com/android/launcher3/taskbar/overlay/TaskbarOverlayDragLayer.java": "4b7f31fdec3aad1a552678ce8b445a302adfa7be8d3217b58f9bf61b8df81197",
+    "quickstep/src/com/android/quickstep/TopTaskTracker.java": "40789322127383ffedf4f13e6f47bb814b861200c10698aa26e1434363097dbe",
+    "quickstep/src/com/android/quickstep/util/TransformParams.java": "af2dbd5777f13be27617db5c7e7916925f3193f0303ce0a8bd49a7b045840077",
+    "quickstep/src/com/android/quickstep/interaction/TutorialController.java": "20a0bb6c65cee51a20a743db976dd5c44aabb67f878035984f50673e3752a31d",
+    "quickstep/src/com/android/quickstep/actioncorner/ActionCornerHandler.kt": "dd15efa3f84a83826e015cde29067f84d8cb623905f291bec4d77d4e54388672",
+    "quickstep/src/com/android/launcher3/uioverrides/touchcontrollers/StatusBarTouchController.java": "2f920b4ea8e26abc74fb04e5aefd16becb5014a52f3bba11122b0966bab1fd05",
+    "quickstep/src/com/android/launcher3/taskbar/TaskbarManagerImpl.java": "c8ceffab1efd31d1ba5344a7de90fb1997ed161e0b75d48fbf77113dd764b1fc",
+    "quickstep/src/com/android/quickstep/util/VibrationConstants.java": "7df797500957bf2a8e789cc5f57f1b72972ec76dbe5bc59dca1b849d67aef5a9"
+  },
+  "supplemental_diagnostics": [
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.app.PictureInPictureParams#isAutoEnterEnabled`",
+      "file": "quickstep/src/com/android/quickstep/AbsSwipeUpHandler.java",
+      "line": "1711"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.app.PictureInPictureParams#getSourceRectHint`",
+      "file": "quickstep/src/com/android/quickstep/AbsSwipeUpHandler.java",
+      "line": "1948"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setBackgroundBlurRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "277"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.view.SurfaceControl.Transaction#setOpaque`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "278"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setBackgroundBlurRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "433"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.view.SurfaceControl.Transaction#setOpaque`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "434"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setRelativeLayer`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "446"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#remove`",
+      "file": "quickstep/src/com/android/quickstep/util/BaseDepthController.java",
+      "line": "450"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl#getLayerId`",
+      "file": "quickstep/src/com/android/quickstep/views/BlurUtils.kt",
+      "line": "65"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/launcher3/desktop/DesktopAppLaunchAnimatorHelper.kt",
+      "line": "162"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#displayId`",
+      "file": "quickstep/src/com/android/quickstep/util/ExternalDisplays.kt",
+      "line": "52"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/util/FadeOutRemoteTransition.kt",
+      "line": "43"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#hide`",
+      "file": "quickstep/src/com/android/quickstep/util/FadeOutRemoteTransition.kt",
+      "line": "59"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "357"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setAnimationTransaction`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "358"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setCallsite`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "418"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setColorLayer`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "419"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setParent`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "420"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setOpaque`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "421"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.view.SurfaceControl.Builder#setHidden`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "422"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#build`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "423"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setColor`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "429"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "431"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setLayer`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "433"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#remove`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "441"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setBackgroundBlurRadius`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "490"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setMatrix`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "502"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setWindowCrop`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "503"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "504"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setFrameTimelineVsync`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "510"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setAlpha`",
+      "file": "quickstep/src/com/android/quickstep/LauncherBackAnimationController.java",
+      "line": "619"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setEffectLayer`",
+      "file": "quickstep/src/com/android/launcher3/QuickstepTransitionManager.java",
+      "line": "1184"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#build`",
+      "file": "quickstep/src/com/android/launcher3/QuickstepTransitionManager.java",
+      "line": "1185"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#apply`",
+      "file": "quickstep/src/com/android/launcher3/QuickstepTransitionManager.java",
+      "line": "1190"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#remove`",
+      "file": "quickstep/src/com/android/launcher3/QuickstepTransitionManager.java",
+      "line": "1190"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isVisible`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "435"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isTopActivityTransparent`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "480"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isVisible`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "487"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#positionInParent`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "505"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#configuration`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "506"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isVisible`",
+      "file": "quickstep/src/com/android/quickstep/RecentTasksList.java",
+      "line": "507"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/views/RecentsView.java",
+      "line": "1508"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.window.OnBackInvokedDispatcher#registerSystemOnBackInvokedCallback`",
+      "file": "quickstep/src/com/android/quickstep/fallback/window/RecentsWindowManager.kt",
+      "line": "310"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setCallsite`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "320"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setParent`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "321"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#setOpaque`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "322"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 33 (current min is 26): `android.view.SurfaceControl.Builder#setHidden`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "323"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Builder#build`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "324"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl#isValid`",
+      "file": "quickstep/src/com/android/quickstep/util/ScalingWorkspaceRevealAnim.kt",
+      "line": "348"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/util/SlideInRemoteTransition.kt",
+      "line": "56"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SlideInRemoteTransition.kt",
+      "line": "64"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SlideInRemoteTransition.kt",
+      "line": "68"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SplitAnimationController.kt",
+      "line": "801"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setAlpha`",
+      "file": "quickstep/src/com/android/quickstep/util/SplitAnimationController.kt",
+      "line": "1179"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/util/SplitAnimationController.kt",
+      "line": "1179"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SplitAnimationController.kt",
+      "line": "1180"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setMatrix`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "72"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setWindowCrop`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "81"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "99"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setBackgroundBlurRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "119"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "128"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#remove`",
+      "file": "quickstep/src/com/android/quickstep/util/SurfaceTransaction.java",
+      "line": "137"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#getDefaultApplyToken`",
+      "file": "quickstep/src/com/android/quickstep/SystemUiProxy.kt",
+      "line": "974"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setDefaultApplyToken`",
+      "file": "quickstep/src/com/android/quickstep/SystemUiProxy.kt",
+      "line": "984"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setDefaultApplyToken`",
+      "file": "quickstep/src/com/android/quickstep/SystemUiProxy.kt",
+      "line": "992"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 28 (current min is 26): `android.view.DisplayCutout#getRotated`",
+      "file": "quickstep/src/com/android/quickstep/util/SystemWindowManagerProxy.java",
+      "line": "168"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "285"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "574"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#hide`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "582"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setAlpha`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "799"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#show`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "800"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#hide`",
+      "file": "quickstep/src/com/android/quickstep/TaskViewUtils.java",
+      "line": "811"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#remove`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarDragController.java",
+      "line": "667"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 34 (current min is 26): `android.window.SurfaceSyncGroup#addSyncCompleteCallback`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarDragController.java",
+      "line": "669"
+    },
+    {
+      "id": "NewApi",
+      "message": "Method reference requires API level 29 (current min is 26): `transaction::close`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarDragController.java",
+      "line": "669"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 28 (current min is 26): `android.view.DisplayCutout#getRotated`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt",
+      "line": "348"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 28 (current min is 26): `android.view.DisplayCutout#getSafeInsetBottom`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt",
+      "line": "351"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 28 (current min is 26): `android.view.DisplayCutout#getSafeInsetLeft`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt",
+      "line": "356"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 28 (current min is 26): `android.view.DisplayCutout#getSafeInsetRight`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt",
+      "line": "357"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 30 (current min is 26): `android.view.WindowInsets.Type#toString`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarInsetsController.kt",
+      "line": "477"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setBackgroundBlurRadius`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/overlay/TaskbarOverlayController.java",
+      "line": "273"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.graphics.Insets#toRect`",
+      "file": "quickstep/src/com/android/launcher3/taskbar/overlay/TaskbarOverlayDragLayer.java",
+      "line": "119"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.app.TaskInfo#getActivityType`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "163"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.app.TaskInfo#getWindowingMode`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "164"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#displayId`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "169"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#displayId`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "169"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isVisible`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "174"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#isVisibleRequested`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "175"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#displayId`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "182"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#displayId`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "184"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#configuration`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "405"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#configuration`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "410"
+    },
+    {
+      "id": "NewApi",
+      "message": "Field requires API level 29 (current min is 26): `android.app.TaskInfo#configuration`",
+      "file": "quickstep/src/com/android/quickstep/TopTaskTracker.java",
+      "line": "588"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.SurfaceControl.Transaction#setCornerRadius`",
+      "file": "quickstep/src/com/android/quickstep/util/TransformParams.java",
+      "line": "210"
+    },
+    {
+      "id": "NewApi",
+      "message": "Call requires API level 29 (current min is 26): `android.view.accessibility.AccessibilityManager#getRecommendedTimeoutMillis`",
+      "file": "quickstep/src/com/android/quickstep/interaction/TutorialController.java",
+      "line": "204"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one of: SplashScreen.SPLASH_SCREEN_STYLE_SOLID_COLOR, SplashScreen.SPLASH_SCREEN_STYLE_ICON",
+      "file": "quickstep/src/com/android/quickstep/actioncorner/ActionCornerHandler.kt",
+      "line": "195"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one or more of: LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON, LayoutParams.FLAG_DIM_BEHIND, LayoutParams.FLAG_BLUR_BEHIND, LayoutParams.FLAG_NOT_FOCUSABLE, LayoutParams.FLAG_NOT_TOUCHABLE, LayoutParams.FLAG_NOT_TOUCH_MODAL, LayoutParams.FLAG_TOUCHABLE_WHEN_WAKING, LayoutParams.FLAG_KEEP_SCREEN_ON, LayoutParams.FLAG_LAYOUT_IN_SCREEN, LayoutParams.FLAG_LAYOUT_NO_LIMITS, LayoutParams.FLAG_FULLSCREEN, LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, LayoutParams.FLAG_DITHER, LayoutParams.FLAG_SECURE, LayoutParams.FLAG_SCALED, LayoutParams.FLAG_IGNORE_CHEEK_PRESSES, LayoutParams.FLAG_LAYOUT_INSET_DECOR, LayoutParams.FLAG_ALT_FOCUSABLE_IM, LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, LayoutParams.FLAG_SHOW_WHEN_LOCKED, LayoutParams.FLAG_SHOW_WALLPAPER, LayoutParams.FLAG_TURN_SCREEN_ON, LayoutParams.FLAG_DISMISS_KEYGUARD, LayoutParams.FLAG_SPLIT_TOUCH, LayoutParams.FLAG_HARDWARE_ACCELERATED, LayoutParams.FLAG_LAYOUT_IN_OVERSCAN, LayoutParams.FLAG_TRANSLUCENT_STATUS, LayoutParams.FLAG_TRANSLUCENT_NAVIGATION, LayoutParams.FLAG_LOCAL_FOCUS_MODE, LayoutParams.FLAG_LAYOUT_ATTACHED_IN_DECOR, LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS",
+      "file": "quickstep/src/com/android/launcher3/uioverrides/touchcontrollers/StatusBarTouchController.java",
+      "line": "205"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one or more of: LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON, LayoutParams.FLAG_DIM_BEHIND, LayoutParams.FLAG_BLUR_BEHIND, LayoutParams.FLAG_NOT_FOCUSABLE, LayoutParams.FLAG_NOT_TOUCHABLE, LayoutParams.FLAG_NOT_TOUCH_MODAL, LayoutParams.FLAG_TOUCHABLE_WHEN_WAKING, LayoutParams.FLAG_KEEP_SCREEN_ON, LayoutParams.FLAG_LAYOUT_IN_SCREEN, LayoutParams.FLAG_LAYOUT_NO_LIMITS, LayoutParams.FLAG_FULLSCREEN, LayoutParams.FLAG_FORCE_NOT_FULLSCREEN, LayoutParams.FLAG_DITHER, LayoutParams.FLAG_SECURE, LayoutParams.FLAG_SCALED, LayoutParams.FLAG_IGNORE_CHEEK_PRESSES, LayoutParams.FLAG_LAYOUT_INSET_DECOR, LayoutParams.FLAG_ALT_FOCUSABLE_IM, LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH, LayoutParams.FLAG_SHOW_WHEN_LOCKED, LayoutParams.FLAG_SHOW_WALLPAPER, LayoutParams.FLAG_TURN_SCREEN_ON, LayoutParams.FLAG_DISMISS_KEYGUARD, LayoutParams.FLAG_SPLIT_TOUCH, LayoutParams.FLAG_HARDWARE_ACCELERATED, LayoutParams.FLAG_LAYOUT_IN_OVERSCAN, LayoutParams.FLAG_TRANSLUCENT_STATUS, LayoutParams.FLAG_TRANSLUCENT_NAVIGATION, LayoutParams.FLAG_LOCAL_FOCUS_MODE, LayoutParams.FLAG_LAYOUT_ATTACHED_IN_DECOR, LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS",
+      "file": "quickstep/src/com/android/launcher3/uioverrides/touchcontrollers/StatusBarTouchController.java",
+      "line": "207"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one of: LayoutParams.TYPE_BASE_APPLICATION, LayoutParams.TYPE_APPLICATION, LayoutParams.TYPE_APPLICATION_STARTING, LayoutParams.TYPE_DRAWN_APPLICATION, LayoutParams.TYPE_APPLICATION_PANEL, LayoutParams.TYPE_APPLICATION_MEDIA, LayoutParams.TYPE_APPLICATION_SUB_PANEL, LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG, LayoutParams.TYPE_STATUS_BAR, LayoutParams.TYPE_SEARCH_BAR, LayoutParams.TYPE_PHONE, LayoutParams.TYPE_SYSTEM_ALERT, LayoutParams.TYPE_TOAST, LayoutParams.TYPE_SYSTEM_OVERLAY, LayoutParams.TYPE_PRIORITY_PHONE, LayoutParams.TYPE_SYSTEM_DIALOG, LayoutParams.TYPE_KEYGUARD_DIALOG, LayoutParams.TYPE_SYSTEM_ERROR, LayoutParams.TYPE_INPUT_METHOD, LayoutParams.TYPE_INPUT_METHOD_DIALOG, LayoutParams.TYPE_WALLPAPER, LayoutParams.TYPE_PRIVATE_PRESENTATION, LayoutParams.TYPE_ACCESSIBILITY_OVERLAY, LayoutParams.TYPE_APPLICATION_OVERLAY",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarManagerImpl.java",
+      "line": "1400"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one of: LayoutParams.TYPE_BASE_APPLICATION, LayoutParams.TYPE_APPLICATION, LayoutParams.TYPE_APPLICATION_STARTING, LayoutParams.TYPE_DRAWN_APPLICATION, LayoutParams.TYPE_APPLICATION_PANEL, LayoutParams.TYPE_APPLICATION_MEDIA, LayoutParams.TYPE_APPLICATION_SUB_PANEL, LayoutParams.TYPE_APPLICATION_ATTACHED_DIALOG, LayoutParams.TYPE_STATUS_BAR, LayoutParams.TYPE_SEARCH_BAR, LayoutParams.TYPE_PHONE, LayoutParams.TYPE_SYSTEM_ALERT, LayoutParams.TYPE_TOAST, LayoutParams.TYPE_SYSTEM_OVERLAY, LayoutParams.TYPE_PRIORITY_PHONE, LayoutParams.TYPE_SYSTEM_DIALOG, LayoutParams.TYPE_KEYGUARD_DIALOG, LayoutParams.TYPE_SYSTEM_ERROR, LayoutParams.TYPE_INPUT_METHOD, LayoutParams.TYPE_INPUT_METHOD_DIALOG, LayoutParams.TYPE_WALLPAPER, LayoutParams.TYPE_PRIVATE_PRESENTATION, LayoutParams.TYPE_ACCESSIBILITY_OVERLAY, LayoutParams.TYPE_APPLICATION_OVERLAY",
+      "file": "quickstep/src/com/android/launcher3/taskbar/TaskbarManagerImpl.java",
+      "line": "1746"
+    },
+    {
+      "id": "WrongConstant",
+      "message": "Must be one of: VibrationEffect.EFFECT_TICK, VibrationEffect.EFFECT_CLICK, VibrationEffect.EFFECT_HEAVY_CLICK, VibrationEffect.EFFECT_DOUBLE_CLICK",
+      "file": "quickstep/src/com/android/quickstep/util/VibrationConstants.java",
+      "line": "23"
+    }
+  ]
+}

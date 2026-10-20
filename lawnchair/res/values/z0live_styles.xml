@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Transparent activity hosts the Material 3 session sheet over the launcher. -->
+    <style name="Theme.Z0LiveGlass" parent="Theme.Lawnchair">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+    <style name="Theme.Z0LivePanel" parent="Theme.Lawnchair" />
+</resources>

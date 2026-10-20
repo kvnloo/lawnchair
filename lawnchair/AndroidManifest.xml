@@ -25,6 +25,9 @@
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="com.google.android.apps.nexuslauncher.permission.QSB" />
     <uses-permission android:name="com.kieronquinn.app.smartspacer.permission.ACCESS_SMARTSPACER"/>
@@ -41,10 +44,15 @@
     <uses-permission android:name="android.permission.FORCE_STOP_PACKAGES" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.STATUS_BAR_SERVICE" tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.SUSPEND_APPS" tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+    <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
 
     <!-- The on-device Android speech service must be discoverable on Android 11+. -->
     <queries>
+        <package android:name="com.tailscale.ipn" />
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
@@ -66,7 +74,72 @@
         android:name="${packageName}.permission.HOTSEAT_EDU"
         tools:node="remove" />
 
-    <application>
+    <application android:dataExtractionRules="@xml/z0live_data_extraction_rules">
+        <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveInboxNotifications"
+            android:exported="true" android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService"
+            android:exported="false" android:label="@string/z0live_accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                android:resource="@xml/z0live_accessibility_service" />
+        </service>
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveService"
+            android:exported="false" android:stopWithTask="false"
+            android:foregroundServiceType="microphone" />
+        <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity"
+            android:exported="false" android:excludeFromRecents="true"
+            android:launchMode="singleTop" android:label="@string/z0live_title"
+            android:theme="@style/Theme.Z0LiveGlass" />
+        <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity$LinkActivity"
+            android:noHistory="true" android:excludeFromRecents="true"
+            android:theme="@style/Theme.Z0LiveGlass" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="z0live" android:host="voice" />
+                <data android:scheme="z0live" android:host="pair" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.ASSIST" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+        <activity android:name="app.lawnchair.zer0.voice.z0live.RippleActivity"
+            android:exported="false" android:excludeFromRecents="true"
+            android:label="@string/z0live_ripple" android:theme="@style/Theme.Z0LivePanel" />
+        <activity-alias android:name="app.lawnchair.zer0.voice.z0live.RippleLink"
+            android:targetActivity="app.lawnchair.zer0.voice.z0live.RippleActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="z0live" android:host="ripple" />
+            </intent-filter>
+        </activity-alias>
+        <receiver android:name="app.lawnchair.zer0.voice.z0live.Z0LiveWidget"
+            android:exported="false" android:label="@string/z0live_title">
+            <intent-filter><action android:name="android.appwidget.action.APPWIDGET_UPDATE" /></intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/z0live_widget_info" />
+        </receiver>
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveTile"
+            android:exported="true" android:icon="@drawable/z0live_mic"
+            android:label="@string/z0live_title" android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter><action android:name="android.service.quicksettings.action.QS_TILE" /></intent-filter>
+        </service>
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAssistantService"
+            android:exported="true" android:label="@string/z0live_title"
+            android:permission="android.permission.BIND_VOICE_INTERACTION">
+            <intent-filter><action android:name="android.service.voice.VoiceInteractionService" /></intent-filter>
+            <meta-data android:name="android.voice_interaction" android:resource="@xml/z0live_assistant" />
+        </service>
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAssistantSessionService"
+            android:exported="true" android:permission="android.permission.BIND_VOICE_INTERACTION" />
         <!-- Downstream zer0: explicit user-initiated voice input, not exported or always listening. -->
         <activity
             android:name="app.lawnchair.zer0.voice.VoiceCommandActivity"
