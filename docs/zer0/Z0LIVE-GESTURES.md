@@ -11,4 +11,6 @@ https://github.com/kvnloo/z0live/blob/feat/oura-context-routing/docs/GESTURES.md
 
 Offline policy tests exercise the exact admission decision used by the service (48 combinations). Android compilation/lint/APK CI are separate gates. **Delayed first capture, no privacy indicator while idle, locked-phone operation and Samsung battery policy remain NOT RUN on hardware.** This is not an Android16/One UI compatibility certification or a claim that provider handshake latency is instant.
 
+The fork-only experimental controls follow the existing z0live English-only resource policy (`translatable=false`); production localization is not claimed. Assistant role checks return false below API 29, preserving the launcher's API 26 minimum without calling unavailable RoleManager APIs.
+
 CI: `.github/workflows/z0live-standby-apk.yml` publishes a downloadable exact-SHA APK, SHA256SUMS, package/version/commit metadata and signing certificate. It never replaces stable/latest assets and never installs anything. Existing inherited lint debt remains pinned; feature diagnostics must not be baselined.
