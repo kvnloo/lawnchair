@@ -16,7 +16,8 @@ public final class Z0LiveTurnState {
         if (value) user = false;
     }
     public void playback(boolean value) { playback = value; }
-    public void toolCompleted() { continuation = true; }
+    public void toolCompleted() { toolCompleted(true); }
+    public void toolCompleted(boolean needsResponse) { continuation |= needsResponse; }
     public boolean canSpeakInbox() { return !response && !user && !playback && !continuation; }
     public boolean takeContinuation(boolean toolsPending) {
         if (!continuation || response || user || playback || toolsPending) return false;

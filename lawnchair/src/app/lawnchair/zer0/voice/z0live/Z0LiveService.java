@@ -546,7 +546,9 @@ public final class Z0LiveService extends Service {
         event("tool_result", "", object("call_id", callId, "name", name, "result", result, "success", success));
         Log.i("z0live", "tool_result name=" + name + " call_id=" + callId + " success=" + success + " status=" + result.optString("status"));
         peer.send(object("type", "conversation.item.create", "item", object("type", "function_call_output", "call_id", callId, "output", result.toString())).toString());
-        turn.toolCompleted();
+        // An async acceptance is already acknowledged before dispatch. Do not force a second
+        // model turn just to announce that the answer has not arrived yet.
+        turn.toolCompleted(!"silent".equals(result.optString("speech")));
         drainTurn();
     }
 

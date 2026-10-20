@@ -44,6 +44,14 @@ public final class Z0LiveTurnStateTest {
         check(!turn.canSpeakInbox());
         turn.userSpeaking(false);
         check(turn.canSpeakInbox());
+        turn.toolCompleted(false); // async acceptance/no-news is data-only, not another response.create
+        check(!turn.takeContinuation(false));
+        check(turn.canSpeakInbox());
+        turn.toolCompleted(); // a synchronous result/error still gets a normal continuation
+        turn.toolCompleted(false); // a parallel silent result must not erase that continuation
+        check(turn.takeContinuation(false));
+        turn.responseDone();
+        check(turn.canSpeakInbox());
         System.out.println("PASS: " + checks + " safe-turn continuation and inbox checks");
     }
 }

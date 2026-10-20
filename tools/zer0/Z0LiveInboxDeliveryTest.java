@@ -32,6 +32,8 @@ public final class Z0LiveInboxDeliveryTest {
         check(!response.has("voice") && !response.has("model"), "reply retains existing model and voice");
         check(Z0LiveInboxDelivery.kind("lookup:lookup-1") == Z0LiveInboxDelivery.Kind.LOOKUP, "work lookup results are framed as the answer the user asked for");
         check(Z0LiveInboxDelivery.kind("task-progress:run_1") == Z0LiveInboxDelivery.Kind.PROGRESS, "progress updates are framed as progress");
+        check(Z0LiveInboxDelivery.kind("voice:turn_fixture:result") == Z0LiveInboxDelivery.Kind.RUN, "layered completion retains requested-work framing");
+        check(Z0LiveInboxDelivery.kind("voice:turn_fixture:partial-finding") == Z0LiveInboxDelivery.Kind.PROGRESS, "layered verified finding is progress, not a new user turn");
         check(Z0LiveInboxDelivery.kind(null) == Z0LiveInboxDelivery.Kind.MESSAGE && Z0LiveInboxDelivery.kind("") == Z0LiveInboxDelivery.Kind.MESSAGE, "unknown source is a plain message");
         String lookup = Z0LiveInboxDelivery.realtimeReply("13 voice events received", "lookup:lookup-1").getJSONObject(0)
                 .getJSONObject("item").getJSONArray("content").getJSONObject(0).getString("text");

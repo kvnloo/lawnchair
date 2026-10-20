@@ -32,6 +32,10 @@ public final class Z0LiveInboxDelivery {
         if (source.startsWith("lookup:")) return Kind.LOOKUP;
         if (source.startsWith("run:")) return Kind.RUN;
         if (source.startsWith("task-progress:")) return Kind.PROGRESS;
+        if (source.startsWith("voice:")) {
+            if (source.endsWith(":result") || source.endsWith(":clarification")) return Kind.RUN;
+            if (source.contains(":partial-")) return Kind.PROGRESS;
+        }
         return Kind.MESSAGE;
     }
 
