@@ -50,6 +50,7 @@ public final class Z0LiveService extends Service {
     private final Z0LiveBrokerSession broker = new Z0LiveBrokerSession(telemetry::offer, android.os.SystemClock::elapsedRealtime);
     private final Z0LiveTurnState turn = new Z0LiveTurnState();
     private final Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
+    private final Z0LiveSpeechGate speechGate = new Z0LiveSpeechGate();
     private long sessionInboxFloor;
     private final AtomicInteger telemetryFailed = new AtomicInteger();
     private final Z0LiveAudioState audio = new Z0LiveAudioState();
@@ -380,12 +381,27 @@ public final class Z0LiveService extends Service {
             // Floor/cancel/usage delivery must not wait for the periodic telemetry tick.
             flush(false);
             switch (type) {
+                case "conversation.item.input_audio_transcription.delta":
+                    // Interrupt only once the transcript proves the owner is talking, never on bare noise.
+                    if (speechGate.transcriptDelta(message.optString("delta"))) interruptRealtime();
+                    break;
                 case "conversation.item.input_audio_transcription.completed":
                     String input = bounded(message.optString("transcript"), 8000);
+                    boolean spoken = speechGate.transcriptCompleted(input);
+                    if (!spoken) {
+                        // Footsteps, doors, room noise: drop the turn from the conversation and stay quiet.
+                        String noiseItem = message.optString("item_id", "");
+                        if (!noiseItem.isEmpty()) peer.send(object("type", "conversation.item.delete", "item_id", noiseItem).toString());
+                        event("noise_ignored", "", object("chars", input.length()));
+                        drainTurn();
+                        break;
+                    }
                     caption = "You: " + input;
-                    if (broker.transcript(input)) interruptRealtime();
+                    if (broker.transcript(input) || !speechGate.interruptedThisTurn() && (speaking || turn.responding())) interruptRealtime();
                     discardInterruptedInbox();
                     event(type, input, new JSONObject());
+                    turn.userTurnNeedsReply();
+                    drainTurn();
                     flush(false);
                     publish();
                     break;
@@ -411,8 +427,9 @@ public final class Z0LiveService extends Service {
                     break;
                 case "input_audio_buffer.speech_started":
                     if (!audio.microphoneEnabled()) break;
+                    // Voice activity alone is not an interruption: wait for words (speechGate).
                     turn.userSpeaking(true);
-                    interruptRealtime();
+                    speechGate.speechStarted();
                     break;
                 case "input_audio_buffer.cleared":
                     turn.userSpeaking(false);
@@ -554,7 +571,7 @@ public final class Z0LiveService extends Service {
 
     private void drainTurn() {
         if (!running || peer == null || inboxItem != null) return;
-        if (turn.takeContinuation(pendingTools > 0)) peer.send(object("type", "response.create").toString());
+        if (turn.takeUserReply() || turn.takeContinuation(pendingTools > 0)) peer.send(object("type", "response.create").toString());
         if (pendingInbox != null && turn.canSpeakInbox()) {
             JSONObject next = pendingInbox;
             pendingInbox = null;

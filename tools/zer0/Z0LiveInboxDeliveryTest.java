@@ -68,7 +68,7 @@ public final class Z0LiveInboxDeliveryTest {
         JSONArray buffered = barge.interrupt();
         check(buffered.length() == 1 && buffered.getJSONObject(0).getString("type").equals("output_audio_buffer.clear"), "finished response still truncates queued playback without invalid cancel");
         JSONObject vad = new JSONObject(Z0LiveBargeIn.vadConfiguration()).getJSONObject("session").getJSONObject("audio").getJSONObject("input").getJSONObject("turn_detection");
-        check(vad.getBoolean("interrupt_response") && vad.getBoolean("create_response"), "automatic barge-in and natural voice turns explicitly enabled");
+        check(!vad.getBoolean("interrupt_response") && !vad.getBoolean("create_response"), "barge-in and replies are client-gated on real words (see Z0LiveSpeechGateTest)");
         System.out.println("PASS: " + checks + " scoped inbox, interruption, Realtime-voice and no-replay checks");
     }
 }
