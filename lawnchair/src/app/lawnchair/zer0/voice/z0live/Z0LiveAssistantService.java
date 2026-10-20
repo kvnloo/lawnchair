@@ -11,6 +11,7 @@ import android.service.voice.VoiceInteractionService;
 public final class Z0LiveAssistantService extends VoiceInteractionService {
     private Z0LiveGestureChannel gestures;
     static boolean mayStart(Context context) {
+        if (android.os.Build.VERSION.SDK_INT < 29) return false;
         RoleManager roles = context.getSystemService(RoleManager.class);
         return roles != null && roles.isRoleHeld(RoleManager.ROLE_ASSISTANT)
                 && VoiceInteractionService.isActiveService(context, new ComponentName(context, Z0LiveAssistantService.class))
