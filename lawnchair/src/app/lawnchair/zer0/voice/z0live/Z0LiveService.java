@@ -259,7 +259,8 @@ public final class Z0LiveService extends Service {
                 store.setInboxCursor(activePairing, Math.max(Math.max(0, inboxCursor), head));
                 JSONObject context = object("app", getPackageName(), "screen", "z0live voice");
                 JSONArray phoneTools = Z0LivePhoneTools.schemas(this);
-                Z0LiveProtocol.Session session = backend.session(context, phoneTools, true);
+                Z0LiveTransport transport = store.transport();
+                Z0LiveProtocol.Session session = backend.session(context, phoneTools, transport.offerBidi());
                 brokerSessionToEnd = session.sessionId;
                 main.post(() -> {
                     if (!valid(id)) return;
@@ -285,7 +286,9 @@ public final class Z0LiveService extends Service {
                                             try {
                                                 answer = backend.liveCall(session.sessionId, sdp);
                                             } catch (IOException bidiFailed) {
-                                                // Keep the phone working: the same offer is valid for gpt-realtime.
+                                                // Live (bidi) chosen explicitly: report the failure instead of switching voices.
+                                                if (!transport.fallbackToRealtime()) throw bidiFailed;
+                                                // Auto keeps the phone working: the same offer is valid for gpt-realtime.
                                                 fallback = backend.session(context, phoneTools, false);
                                                 try { backend.endSession(session.sessionId); } catch (IOException ignored) { telemetryFailed.incrementAndGet(); }
                                                 answer = backend.exchangeSdp(fallback.secret, sdp);

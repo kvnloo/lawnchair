@@ -27,6 +27,8 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import app.lawnchair.ui.preferences.components.controls.ClickablePreference
+import app.lawnchair.ui.preferences.components.controls.ListPreference
+import app.lawnchair.ui.preferences.components.controls.ListPreferenceEntry
 import app.lawnchair.ui.preferences.components.controls.SwitchPreference
 import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
@@ -36,6 +38,7 @@ import app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService
 import app.lawnchair.zer0.voice.z0live.Z0LiveActivity
 import app.lawnchair.zer0.voice.z0live.Z0LiveStatus
 import app.lawnchair.zer0.voice.z0live.Z0LiveStore
+import app.lawnchair.zer0.voice.z0live.Z0LiveTransport
 import com.android.launcher3.R
 
 /** Settings contain no pairing token. Pairing admission always opens the secure, internal activity. */
@@ -45,6 +48,7 @@ fun Z0LivePreferences() {
     val store = remember { runCatching { Z0LiveStore(context) }.getOrNull() }
     var backend by remember { mutableStateOf<String?>(null) }
     var ripple by remember { mutableStateOf("") }
+    var transport by remember { mutableStateOf(Z0LiveTransport.AUTO) }
     var message by remember { mutableStateOf<Int?>(null) }
     var editRipple by remember { mutableStateOf(false) }
     var rippleDraft by remember { mutableStateOf("") }
@@ -78,6 +82,7 @@ fun Z0LivePreferences() {
             checkNotNull(store)
             backend = store.pairing()?.backendUrl
             ripple = store.rippleUrl().orEmpty()
+            transport = store.transport()
             navigationAllowed = Z0LiveAccessibilityService.sessionAllowed()
         } catch (_: RuntimeException) {
             message = R.string.z0live_storage_error
@@ -99,6 +104,23 @@ fun Z0LivePreferences() {
                 label = stringResource(R.string.z0live_session_controls),
                 subtitle = stringResource(R.string.z0live_session_description),
                 onClick = { launch(Z0LiveActivity.intent(context, false)) },
+            )
+            ListPreference(
+                entries = listOf(
+                    ListPreferenceEntry(Z0LiveTransport.AUTO) { stringResource(R.string.z0live_transport_auto) },
+                    ListPreferenceEntry(Z0LiveTransport.REALTIME) { stringResource(R.string.z0live_transport_realtime) },
+                    ListPreferenceEntry(Z0LiveTransport.BIDI) { stringResource(R.string.z0live_transport_bidi) },
+                ),
+                value = transport,
+                onValueChange = { chosen ->
+                    try {
+                        checkNotNull(store).setTransport(chosen)
+                        transport = chosen
+                    } catch (_: RuntimeException) {
+                        message = R.string.z0live_storage_error
+                    }
+                },
+                label = stringResource(R.string.z0live_transport),
             )
         }
         PreferenceGroup(

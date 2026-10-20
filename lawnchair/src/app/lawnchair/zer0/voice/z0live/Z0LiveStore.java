@@ -81,6 +81,13 @@ public final class Z0LiveStore {
         }
     }
 
+    /** Voice transport chosen in z0live settings (default Auto). */
+    public Z0LiveTransport transport() { return Z0LiveTransport.parse(preferences.getString("transport", null)); }
+
+    public void setTransport(Z0LiveTransport transport) {
+        commit(preferences.edit().putString("transport", transport.key));
+    }
+
     public void clearPairing() {
         commit(preferences.edit().remove("backend").remove("token").remove("inbox_cursor"));
         Z0LiveInboxNotifications.cancel(appContext);

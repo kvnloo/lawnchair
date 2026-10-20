@@ -2,6 +2,10 @@
 <resources>
     <string translatable="false" name="z0live_title">z0live</string>
     <string translatable="false" name="z0live_voice">Voice</string>
+    <string translatable="false" name="z0live_transport">Voice connection</string>
+    <string translatable="false" name="z0live_transport_auto">Auto (Live when available, otherwise Realtime)</string>
+    <string translatable="false" name="z0live_transport_realtime">Realtime (gpt-realtime)</string>
+    <string translatable="false" name="z0live_transport_bidi">Live (gpt-live, full duplex)</string>
     <string translatable="false" name="z0live_provider_voice">Search provider voice</string>
     <string translatable="false" name="z0live_ripple">Ripple</string>
     <string translatable="false" name="z0live_widget_description">Start z0live voice or open your Ripple panel</string>
