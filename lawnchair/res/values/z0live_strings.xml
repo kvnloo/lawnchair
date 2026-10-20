@@ -54,13 +54,16 @@
     <string translatable="false" name="z0live_session_description">Captions, microphone and session controls. Closing the panel keeps an active session running.</string>
     <string translatable="false" name="z0live_open_ripple">Open Ripple</string>
     <string translatable="false" name="z0live_phone_tools">Optional phone tools</string>
-    <string translatable="false" name="z0live_phone_navigation">Phone navigation</string>
-    <string translatable="false" name="z0live_phone_navigation_description">Allow Back, Recents and notifications through Lawnchair Accessibility. Optional; no screen reading.</string>
-    <string translatable="false" name="z0live_navigation_consent">Allow z0live to request Back, Recents and the notification shade through Lawnchair Accessibility? This does not read your screen. You must also enable Lawnchair manually in Android Accessibility settings. Voice works without it.</string>
-    <string translatable="false" name="z0live_navigation_allow">Allow and open settings</string>
+    <string translatable="false" name="z0live_phone_navigation">In-app control for this session</string>
+    <string translatable="false" name="z0live_phone_navigation_description">Allow text-only screen access, exact button taps, text entry, scrolling and navigation until this voice session ends. Sensitive apps and password screens are blocked.</string>
+    <string translatable="false" name="z0live_navigation_consent">Allow z0live to read a bounded text-only list of controls and dispatch taps, text entry, scrolling and navigation for the current voice session? Screen text may reach your voice provider. Never share credentials. Sensitive apps, password screens, sending and calling are blocked. Enable z0live manually in Settings > Accessibility first. This consent expires when the session ends.</string>
+    <string translatable="false" name="z0live_navigation_allow">Allow for this session</string>
     <string translatable="false" name="z0live_accessibility_settings">Android Accessibility settings</string>
     <string translatable="false" name="z0live_flashlight_permission">Allow flashlight</string>
     <string translatable="false" name="z0live_flashlight_description">Optional camera permission for the flashlight. Not requested when starting voice.</string>
     <string translatable="false" name="z0live_flashlight_granted">Camera permission allowed. Tap to manage in Android settings.</string>
     <string translatable="false" name="z0live_settings_unavailable">Android settings or this integration could not be opened.</string>
+    <string translatable="false" name="z0live_accessibility_label">z0live in-app control</string>
+    <string translatable="false" name="z0live_accessibility_description">Optional text-only screen control for z0live. You must separately allow each voice session in z0live settings. Sensitive apps and password screens are blocked. No screenshots, coordinates, automatic sending or calling.</string>
+    <string translatable="false" name="z0live_control_permission_required">Enable z0live in Android Accessibility settings, start a voice session, then allow in-app control here.</string>
 </resources>

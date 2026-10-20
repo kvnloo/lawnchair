@@ -1,7 +1,6 @@
 package app.lawnchair.zer0.voice.z0live
 
 import android.Manifest
-import android.accessibilityservice.AccessibilityService
 import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherActivityInfo
@@ -15,12 +14,11 @@ import android.os.Process
 import android.provider.AlarmClock
 import android.provider.Settings
 import android.view.KeyEvent
-import app.lawnchair.LawnchairApp
 import app.lawnchair.zer0.voice.VoiceAppVisibility
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Session-scoped, public-API phone actions. No contacts, screen contents or auto-send permissions. */
+/** Session-scoped phone actions. Screen access is opt-in; sending and calling require the owner. */
 object Z0LivePhoneTools {
     private fun obj(vararg values: Pair<String, Any?>) = JSONObject().apply {
         values.forEach { (key, value) -> put(key, value ?: JSONObject.NULL) }
@@ -38,18 +36,6 @@ object Z0LivePhoneTools {
         "location" to Settings.ACTION_LOCATION_SOURCE_SETTINGS,
         "general" to Settings.ACTION_SETTINGS,
     )
-
-    @JvmStatic
-    fun accessibilityOptIn(context: Context): Boolean = context.getSharedPreferences("z0live_tools", Context.MODE_PRIVATE)
-        .getBoolean("accessibility_opt_in", false)
-
-    @JvmStatic
-    fun setAccessibilityOptIn(context: Context, enabled: Boolean) {
-        context.getSharedPreferences("z0live_tools", Context.MODE_PRIVATE).edit()
-            .putBoolean("accessibility_opt_in", enabled).apply()
-    }
-
-    private fun navigationAvailable(context: Context) = accessibilityOptIn(context) && LawnchairApp.instance.isAccessibilityServiceBound()
 
     @JvmStatic
     fun schemas(context: Context): JSONArray = JSONArray().apply {
@@ -91,9 +77,18 @@ object Z0LivePhoneTools {
         tool("ripple", "Open/close the configured trusted HTTPS Ripple panel. Not a screen-reading or automation tool.", "action" to choice("open", "close"))
         tool("z0live_mute", "Set microphone mute. Does not end the voice session.", "muted" to obj("type" to "boolean"))
         tool("z0live_end", "End the voice session after submitting its summary. No always-on restart.")
-        if (navigationAvailable(context)) {
-            tool("phone_navigation", "Perform explicitly opted-in Lawnchair accessibility navigation only. Does not read screen contents.", "action" to choice("back", "recents", "notifications"))
-        }
+        tool("phone_navigation", "Back, home, recents or notifications. Requires owner accessibility enablement and consent for this voice session. Success means dispatched, not verified.", "action" to choice("back", "home", "recents", "notifications"))
+        tool("phone_ui_tree", "Read a bounded text-only list of safe controls in the active app after owner consent. Returns package, window_id and snapshot needed for exact selection. Sensitive apps and password windows are blocked. Never request credentials.")
+        fun targetProperties() = arrayOf(
+            "package" to text(),
+            "window_id" to obj("type" to "integer", "minimum" to 0),
+            "snapshot" to text(),
+            "by" to choice("text", "id"),
+            "target" to text(),
+        )
+        tool("phone_tap", "Tap one exact text or resource id from a fresh phone_ui_tree in that package/window/snapshot. Ambiguity is rejected. Never send, call, purchase, confirm or grant permission; the owner must do those. Success means dispatched only.", *targetProperties())
+        tool("phone_type_text", "Replace an editable field using ACTION_SET_TEXT, selected by exact id from a fresh phone_ui_tree. Never enter credentials or submit. Success means dispatched only.", *targetProperties(), "text" to text())
+        tool("phone_scroll", "Scroll a single exact text/id target from a fresh phone_ui_tree. No coordinate fallback. Success means dispatched only.", *targetProperties(), "direction" to choice("forward", "backward"))
     }
 
     @JvmStatic
@@ -251,12 +246,16 @@ object Z0LivePhoneTools {
 
             "z0live_end" -> obj("ok" to true, "status" to "ending")
 
-            // Service returns result and flushes before closing.
-            "phone_navigation" -> {
-                require(navigationAvailable(context)) { "Explicit opt-in and enabled Lawnchair accessibility service required" }
-                val action = mapOf("back" to AccessibilityService.GLOBAL_ACTION_BACK, "recents" to AccessibilityService.GLOBAL_ACTION_RECENTS, "notifications" to AccessibilityService.GLOBAL_ACTION_NOTIFICATIONS)[string(args, "action")] ?: error("Invalid navigation action")
-                val accepted = LawnchairApp.instance.performGlobalAction(action)
-                obj("ok" to accepted, "status" to if (accepted) "dispatched" else "unavailable")
+            "phone_navigation", "phone_ui_tree", "phone_tap", "phone_type_text", "phone_scroll" -> {
+                if (name != "phone_ui_tree" && name != "phone_navigation") {
+                    string(args, "package")
+                    integer(args, "window_id", 0..Int.MAX_VALUE)
+                    string(args, "snapshot")
+                    string(args, "by")
+                    string(args, "target")
+                    if (name == "phone_type_text") string(args, "text")
+                }
+                Z0LiveAccessibilityService.execute(name, args)
             }
 
             else -> error("Unknown tool")

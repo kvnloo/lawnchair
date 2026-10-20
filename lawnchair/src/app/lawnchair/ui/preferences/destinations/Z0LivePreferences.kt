@@ -14,6 +14,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,8 +32,9 @@ import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.zer0.voice.z0live.RippleActivity
+import app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService
 import app.lawnchair.zer0.voice.z0live.Z0LiveActivity
-import app.lawnchair.zer0.voice.z0live.Z0LivePhoneTools
+import app.lawnchair.zer0.voice.z0live.Z0LiveStatus
 import app.lawnchair.zer0.voice.z0live.Z0LiveStore
 import com.android.launcher3.R
 
@@ -54,6 +56,15 @@ fun Z0LivePreferences() {
         cameraGranted = it
     }
 
+    DisposableEffect(Unit) {
+        val observer = Z0LiveStatus.Observer {
+            navigationAllowed = Z0LiveAccessibilityService.sessionAllowed()
+            if (!it.active) navigationConsent = false
+        }
+        Z0LiveStatus.observe(observer)
+        onDispose { Z0LiveStatus.remove(observer) }
+    }
+
     fun launch(intent: Intent) {
         try {
             context.startActivity(intent)
@@ -67,7 +78,7 @@ fun Z0LivePreferences() {
             checkNotNull(store)
             backend = store.pairing()?.backendUrl
             ripple = store.rippleUrl().orEmpty()
-            navigationAllowed = Z0LivePhoneTools.accessibilityOptIn(context)
+            navigationAllowed = Z0LiveAccessibilityService.sessionAllowed()
         } catch (_: RuntimeException) {
             message = R.string.z0live_storage_error
         }
@@ -124,7 +135,7 @@ fun Z0LivePreferences() {
                         navigationConsent = true
                     } else {
                         try {
-                            Z0LivePhoneTools.setAccessibilityOptIn(context, false)
+                            Z0LiveAccessibilityService.allowCurrentSession(false)
                             navigationAllowed = false
                         } catch (_: RuntimeException) {
                             message = R.string.z0live_save_error
@@ -134,12 +145,10 @@ fun Z0LivePreferences() {
                 label = stringResource(R.string.z0live_phone_navigation),
                 description = stringResource(R.string.z0live_phone_navigation_description),
             )
-            if (navigationAllowed) {
-                ClickablePreference(
-                    label = stringResource(R.string.z0live_accessibility_settings),
-                    onClick = { launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
-                )
-            }
+            ClickablePreference(
+                label = stringResource(R.string.z0live_accessibility_settings),
+                onClick = { launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+            )
             ClickablePreference(
                 label = stringResource(R.string.z0live_flashlight_permission),
                 subtitle = stringResource(if (cameraGranted) R.string.z0live_flashlight_granted else R.string.z0live_flashlight_description),
@@ -163,9 +172,8 @@ fun Z0LivePreferences() {
                 TextButton(onClick = {
                     navigationConsent = false
                     try {
-                        Z0LivePhoneTools.setAccessibilityOptIn(context, true)
-                        navigationAllowed = true
-                        launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+                        navigationAllowed = Z0LiveAccessibilityService.allowCurrentSession(true)
+                        if (!navigationAllowed) message = R.string.z0live_control_permission_required
                     } catch (_: RuntimeException) {
                         message = R.string.z0live_save_error
                     }

@@ -78,6 +78,15 @@
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
         <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveInboxNotifications"
             android:exported="true" android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService"
+            android:exported="false" android:label="@string/z0live_accessibility_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice"
+                android:resource="@xml/z0live_accessibility_service" />
+        </service>
         <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveService"
             android:exported="false" android:stopWithTask="false"
             android:foregroundServiceType="microphone" />
