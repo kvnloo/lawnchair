@@ -51,6 +51,7 @@ public final class Z0LiveService extends Service {
     private final Z0LiveTurnState turn = new Z0LiveTurnState();
     private final Z0LiveBargeIn bargeIn = new Z0LiveBargeIn();
     private final Z0LiveSpeechGate speechGate = new Z0LiveSpeechGate();
+    private Runnable bargeProbe = () -> {};
     private long sessionInboxFloor;
     private final AtomicInteger telemetryFailed = new AtomicInteger();
     private final Z0LiveAudioState audio = new Z0LiveAudioState();
@@ -414,7 +415,7 @@ public final class Z0LiveService extends Service {
                 if (!caption.startsWith("You: ")) { bidiCaption.setLength(0); caption = "You: "; }
                 JSONObject heard = message.optJSONObject("item");
                 // Real words over an open assistant turn silence playback now; noise never does.
-                if (heard != null && bidiBarge.userTranscript(heard.optString("text"))) applyAudio();
+                if (heard != null && bidiBarge.userTranscript(heard.optString("text"), android.os.SystemClock.elapsedRealtime())) applyAudio();
                 appendCaption(heard);
                 break;
             case "turn.created":
@@ -431,7 +432,7 @@ public final class Z0LiveService extends Service {
             case "turn.done":
                 JSONObject done = message.optJSONObject("turn");
                 if (done == null) break;
-                if ("assistant".equals(done.optString("role"))) { if (bidiBarge.assistantTurnDone(done.optString("id"))) applyAudio(); }
+                if ("assistant".equals(done.optString("role"))) { if (bidiBarge.assistantTurnDone(done.optString("id"), android.os.SystemClock.elapsedRealtime())) applyAudio(); }
                 else bidiBarge.userTurnDone();
                 String text = bounded(done.optString("transcript").trim(), 8000);
                 if (!text.isEmpty()) caption = ("user".equals(done.optString("role")) ? "You: " : "z0live: ") + text;
@@ -480,10 +481,16 @@ public final class Z0LiveService extends Service {
                 case "conversation.item.input_audio_transcription.delta":
                     // Interrupt only once the transcript proves the owner is talking, never on bare noise.
                     if (speechGate.transcriptDelta(message.optString("delta"))) interruptRealtime();
+                    // The owner has stopped and real words are in: answer now, not after the full transcript.
+                    if (speechGate.earlyReply(turn.userTalking())) {
+                        turn.userTurnNeedsReply();
+                        drainTurn();
+                    }
                     break;
                 case "conversation.item.input_audio_transcription.completed":
                     String input = bounded(message.optString("transcript"), 8000);
-                    boolean spoken = speechGate.transcriptCompleted(input);
+                    boolean reply = speechGate.transcriptCompleted(input, turn.userTalking());
+                    boolean spoken = Z0LiveSpeechGate.isSpeech(input);
                     if (!spoken) {
                         // Footsteps, doors, room noise: drop the turn from the conversation and stay quiet.
                         String noiseItem = message.optString("item_id", "");
@@ -496,7 +503,8 @@ public final class Z0LiveService extends Service {
                     if (broker.transcript(input) || !speechGate.interruptedThisTurn() && (speaking || turn.responding())) interruptRealtime();
                     discardInterruptedInbox();
                     event(type, input, new JSONObject());
-                    turn.userTurnNeedsReply();
+                    // One utterance, one reply: an early reply or a barge-probe item may already have claimed it.
+                    if (reply) turn.userTurnNeedsReply();
                     drainTurn();
                     flush(false);
                     publish();
@@ -525,7 +533,19 @@ public final class Z0LiveService extends Service {
                     if (!audio.microphoneEnabled()) break;
                     // Voice activity alone is not an interruption: wait for words (speechGate).
                     turn.userSpeaking(true);
-                    speechGate.speechStarted();
+                    if (speechGate.speechStarted(speaking || turn.responding())) {
+                        // Barge probe: commit the first moments of speech heard over the assistant so
+                        // its words, not its loudness, can interrupt within a second.
+                        final int probeGeneration = generation;
+                        main.removeCallbacks(bargeProbe);
+                        bargeProbe = () -> {
+                            if (!running || bidi || peer == null || probeGeneration != generation) return;
+                            if (!turn.userTalking() || !speechGate.probeDue() || !(speaking || turn.responding())) return;
+                            sendRealtime(object("type", "input_audio_buffer.commit").toString());
+                            event("barge_probe", "", new JSONObject());
+                        };
+                        main.postDelayed(bargeProbe, Z0LiveSpeechGate.PROBE_MS);
+                    }
                     break;
                 case "input_audio_buffer.cleared":
                     turn.userSpeaking(false);
@@ -533,6 +553,7 @@ public final class Z0LiveService extends Service {
                     break;
                 case "input_audio_buffer.speech_stopped":
                     turn.userSpeaking(false);
+                    main.removeCallbacks(bargeProbe);
                     drainTurn();
                     break;
                 case "output_audio_buffer.started":
@@ -865,6 +886,7 @@ public final class Z0LiveService extends Service {
         main.removeCallbacks(healthRetry);
         main.removeCallbacks(connectionTimeout);
         main.removeCallbacks(inboxTimeout);
+        main.removeCallbacks(bargeProbe);
         main.removeCallbacks(inboxTick);
         main.removeCallbacks(telemetryTick);
         http.dispatcher().cancelAll();

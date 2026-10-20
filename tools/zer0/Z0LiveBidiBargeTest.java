@@ -6,31 +6,34 @@ public final class Z0LiveBidiBargeTest {
 
     public static void main(String[] args) {
         Z0LiveBidiBarge barge = new Z0LiveBidiBarge();
-        check(!barge.userTranscript("hello there"), "no open assistant turn: nothing to duck");
+        check(!barge.userTranscript("hello there", 0), "no assistant audio: nothing to duck");
         barge.userTurnDone();
 
         check(!barge.assistantTurnCreated("turn_a"), "assistant starts speaking");
-        check(!barge.userTranscript("hmm"), "a grunt does not duck");
-        check(!barge.userTranscript(" "), "silence does not duck");
+        check(!barge.userTranscript("hmm", 100), "a grunt does not duck");
+        check(!barge.userTranscript(" ", 150), "silence does not duck");
         barge.userTurnDone();
-        check(!barge.userTranscript("Thank you"), "known noise hallucination does not duck");
+        check(!barge.userTranscript("Thank you", 200), "known noise hallucination does not duck");
         barge.userTurnDone();
-        check(barge.userTranscript("Wait,"), "real words duck playback immediately");
+        check(barge.userTranscript("Wait,", 1000), "real words duck playback immediately");
         check(barge.ducked(), "playback is ducked");
-        check(!barge.userTranscript(" stop."), "ducks once per barge");
+        check(!barge.userTranscript(" stop.", 1100), "ducks once per barge");
+        check(!barge.assistantTurnDone("turn_a", 1040), "the interrupted turn ending does not restore playback");
+        check(barge.ducked(), "buffered audio of the interrupted turn stays silent");
         barge.userTurnDone();
-        check(barge.ducked(), "still ducked while the interrupted turn may keep streaming");
         check(barge.assistantTurnCreated("turn_b"), "the model's reply restores playback");
         check(!barge.ducked(), "reply is audible");
 
-        check(barge.userTranscript("no, the other one"), "barge on the reply too");
-        check(barge.assistantTurnDone("turn_b"), "interrupted turn finishing restores playback");
-        check(!barge.ducked(), "audible again");
+        // The model often yields at the same moment its transcript of the barge arrives.
+        check(!barge.assistantTurnDone("turn_b", 5000), "reply finishes");
+        check(barge.userTranscript("no, the other one", 5200), "words right after a turn still silence its buffered tail");
         barge.userTurnDone();
-        check(!barge.userTranscript("and another thing"), "closed turn is never ducked");
-
         barge.assistantTurnCreated("turn_c");
-        barge.userTranscript("stop please");
+        barge.assistantTurnDone("turn_c", 9000);
+        check(!barge.userTranscript("and another thing", 9000 + Z0LiveBidiBarge.TAIL_MS + 1), "long after a turn, nothing is ducked");
+
+        barge.assistantTurnCreated("turn_d");
+        barge.userTranscript("stop please", 12000);
         barge.reset();
         check(!barge.ducked(), "a new call starts audible");
         System.out.println("PASS: " + checked + " Frameless Bidi barge-in checks");

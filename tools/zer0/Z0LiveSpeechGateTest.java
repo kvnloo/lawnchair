@@ -36,9 +36,36 @@ public final class Z0LiveSpeechGateTest {
 
         check(!gate.transcriptDelta("hello"), "words outside a detected turn do not interrupt");
 
+        // Barge probe: only scheduled while the assistant talks; it stands down once words interrupted.
+        check(!gate.speechStarted(false), "no probe when the assistant is quiet");
+        check(gate.speechStarted(true), "probe when the owner talks over the assistant");
+        check(gate.probeDue(), "probe still due before any words");
+        check(gate.transcriptDelta("Wait"), "probe words interrupt");
+        check(!gate.probeDue(), "no second probe after words interrupted");
+        check(gate.transcriptCompleted("Wait,", true), "the probe item claims the utterance's reply");
+        check(!gate.transcriptDelta(" actually"), "still one interruption per utterance");
+        check(!gate.earlyReply(false), "the rest of a probed utterance gets no second reply");
+        check(!gate.transcriptCompleted("actually, what time is it?", false), "one utterance, one reply");
+
+        // Early reply: two real words after the owner stopped start the answer.
+        gate.speechStarted(false);
+        gate.transcriptDelta("What");
+        check(!gate.earlyReply(false), "one word is not enough to answer early");
+        gate.transcriptDelta(" is");
+        check(!gate.earlyReply(true), "never while the owner is still talking");
+        check(gate.earlyReply(false), "two real words start the reply");
+        check(!gate.earlyReply(false), "early reply fires once");
+        check(!gate.transcriptCompleted("What is the capital of Australia?", false), "completion does not reply twice");
+        gate.speechStarted(false);
+        check(gate.transcriptCompleted("Thanks.", false), "the next utterance is answered again");
+        gate.speechStarted(false);
+        gate.transcriptDelta("Thank you");
+        check(!gate.earlyReply(false), "a noise hallucination never answers early");
+
         JSONObject input = new JSONObject(Z0LiveBargeIn.vadConfiguration()).getJSONObject("session").getJSONObject("audio").getJSONObject("input");
         JSONObject vad = input.getJSONObject("turn_detection");
         check(vad.getString("type").equals("semantic_vad"), "turn detection judges speech, not loudness");
+        check(vad.getString("eagerness").equals("high"), "the owner's turn ends promptly; the gate drops noise turns");
         check(!vad.getBoolean("interrupt_response"), "server never interrupts on voice activity alone");
         check(!vad.getBoolean("create_response"), "server never answers a turn the client has not confirmed as speech");
         check(input.getJSONObject("noise_reduction").getString("type").equals("far_field"), "room noise is reduced for a phone away from the mouth");

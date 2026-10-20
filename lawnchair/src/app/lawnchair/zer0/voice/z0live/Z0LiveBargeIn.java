@@ -26,12 +26,14 @@ public final class Z0LiveBargeIn {
      * Semantic turn detection with far-field noise reduction. The server neither interrupts nor
      * replies on its own: voice activity also fires for footsteps and room noise, so the client
      * interrupts and creates a reply only once the transcript holds real words (Z0LiveSpeechGate).
+     * High eagerness ends the owner's turn about 0.7 s after speech instead of ~0.9-1 s ("auto");
+     * noise turns it ends early are dropped by the gate anyway.
      */
     public static String vadConfiguration() {
         return Z0LiveEventsObject.object("type", "session.update", "session", Z0LiveEventsObject.object(
                 "type", "realtime", "audio", Z0LiveEventsObject.object("input", Z0LiveEventsObject.object(
                         "noise_reduction", Z0LiveEventsObject.object("type", "far_field"),
-                        "turn_detection", Z0LiveEventsObject.object("type", "semantic_vad", "eagerness", "auto",
+                        "turn_detection", Z0LiveEventsObject.object("type", "semantic_vad", "eagerness", "high",
                                 "interrupt_response", false, "create_response", false))))).toString();
     }
 }

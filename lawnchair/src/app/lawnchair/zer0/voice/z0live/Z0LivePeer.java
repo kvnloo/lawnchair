@@ -80,6 +80,9 @@ final class Z0LivePeer {
             factory = PeerConnectionFactory.builder().setAudioDeviceModule(device).createPeerConnectionFactory();
             PeerConnection.RTCConfiguration config = new PeerConnection.RTCConfiguration(Collections.emptyList());
             config.sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN;
+            // Codex Frameless Bidi media arrives in bursts and NetEq grows its playout delay to match
+            // (~145 ms mean, 600 ms seen in the parity eval). Let it drain that backlog quickly.
+            config.audioJitterBufferFastAccelerate = true;
             peer = factory.createPeerConnection(config, new PeerConnection.Observer() {
                 public void onSignalingChange(PeerConnection.SignalingState state) {}
                 public void onIceConnectionChange(PeerConnection.IceConnectionState state) {

@@ -12,6 +12,8 @@ public final class Z0LiveTurnState {
     public void responseStarted() { response = true; }
     public void responseDone() { response = false; }
     public boolean responding() { return response; }
+    /** True while voice activity says the owner is mid-utterance. */
+    public boolean userTalking() { return user; }
     public void userSpeaking(boolean value) { user = value && !inputMuted; }
     public void inputMuted(boolean value) {
         inputMuted = value;

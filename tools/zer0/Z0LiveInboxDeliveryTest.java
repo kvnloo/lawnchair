@@ -38,6 +38,10 @@ public final class Z0LiveInboxDeliveryTest {
         String lookup = Z0LiveInboxDelivery.realtimeReply("13 voice events received", "lookup:lookup-1").getJSONObject(0)
                 .getJSONObject("item").getJSONArray("content").getJSONObject(0).getString("text");
         check(lookup.startsWith("The lookup you started earlier"), "lookup framing ties result to the user's question");
+        String run = Z0LiveInboxDelivery.realtimeReply("core.py sets the model", "run:rt-1").getJSONObject(0)
+                .getJSONObject("item").getJSONArray("content").getJSONObject(0).getString("text");
+        check(run.startsWith("The work the user handed off") && !run.contains("Hermes"), "a finished hand-off is framed as the user's own work, without naming an agent the voice would then narrate");
+        check(run.contains("as your own finding without naming agents, tools"), "results are presented as the assistant's own finding, not plumbing");
         for (String invalid : new String[] {null, "", "x".repeat(12001)}) {
             try { Z0LiveInboxDelivery.realtimeReply(invalid, "run:x"); throw new AssertionError("invalid reply accepted"); }
             catch (IllegalArgumentException expected) { checks++; }
