@@ -63,6 +63,10 @@ public final class Z0LiveService extends Service {
     private AudioFocusRequest focusRequest;
     private boolean running, pendingNetwork, connecting, telemetryBusy, inboxBusy;
     private boolean speaking, ending, closingResources;
+    /** True while connected through the broker-signaled Frameless Bidi call (OMP /live architecture). */
+    private boolean bidi;
+    private final StringBuilder bidiCaption = new StringBuilder();
+    private final Z0LiveBidiBarge bidiBarge = new Z0LiveBidiBarge();
     private int generation, reachabilityAttempts, pendingTools;
     private Z0LiveStore store;
     private PairingValidation.Pairing activePairing;
@@ -86,7 +90,8 @@ public final class Z0LiveService extends Service {
         public void run() {
             if (!running) return;
             pollInbox();
-            main.postDelayed(this, 3000);
+            // Bidi phone actions arrive through the inbox: poll quickly so they feel immediate.
+            main.postDelayed(this, bidi ? 600 : 3000);
         }
     };
 
@@ -199,7 +204,7 @@ public final class Z0LiveService extends Service {
             turn.userSpeaking(false);
             broker.inputMuted();
             flush(false);
-            if (peer != null && audio.isConnected()) peer.send(object("type", "input_audio_buffer.clear").toString());
+            if (audio.isConnected()) sendRealtime(object("type", "input_audio_buffer.clear").toString());
         }
         applyAudio();
         drainTurn();
@@ -207,7 +212,7 @@ public final class Z0LiveService extends Service {
         publish();
     }
     private void applyAudio() {
-        if (peer != null) peer.audio(audio.microphoneEnabled(), audio.realtimeSpeakerEnabled());
+        if (peer != null) peer.audio(audio.microphoneEnabled(), audio.realtimeSpeakerEnabled() && !(bidi && bidiBarge.ducked()));
     }
 
     private void checkBackend() {
@@ -251,7 +256,9 @@ public final class Z0LiveService extends Service {
                 // Every explicit connection establishes a live-only floor. Never read old replies aloud.
                 long head = backend.inboxHead();
                 store.setInboxCursor(activePairing, Math.max(Math.max(0, inboxCursor), head));
-                Z0LiveProtocol.Session session = backend.session(object("app", getPackageName(), "screen", "z0live voice"), Z0LivePhoneTools.schemas(this));
+                JSONObject context = object("app", getPackageName(), "screen", "z0live voice");
+                JSONArray phoneTools = Z0LivePhoneTools.schemas(this);
+                Z0LiveProtocol.Session session = backend.session(context, phoneTools, true);
                 brokerSessionToEnd = session.sessionId;
                 main.post(() -> {
                     if (!valid(id)) return;
@@ -259,6 +266,8 @@ public final class Z0LiveService extends Service {
                     inboxCursor = Math.max(Math.max(0, inboxCursor), head);
                     sessionInboxFloor = inboxCursor;
                     sessionId = session.sessionId;
+                    bidi = "bidi".equals(session.transport);
+                    bidiBarge.reset();
                     broker.start(sessionId);
                     flush(false);
                     event("session_ready", "", object("model", session.model, "voice", session.voice, "instructions_version", session.instructionsVersion, "builtin_tools", new JSONArray(session.builtinTools)));
@@ -269,6 +278,26 @@ public final class Z0LiveService extends Service {
                                 if (!valid(id)) return;
                                 network.execute(() -> {
                                     try {
+                                        if ("bidi".equals(session.transport)) {
+                                            String answer;
+                                            Z0LiveProtocol.Session fallback = null;
+                                            try {
+                                                answer = backend.liveCall(session.sessionId, sdp);
+                                            } catch (IOException bidiFailed) {
+                                                // Keep the phone working: the same offer is valid for gpt-realtime.
+                                                fallback = backend.session(context, phoneTools, false);
+                                                try { backend.endSession(session.sessionId); } catch (IOException ignored) { telemetryFailed.incrementAndGet(); }
+                                                answer = backend.exchangeSdp(fallback.secret, sdp);
+                                            }
+                                            String finalAnswer = answer;
+                                            Z0LiveProtocol.Session adopted = fallback;
+                                            main.post(() -> {
+                                                if (!valid(id) || peer == null) return;
+                                                if (adopted != null) adoptFallback(adopted);
+                                                peer.answer(finalAnswer);
+                                            });
+                                            return;
+                                        }
                                         String answer = backend.exchangeSdp(session.secret, sdp);
                                         main.post(() -> { if (valid(id) && peer != null) peer.answer(answer); });
                                     } catch (IOException e) {
@@ -283,7 +312,8 @@ public final class Z0LiveService extends Service {
                                 status = getString(R.string.z0live_service_listening);
                                 error = "";
                                 applyAudio();
-                                peer.send(Z0LiveBargeIn.vadConfiguration());
+                                // Frameless Bidi does its own full-duplex turn-taking; only gpt-realtime takes VAD config.
+                                sendRealtime(Z0LiveBargeIn.vadConfiguration());
                                 Log.i("z0live", "connected model=" + session.model + " voice=" + session.voice);
                                 event("connected", "", object("model", session.model, "voice", session.voice));
                                 publish();
@@ -314,7 +344,7 @@ public final class Z0LiveService extends Service {
                         turn.userSpeaking(false);
                         broker.inputMuted();
                         flush(false);
-                        if (peer != null && audio.isConnected()) peer.send(object("type", "input_audio_buffer.clear").toString());
+                        if (audio.isConnected()) sendRealtime(object("type", "input_audio_buffer.clear").toString());
                     }
                     if (!gained && inboxItem != null) {
                         interruptRealtime();
@@ -348,7 +378,7 @@ public final class Z0LiveService extends Service {
     }
     public static boolean injectDebugText(String text) {
         Z0LiveService service = current;
-        if (!debugReady() || Looper.myLooper() != Looper.getMainLooper() || text == null || text.isBlank() || text.length() > 2000) return false;
+        if (!debugReady() || service.bidi || Looper.myLooper() != Looper.getMainLooper() || text == null || text.isBlank() || text.length() > 2000) return false;
         service.turn.responseStarted();
         service.caption = "You: " + text;
         if (service.broker.transcript(text)) service.interruptRealtime();
@@ -362,8 +392,73 @@ public final class Z0LiveService extends Service {
         return true;
     }
 
+    /** gpt-realtime control messages; Frameless Bidi accepts none from the phone. */
+    private void sendRealtime(String json) {
+        if (peer != null && !bidi) peer.send(json);
+    }
+
+    /** Switch to the gpt-realtime session minted after a failed Frameless Bidi signaling attempt. */
+    private void adoptFallback(Z0LiveProtocol.Session session) {
+        bidi = false;
+        sessionId = session.sessionId;
+        brokerSessionToEnd = session.sessionId;
+        broker.start(sessionId);
+        event("session_ready", "", object("model", session.model, "voice", session.voice, "instructions_version", session.instructionsVersion, "builtin_tools", new JSONArray(session.builtinTools), "fallback", "bidi_signaling_failed"));
+        flush(false);
+    }
+
+    /** Frameless Bidi events seen on the phone's own data channel: captions and failures only. */
+    private void bidiEvent(JSONObject message) {
+        switch (message.optString("type")) {
+            case "input_transcript.added":
+                if (!caption.startsWith("You: ")) { bidiCaption.setLength(0); caption = "You: "; }
+                JSONObject heard = message.optJSONObject("item");
+                // Real words over an open assistant turn silence playback now; noise never does.
+                if (heard != null && bidiBarge.userTranscript(heard.optString("text"))) applyAudio();
+                appendCaption(heard);
+                break;
+            case "turn.created":
+                JSONObject created = message.optJSONObject("turn");
+                if (created != null && "assistant".equals(created.optString("role"))
+                        && bidiBarge.assistantTurnCreated(created.optString("id"))) applyAudio();
+                break;
+            case "output_transcript.added":
+                if (!caption.startsWith("z0live: ")) { bidiCaption.setLength(0); caption = "z0live: "; }
+                appendCaption(message.optJSONObject("item"));
+                status = getString(R.string.z0live_service_speaking);
+                publish();
+                break;
+            case "turn.done":
+                JSONObject done = message.optJSONObject("turn");
+                if (done == null) break;
+                if ("assistant".equals(done.optString("role"))) { if (bidiBarge.assistantTurnDone(done.optString("id"))) applyAudio(); }
+                else bidiBarge.userTurnDone();
+                String text = bounded(done.optString("transcript").trim(), 8000);
+                if (!text.isEmpty()) caption = ("user".equals(done.optString("role")) ? "You: " : "z0live: ") + text;
+                bidiCaption.setLength(0);
+                status = getString(R.string.z0live_service_listening);
+                publish();
+                break;
+            case "error":
+                // The broker's sideband sees the same error; the phone records and ends the call honestly.
+                event("realtime_error", "", new JSONObject());
+                fail(getString(R.string.z0live_service_realtime_failed));
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void appendCaption(JSONObject item) {
+        if (item == null) return;
+        bidiCaption.append(item.optString("text"));
+        String prefix = caption.startsWith("You: ") ? "You: " : "z0live: ";
+        caption = prefix + bounded(bidiCaption.toString().trim(), 8000);
+        publish();
+    }
+
     private void interruptRealtime() {
-        if (peer != null) {
+        if (peer != null && !bidi) {
             JSONArray commands = bargeIn.interrupt();
             for (int i = 0; i < commands.length(); i++) peer.send(commands.optJSONObject(i).toString());
         }
@@ -376,6 +471,7 @@ public final class Z0LiveService extends Service {
         try {
             JSONObject message = new JSONObject(raw);
             String type = message.optString("type");
+            if (bidi) { bidiEvent(message); return; }
             broker.realtime(message, audio.microphoneEnabled());
             discardInterruptedInbox();
             // Floor/cancel/usage delivery must not wait for the periodic telemetry tick.
@@ -571,7 +667,7 @@ public final class Z0LiveService extends Service {
 
     private void drainTurn() {
         if (!running || peer == null || inboxItem != null) return;
-        if (turn.takeUserReply() || turn.takeContinuation(pendingTools > 0)) peer.send(object("type", "response.create").toString());
+        if (turn.takeUserReply() || turn.takeContinuation(pendingTools > 0)) sendRealtime(object("type", "response.create").toString());
         if (pendingInbox != null && turn.canSpeakInbox()) {
             JSONObject next = pendingInbox;
             pendingInbox = null;
@@ -659,7 +755,8 @@ public final class Z0LiveService extends Service {
         persistCursor();
         String say = item.optString("say", "");
         if (say.isEmpty()) { finishInbox(true, true, "none"); return; }
-        if (item.optLong("id") <= sessionInboxFloor || !Z0LiveInboxDelivery.maySpeak(hasActiveSession(), sessionId, item)
+        // Frameless Bidi speaks results through the broker's delegation context, never from the inbox.
+        if (bidi || item.optLong("id") <= sessionInboxFloor || !Z0LiveInboxDelivery.maySpeak(hasActiveSession(), sessionId, item)
                 || !audio.realtimeSpeakerEnabled()) {
             Z0LiveInboxNotifications.show(this, item);
             finishInbox(true, true, "notification");

@@ -108,6 +108,33 @@ The canonical contract is the z0live backend's `docs/API.md`:
   OpenAI's WebRTC buffer-clear also truncates unheard conversation audio. The mic stays
   available for interruption unless the owner manually mutes it or audio focus is lost.
 
+### Frameless Bidi transport (OMP `/live` architecture)
+
+The APK offers `transports:["bidi","realtime"]` at mint. A broker with `Z0LIVE_LIVE_TRANSPORT=bidi`
+(its default) answers with a `gpt-live-1-codex` session and **no client secret**; the phone posts
+its SDP offer to the broker's authenticated `/v1/live/calls`, which signals Codex with the desktop's
+ChatGPT login, owns the call's sideband, and returns the SDP answer. Media is still direct
+phone ↔ OpenAI WebRTC. Older brokers ignore the offer and keep minting gpt-realtime.
+
+- The model has no function tools in this mode (the provider rejects `tools`). It natively creates
+  client delegations; the broker answers each one through one persistent Hermes session (silent
+  `commentary` progress, one speakable final) or, for a single declared phone action, queues an
+  ordinary inbox action (`say:""`). The phone executes it exactly as before and reports the usual
+  `tool_result` event, which becomes the spoken result. The inbox is polled every 600 ms while a
+  Bidi call is up (3 s for gpt-realtime).
+- The phone sends **no** control messages on the data channel: no VAD `session.update`,
+  `response.create/cancel` or `output_audio_buffer.clear`. Inbox `say` text is never injected; it
+  becomes a silent notification. The debug text-injection hook is disabled for Bidi calls.
+- Captions come from `input_transcript.added`, `output_transcript.added` and `turn.done`; an
+  `error` event ends the call honestly. Transcripts are recorded by the broker, not re-posted.
+- Barge-in: the model does its own full-duplex turn-taking. `Z0LiveBidiBarge` additionally mutes
+  playback (`setSpeakerMute`) the moment the live owner transcript shows real words
+  (`Z0LiveSpeechGate.isSpeech`) while an assistant turn is open, and restores it for the model's next
+  turn. Noise and grunts never duck. Echo is handled by the platform AEC on the
+  `VOICE_COMMUNICATION` source; the desktop OMP-style level gate is not used on Android.
+- If `/v1/live/calls` fails, the same offer is sent to OpenAI with a freshly minted gpt-realtime
+  session (`transports:["realtime"]`) and the old broker session is ended, so the phone keeps working.
+
 ## Native surfaces and identity
 
 The settings destination uses Lawnchair's existing PreferenceLayout, PreferenceGroup,
