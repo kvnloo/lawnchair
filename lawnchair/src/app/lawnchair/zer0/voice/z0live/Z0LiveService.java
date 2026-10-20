@@ -427,6 +427,8 @@ public final class Z0LiveService extends Service {
                         && bidiBarge.assistantTurnCreated(created.optString("id"))) applyAudio();
                 break;
             case "output_transcript.added":
+                // New speech after the interrupted turn ended (a full-duplex answer) restores playback.
+                if (bidiBarge.assistantOutput()) applyAudio();
                 if (!caption.startsWith("z0live: ")) { bidiCaption.setLength(0); caption = "z0live: "; }
                 appendCaption(message.optJSONObject("item"));
                 status = getString(R.string.z0live_service_speaking);

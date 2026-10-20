@@ -32,6 +32,23 @@ public final class Z0LiveBidiBargeTest {
         barge.assistantTurnDone("turn_c", 9000);
         check(!barge.userTranscript("and another thing", 9000 + Z0LiveBidiBarge.TAIL_MS + 1), "long after a turn, nothing is ducked");
 
+        // Rapid follow-up: words right after a reply duck its tail; the full-duplex answer to the
+        // follow-up streams before its turn is created and must be heard (seen in the parity eval).
+        barge.assistantTurnCreated("turn_q1");
+        check(!barge.assistantOutput(), "ordinary output is not an un-duck when nothing is ducked");
+        barge.userTurnDone();
+        check(barge.userTranscript(" And times", 20010), "follow-up words over the reply duck it");
+        check(!barge.assistantOutput(), "the interrupted reply's own trailing output stays silent");
+        barge.assistantTurnDone("turn_q1", 20050);
+        check(barge.assistantOutput(), "new output after the interrupted turn ended restores playback");
+        check(!barge.ducked(), "the follow-up answer is audible");
+        check(!barge.userTranscript(" three?", 20400), "the rest of the follow-up's late transcript never re-mutes its answer");
+        check(!barge.ducked(), "the answer stays audible");
+        barge.userTurnDone();
+        barge.assistantTurnDone("turn_q2", 21000);
+        check(barge.userTranscript("and divided by two", 21500), "tail duck right after a turn");
+        check(barge.assistantOutput(), "the turn had already ended: the next output is the answer");
+
         barge.assistantTurnCreated("turn_d");
         barge.userTranscript("stop please", 12000);
         barge.reset();
