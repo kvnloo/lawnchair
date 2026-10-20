@@ -41,8 +41,15 @@ public final class Z0LiveProtocol {
         public final String sessionId;
         public final String instructionsVersion;
         public final java.util.Set<String> builtinTools;
+        /** "bidi": broker-signaled Codex Frameless Bidi call; "realtime": direct gpt-realtime mint. */
+        public final String transport;
 
         private Session(String secret, long expiresAt, String model, String voice, String sessionId, java.util.Set<String> builtinTools, String instructionsVersion) {
+            this(secret, expiresAt, model, voice, sessionId, builtinTools, instructionsVersion, "realtime");
+        }
+
+        private Session(String secret, long expiresAt, String model, String voice, String sessionId, java.util.Set<String> builtinTools, String instructionsVersion, String transport) {
+            this.transport = transport;
             this.secret = secret;
             this.expiresAt = expiresAt;
             this.model = model;
@@ -73,12 +80,35 @@ public final class Z0LiveProtocol {
     }
 
     public Session session(JSONObject context, JSONArray tools) throws IOException {
+        return session(context, tools, false);
+    }
+
+    /**
+     * Mint a voice session. With {@code offerBidi} the broker may answer with a Frameless Bidi
+     * session (no client secret: the SDP offer then goes to {@link #liveCall}); brokers that
+     * predate it ignore the offer and keep minting gpt-realtime.
+     */
+    public Session session(JSONObject context, JSONArray tools, boolean offerBidi) throws IOException {
         if (context == null || tools == null) throw new IOException("Missing session inputs");
         try {
+            JSONArray transports = new JSONArray();
+            if (offerBidi) transports.put("bidi");
+            transports.put("realtime");
             JSONObject payload = new JSONObject().put("client", "lawnchair")
-                    .put("context", context).put("tools", tools);
+                    .put("context", context).put("tools", tools).put("transports", transports);
             JSONObject result = object(execute(backendRequest("/v1/realtime/session")
                     .post(body(payload.toString(), JSON)).build()));
+            String transport = result.has("transport") ? requiredText(result, "transport", 32) : "realtime";
+            if ("bidi".equals(transport)) {
+                if (!offerBidi) throw new IOException("Broker chose an unrequested transport");
+                String sessionId = requiredText(result, "session_id", 256);
+                Session session = new Session("", 0, requiredText(result, "model", 256),
+                        requiredText(result, "voice", 256), sessionId, java.util.Set.of(),
+                        result.has("instructions_version") ? requiredText(result, "instructions_version", 256) : "bidi", "bidi");
+                sessionBuiltins.put(sessionId, session.builtinTools);
+                return session;
+            }
+            if (!"realtime".equals(transport)) throw new IOException("Unsupported voice transport");
             String secret = requiredText(result, "value", 4096);
             try {
                 PairingValidation.validateToken(secret);
@@ -112,6 +142,25 @@ public final class Z0LiveProtocol {
             return session;
         } catch (JSONException ignored) {
             throw new IOException("Invalid session JSON");
+        }
+    }
+
+    /** Broker-signaled Frameless Bidi call: the broker returns the provider's SDP answer. */
+    public String liveCall(String sessionId, String offer) throws IOException {
+        if (sessionId == null || !sessionId.matches("[A-Za-z0-9_-]{1,100}")) throw new IOException("Invalid session id");
+        if (offer == null || !offer.startsWith("v=0") || offer.length() > 20000) throw new IOException("Invalid SDP offer");
+        try {
+            JSONObject payload = new JSONObject().put("session_id", sessionId).put("sdp", offer);
+            JSONObject result = object(execute(backendRequest("/v1/live/calls")
+                    .post(body(payload.toString(), JSON)).build()));
+            Object answer = result.opt("sdp");
+            // SDP is CRLF text, so it cannot use the control-character-free field validator.
+            if (!(answer instanceof String) || !((String) answer).startsWith("v=0") || ((String) answer).length() > 20000) {
+                throw new IOException("Invalid SDP answer");
+            }
+            return (String) answer;
+        } catch (JSONException ignored) {
+            throw new IOException("Invalid live call JSON");
         }
     }
 

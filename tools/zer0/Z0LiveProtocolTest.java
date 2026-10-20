@@ -32,6 +32,7 @@ public final class Z0LiveProtocolTest {
         routesAndAuthorization();
         sessionValidation();
         mintedBuiltinCatalog();
+        bidiSessionAndLiveCall();
         inboxHistoryHead();
         inboxValidation();
         errorsAndRedirects();
@@ -211,6 +212,53 @@ public final class Z0LiveProtocolTest {
                 backend.reply(200, new JSONObject(valid).put("builtin_tools", invalid).toString());
                 io(() -> protocol.session(new JSONObject(), new JSONArray()), "invalid builtin catalog rejected");
             }
+        }
+    }
+
+    private static void bidiSessionAndLiveCall() throws Exception {
+        try (Server backend = new Server(); Server openai = new Server()) {
+            Z0LiveProtocol protocol = protocol(backend, openai);
+            backend.reply(200, "{\"transport\":\"bidi\",\"model\":\"gpt-live-1-codex\",\"voice\":\"sol\","
+                    + "\"instructions_version\":\"z0live.bidi.v1\",\"session_id\":\"sess-b\",\"builtin_tools\":[]}");
+            Z0LiveProtocol.Session session = protocol.session(new JSONObject(), new JSONArray(), true);
+            equal(session.transport, "bidi", "broker chose Frameless Bidi");
+            equal(session.secret, "", "bidi mint carries no client secret");
+            equal(session.model, "gpt-live-1-codex", "bidi model");
+            equal(session.builtinTools.size(), 0, "bidi has no function tools");
+            JSONArray offered = new JSONObject(backend.last().body).getJSONArray("transports");
+            equal(offered.toString(), "[\"bidi\",\"realtime\"]", "client offers bidi with realtime fallback");
+
+            String offer = "v=0\r\ns=offer\r\n";
+            backend.reply(200, new JSONObject().put("sdp", "v=0\r\ns=answer\r\n").put("call_id", "rtc_1").toString());
+            equal(protocol.liveCall("sess-b", offer), "v=0\r\ns=answer\r\n", "broker returns provider SDP answer");
+            Request call = backend.last();
+            equal(call.path, "/v1/live/calls", "live call route");
+            equal(call.authorization, "Bearer " + TOKEN, "live call uses the device bearer, never a provider secret");
+            JSONObject body = new JSONObject(call.body);
+            equal(body.getString("session_id"), "sess-b", "live call session");
+            equal(body.getString("sdp"), offer, "live call carries the raw offer");
+            equal(openai.requests.size(), 0, "bidi never calls OpenAI from the phone");
+
+            backend.reply(200, "{\"sdp\":\"not sdp\"}");
+            io(() -> protocol.liveCall("sess-b", offer), "non-SDP answer rejected");
+            backend.reply(502, "{\"error\":\"live signaling HTTP 500\"}");
+            io(() -> protocol.liveCall("sess-b", offer), "broker signaling failure surfaces for fallback");
+            int before = backend.requests.size();
+            io(() -> protocol.liveCall("../x", offer), "invalid session id never sent");
+            io(() -> protocol.liveCall("sess-b", "garbage"), "invalid offer never sent");
+            equal(backend.requests.size(), before, "invalid live calls make no request");
+
+            // Old brokers ignore the offer and keep minting gpt-realtime.
+            long expires = System.currentTimeMillis() / 1000 + 300;
+            backend.reply(200, sessionJson(expires, true));
+            equal(protocol.session(new JSONObject(), new JSONArray(), true).transport, "realtime", "old broker stays realtime");
+            backend.reply(200, sessionJson(expires, true));
+            protocol.session(new JSONObject(), new JSONArray());
+            equal(new JSONObject(backend.last().body).getJSONArray("transports").toString(), "[\"realtime\"]", "fallback mint asks for realtime only");
+            backend.reply(200, "{\"transport\":\"bidi\",\"model\":\"m\",\"voice\":\"v\",\"session_id\":\"s\"}");
+            io(() -> protocol.session(new JSONObject(), new JSONArray(), false), "unrequested bidi rejected");
+            backend.reply(200, "{\"transport\":\"carrier-pigeon\",\"model\":\"m\",\"voice\":\"v\"}");
+            io(() -> protocol.session(new JSONObject(), new JSONArray(), true), "unknown transport rejected");
         }
     }
 
