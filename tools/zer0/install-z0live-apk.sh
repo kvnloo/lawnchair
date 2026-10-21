@@ -13,6 +13,12 @@
 #      owner-disabled services stay off) and always keeps the z0live control service on
 #      if it was on before;
 #   5. re-applies the battery exemptions and verifies the result.
+# Owner laws (kvnloo/z0intelligence bend/ops_fsm), checked with `z0-guard` when installed:
+#   O5  Lawnchair is in the z0live call chain: no install while a z0live call is live
+#       (`z0-guard phone --kind install`; report-only until Z0_GUARD_O5=enforce);
+#   O6  enabled accessibility services after the install ⊇ before, unless the owner removed
+#       one (`z0-guard a11y`, else the a11y-superset.sh mirror). Exit 5 on a violation.
+#       Services the owner switched off on purpose: Z0LIVE_A11Y_REMOVED=svc1:svc2.
 set -euo pipefail
 unset ADB_SERVER_SOCKET
 APK=${1:?usage: install-z0live-apk.sh APK [SERIAL]}
@@ -26,6 +32,13 @@ digest() { "$APKSIGNER" verify --print-certs "$1" | sed -n 's/.*certificate SHA-
 
 [ -f "$APK" ] || { echo "no such APK: $APK" >&2; exit 2; }
 [ -x "$APKSIGNER" ] || { echo "apksigner not found under $SDK" >&2; exit 2; }
+
+if command -v z0-guard >/dev/null 2>&1; then
+  z0-guard phone --kind install --package "$PKG" >&2 || {
+    echo "O5: a z0live call is live; Lawnchair is in the call chain. Install after the call." >&2; exit 6; }
+else
+  echo "O5: z0-guard not installed; owner-call check skipped" >&2
+fi
 
 exec 9>"$LOCK"
 flock -w 600 9 || { echo "install lock busy: $LOCK" >&2; exit 3; }
@@ -59,7 +72,13 @@ adb_ shell dumpsys deviceidle whitelist +"$PKG" >/dev/null || true
 adb_ shell cmd appops set "$PKG" RUN_ANY_IN_BACKGROUND allow || true
 
 final=$(adb_ shell settings get secure enabled_accessibility_services | tr -d '\r')
-missing=$(printf '%s\n' "$before" | tr ':' '\n' | awk 'NF' | while read -r s; do case ":$final:" in *":$s:"*) ;; *) echo "$s";; esac; done)
 adb_ shell dumpsys package "$PKG" | grep -m2 -E 'versionName|lastUpdateTime' | sed 's/^ *//' || true
-if [ -n "$missing" ]; then echo "STILL MISSING: $missing" >&2; exit 5; fi
+removed=${Z0LIVE_A11Y_REMOVED:-}
+if command -v z0-guard >/dev/null 2>&1; then
+  if ! z0-guard a11y --pre "$before" --post "$final" --removed "$removed" >&2; then
+    echo "O6: STILL MISSING after restore (see z0-guard output above)" >&2; exit 5
+  fi
+elif ! missing=$("$(dirname "$0")/a11y-superset.sh" "$before" "$final" "$removed"); then
+  echo "O6: STILL MISSING: $missing" >&2; exit 5
+fi
 echo "accessibility after: $(echo "$final" | tr ':' '\n' | grep -c .) services (all previous kept)"
