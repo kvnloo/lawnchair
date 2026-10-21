@@ -57,6 +57,8 @@ public final class Z0LiveAccessibilityPolicy {
     private static final Pattern DESTRUCTIVE_SCREEN = Pattern.compile(
             "(?i)\\b(delete|erase|reset|uninstall|remove|factory|wipe|format|clear (?:data|storage)|sign out|log out|"
             + "permanently|cannot be undone|can't be undone|payment|purchase|charge|subscription|transfer|send)\\b");
+    private static final Pattern STORE_ACQUIRE = Pattern.compile(
+            "(?i)(^\\s*(get|pre-?register|try (it )?free|free trial)\\s*$|[$\u20ac\u00a3\u00a5\u20b9]\\s*\\d|\\d\\s*[$\u20ac\u00a3\u00a5\u20b9])");
     private static final Pattern PERMISSION_TEXT = Pattern.compile("(?i)\\ballow\\b.{1,60}\\bto\\b.{1,100}\\?");
     private static final java.util.List<String> BLAND_PROCEED = java.util.Arrays.asList(
             "continue", "ok", "okay", "yes", "next", "proceed", "done", "got it", "apply", "save", "agree");
@@ -69,8 +71,12 @@ public final class Z0LiveAccessibilityPolicy {
         String norm = head.toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
         if (SAFE_ON_PERMISSION.contains(norm)) return null;
         String screen = screenText == null ? "" : screenText;
-        if (pkg != null && (pkg.contains("permissioncontroller") || pkg.contains("packageinstaller") || pkg.equals("com.android.vending"))) {
+        if (pkg != null && (pkg.contains("permissioncontroller") || pkg.contains("packageinstaller"))) {
             return "permission or install dialog button '" + head + "'";
+        }
+        // Play Store: searching and browsing are routine; getting, buying and price buttons are not.
+        if ("com.android.vending".equals(pkg) && STORE_ACQUIRE.matcher(head).find()) {
+            return "'" + head + "' installs or buys from the Play Store";
         }
         if (PERMISSION_TEXT.matcher(screen).find() && head.length() <= 40 && BLAND_PROCEED.contains(norm)) {
             return "permission dialog button '" + head + "'";
