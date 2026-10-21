@@ -44,7 +44,11 @@ public final class Z0LiveTargetMatcher {
             this.margin = ranked.isEmpty() ? 0 : ranked.size() == 1 ? ranked.get(0).score : ranked.get(0).score - ranked.get(1).score;
         }
 
-        public boolean confident() { return confidence >= ACT_SCORE && margin >= ACT_MARGIN; }
+        /** Clearly ahead, or the only control whose label is exactly what the owner said. */
+        public boolean confident() {
+            if (confidence >= ACT_SCORE && margin >= ACT_MARGIN) return true;
+            return confidence >= 1.0 && ranked.size() > 1 && ranked.get(1).score < 1.0 && margin >= 0.05;
+        }
 
         public int best() { return ranked.isEmpty() ? -1 : ranked.get(0).index; }
     }

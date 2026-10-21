@@ -66,6 +66,25 @@ public final class Z0LiveScreen {
         return "text";
     }
 
+    /**
+     * Readable label text: drops icon-font glyphs (Unicode private use area, e.g. Ionicons in
+     * React Native apps), which say nothing to a model and would otherwise become labels.
+     */
+    public static String readable(String value) {
+        if (value == null || value.isEmpty()) return "";
+        StringBuilder out = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            char ch = value.charAt(i);
+            if (ch >= '\uE000' && ch <= '\uF8FF') continue;
+            if (Character.isHighSurrogate(ch) && i + 1 < value.length()) {
+                int cp = Character.toCodePoint(ch, value.charAt(i + 1));
+                if (cp >= 0xF0000) { i++; continue; }
+            }
+            out.append(ch);
+        }
+        return out.toString().trim();
+    }
+
     /** Human words from a resource id: "com.x:id/open_drawer_button" -> "open drawer button". */
     public static String idWords(String viewId) {
         if (viewId == null || viewId.isEmpty()) return "";

@@ -91,9 +91,9 @@ class Z0LiveAccessibilityService : AccessibilityService() {
             if (!info.isVisibleToUser) continue
             val password = Z0LiveAccessibilityPolicy.passwordField(info.isPassword, info.inputType)
             val editable = info.isEditable
-            val text = info.text?.toString()?.trim().orEmpty()
-            val desc = info.contentDescription?.toString()?.trim().orEmpty()
-            val hint = info.hintText?.toString()?.trim().orEmpty()
+            val text = Z0LiveScreen.readable(info.text?.toString())
+            val desc = Z0LiveScreen.readable(info.contentDescription?.toString())
+            val hint = Z0LiveScreen.readable(info.hintText?.toString())
             // Never read an editable field's value: its label is the hint or description only.
             val label = when {
                 password -> ""

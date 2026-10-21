@@ -77,7 +77,10 @@ public final class Z0LiveControlTest {
         if (Z0LiveAccessibilityPolicy.consequential("Continue", false, "x", "Erase all data? This cannot be undone") == null) throw new AssertionError("bland proceed on destructive screen");
         if (Z0LiveAccessibilityPolicy.consequential("Don't allow", false, "com.android.permissioncontroller", "") != null) throw new AssertionError("declining is safe");
         if (!Z0LiveAccessibilityPolicy.secretField("Enter PIN", "") || Z0LiveAccessibilityPolicy.secretField("Ask anything", "")) throw new AssertionError("secret field");
-        System.out.println("PASS stable ids, ancestor click target, inherited row labels, no editable/password values, phone_goal denylist gates");
+        // Icon-font glyphs (React Native Ionicons) are not labels.
+        if (!Z0LiveScreen.readable("\uf19a").isEmpty() || !Z0LiveScreen.readable(" Send \uf114").equals("Send"))
+            throw new AssertionError("icon glyphs stripped");
+        System.out.println("PASS stable ids, ancestor click target, inherited row labels, no editable/password values, icon glyphs dropped, phone_goal denylist gates");
     }
 
     static Z0LiveScreen.Node find(Z0LiveScreen screen, String label) {
