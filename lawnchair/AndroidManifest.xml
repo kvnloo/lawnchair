@@ -20,6 +20,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Opt-in foreground on-device recognition; Android runtime permission is required. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-feature android:name="android.hardware.microphone" android:required="false" />
@@ -75,6 +76,12 @@
         tools:node="remove" />
 
     <application android:dataExtractionRules="@xml/z0live_data_extraction_rules">
+        <receiver android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityRecoveryReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
         <meta-data android:name="com.google.mlkit.vision.DEPENDENCIES" android:value="barcode_ui" />
         <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveInboxNotifications"
             android:exported="true" android:permission="android.permission.BIND_JOB_SERVICE" />

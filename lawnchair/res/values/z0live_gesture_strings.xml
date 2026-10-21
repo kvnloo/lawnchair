@@ -1,0 +1,7 @@
+<resources>
+    <string translatable="false" name="z0live_standby_ready">z0live ready</string>
+    <string translatable="false" name="z0live_standby_detail">Standby keeps a microphone-type service ready without capturing audio. Ring double tap starts voice or toggles mute; triple tap ends voice. Android may stop Standby. OFF ends voice and disables gestures.</string>
+    <string translatable="false" name="z0live_standby_on">Enable Standby (no audio capture)</string>
+    <string translatable="false" name="z0live_standby_off">Standby OFF</string>
+    <string translatable="false" name="z0live_voice_here">Voice here (5 minutes)</string>
+</resources>

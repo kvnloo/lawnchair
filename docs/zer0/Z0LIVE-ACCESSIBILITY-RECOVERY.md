@@ -1,0 +1,17 @@
+# Accessibility recovery (not rolled out)
+
+Recovery preserves `z0live_control.xml` / `in_app_control` (default false). It restores only the isolated z0live service registration, never another service or per-session screen consent. The persistent “Keep in-app control enabled” switch is independent of session consent; OFF on either in-app switch saves false and revokes session consent. Android Settings OFF alone is not a persistent opt-out when this preference stays true: use the in-app switch to opt out. Missing debug WRITE_SECURE_SETTINGS gives a once-per-outage notification linking to this service's exact Accessibility details page; tools continue returning permission_required until registration and session consent are present. Notification permission/channel disabling can prevent that notification.
+
+Checks run on boot, package replacement, foreground voice service creation, each session start, and every 30 seconds on the existing Standby/active-session background channel. No boot microphone or foreground service is started. Android doze/process death can delay periodic work; there is no claim of an always-running watchdog. The separately opted-in broker covers reported loss while the app is alive. Recovery does not detect an enabled-but-crashed binding; inspect dumpsys accessibility if it still fails.
+
+## Post-call rollout only
+
+1. Integrate reviewed recovery plus the current fast-control/Standby changes into the owner's shipping branch. This PR starts from feat/z0live-realtime and carries the three existing Standby prerequisite commits; it is not a replacement for newer, separately owned fast-control changes. Preserve current phone tools before rollout.
+2. Build with JDK21 via fleet-build (MBP); verify signer against the installed base.apk. Never uninstall to work around a signer mismatch. Only install through tools/zer0/install-z0live-apk.sh APK SERIAL from PR #42 (merge that wrapper if not yet present).
+3. `env -u ADB_SERVER_SOCKET adb -s SERIAL shell pm grant app.lawnchair.play.debug android.permission.WRITE_SECURE_SETTINGS`
+4. Confirm the persistent opt-in still reflects the owner. Open controls when safe and separately grant screen consent for a voice session. Do not script preference edits to invent consent.
+5. Optional explicit battery exemption: `bash tools/zer0/exempt-z0live-battery.sh SERIAL --apply`. It merges the Doze whitelist, allows RUN_ANY_IN_BACKGROUND, clears inactivity and sets active standby bucket. The script reads back all four states. These are Android battery policies, NOT a Samsung sleeping-list API.
+6. On One UI: Settings > Battery > Background usage limits: remove Lawnchair (Debug) from Sleeping apps AND Deep sleeping apps; add it to Never auto sleeping apps (wording varies by One UI). Set app Battery to Unrestricted. Review Auto optimisation / Auto restart with the owner; do not disable global protection silently. ADB has no stable supported interface for these Samsung lists; do not edit private Device Care databases or claim the script changed them.
+7. Re-read accessibility enabled/bound/crashed, appops, deviceidle whitelist, standby bucket and version. With owner approval, simulate one loss outside a call and verify recovery, then opt OFF and verify it stays OFF. These handset acceptance steps have NOT run during the call.
+
+Battery exemptions reduce background killing but do not prove the cause of a secure-settings removal and cannot prevent low-memory process death or an explicit Settings switch action.

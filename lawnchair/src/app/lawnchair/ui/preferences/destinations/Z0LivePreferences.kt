@@ -34,6 +34,7 @@ import app.lawnchair.ui.preferences.components.controls.WarningPreference
 import app.lawnchair.ui.preferences.components.layout.PreferenceGroup
 import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.zer0.voice.z0live.RippleActivity
+import app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityRecovery
 import app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService
 import app.lawnchair.zer0.voice.z0live.Z0LiveActivity
 import app.lawnchair.zer0.voice.z0live.Z0LiveStatus
@@ -53,6 +54,7 @@ fun Z0LivePreferences() {
     var editRipple by remember { mutableStateOf(false) }
     var rippleDraft by remember { mutableStateOf("") }
     var rippleError by remember { mutableStateOf<Int?>(null) }
+    var controlOptedIn by remember { mutableStateOf(Z0LiveAccessibilityRecovery.optedIn(context)) }
     var navigationAllowed by remember { mutableStateOf(false) }
     var navigationConsent by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
@@ -151,12 +153,31 @@ fun Z0LivePreferences() {
         }
         PreferenceGroup(heading = stringResource(R.string.z0live_phone_tools)) {
             SwitchPreference(
+                checked = controlOptedIn,
+                onCheckedChange = { enabled ->
+                    try {
+                        Z0LiveAccessibilityRecovery.setOptedIn(context, enabled)
+                        controlOptedIn = enabled
+                        if (!enabled) {
+                            Z0LiveAccessibilityService.allowCurrentSession(false)
+                            navigationAllowed = false
+                        }
+                    } catch (_: RuntimeException) {
+                        message = R.string.z0live_save_error
+                    }
+                },
+                label = stringResource(R.string.z0live_control_keep_enabled),
+                description = stringResource(R.string.z0live_control_keep_enabled_detail),
+            )
+            SwitchPreference(
                 checked = navigationAllowed,
                 onCheckedChange = { enabled ->
                     if (enabled) {
                         navigationConsent = true
                     } else {
                         try {
+                            Z0LiveAccessibilityRecovery.setOptedIn(context, false)
+                            controlOptedIn = false
                             Z0LiveAccessibilityService.allowCurrentSession(false)
                             navigationAllowed = false
                         } catch (_: RuntimeException) {
@@ -169,7 +190,7 @@ fun Z0LivePreferences() {
             )
             ClickablePreference(
                 label = stringResource(R.string.z0live_accessibility_settings),
-                onClick = { launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+                onClick = { launch(Z0LiveAccessibilityRecovery.settingsIntent(context)) },
             )
             ClickablePreference(
                 label = stringResource(R.string.z0live_flashlight_permission),
@@ -194,6 +215,8 @@ fun Z0LivePreferences() {
                 TextButton(onClick = {
                     navigationConsent = false
                     try {
+                        Z0LiveAccessibilityRecovery.setOptedIn(context, true)
+                        controlOptedIn = true
                         navigationAllowed = Z0LiveAccessibilityService.allowCurrentSession(true)
                         if (!navigationAllowed) message = R.string.z0live_control_permission_required
                     } catch (_: RuntimeException) {
