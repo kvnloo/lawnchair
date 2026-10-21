@@ -24,9 +24,13 @@ public final class Z0LiveAccessibilityRecovery {
     public static boolean optedIn(Context context) {
         return context.getSharedPreferences("z0live_control", Context.MODE_PRIVATE).getBoolean("in_app_control", false);
     }
+    @android.annotation.SuppressLint("ApplySharedPref")
     public static synchronized void setOptedIn(Context context, boolean enabled) {
-        // Same monitor as repair: OFF wins before any subsequent repair can read the preference.
-        context.getSharedPreferences("z0live_control", Context.MODE_PRIVATE).edit().putBoolean("in_app_control", enabled).apply();
+        // Persist before returning: the broker also checks the on-disk opt-in through run-as.
+        // Same monitor as local repair: OFF wins before any later local check reads it.
+        if (!context.getSharedPreferences("z0live_control", Context.MODE_PRIVATE).edit().putBoolean("in_app_control", enabled).commit()) {
+            throw new IllegalStateException("Could not persist in-app control preference");
+        }
         if (!enabled) {
             notified = false;
             context.getSystemService(NotificationManager.class).cancel(NOTICE);

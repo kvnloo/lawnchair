@@ -155,11 +155,15 @@ fun Z0LivePreferences() {
             SwitchPreference(
                 checked = controlOptedIn,
                 onCheckedChange = { enabled ->
-                    Z0LiveAccessibilityRecovery.setOptedIn(context, enabled)
-                    controlOptedIn = enabled
-                    if (!enabled) {
-                        Z0LiveAccessibilityService.allowCurrentSession(false)
-                        navigationAllowed = false
+                    try {
+                        Z0LiveAccessibilityRecovery.setOptedIn(context, enabled)
+                        controlOptedIn = enabled
+                        if (!enabled) {
+                            Z0LiveAccessibilityService.allowCurrentSession(false)
+                            navigationAllowed = false
+                        }
+                    } catch (_: RuntimeException) {
+                        message = R.string.z0live_save_error
                     }
                 },
                 label = stringResource(R.string.z0live_control_keep_enabled),
