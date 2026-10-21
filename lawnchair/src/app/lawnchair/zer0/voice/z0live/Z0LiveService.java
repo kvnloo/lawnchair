@@ -41,6 +41,7 @@ public final class Z0LiveService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService network = Executors.newSingleThreadExecutor();
     private final ExecutorService control = Executors.newSingleThreadExecutor();
+    private final ExecutorService phone = Executors.newSingleThreadExecutor();
     private final OkHttpClient http = new OkHttpClient.Builder()
             .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -722,6 +723,15 @@ public final class Z0LiveService extends Service {
             interruptRealtime();
             flush(false);
         }
+        if (!backend.isBuiltin(sessionId, name) && Z0LivePhoneTools.supports(this, name) && Z0LivePhoneTools.blocking(name)) {
+            // Accessibility tools wait up to ~300 ms for the app's own events: never on main.
+            int id = generation;
+            phone.execute(() -> {
+                JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
+                main.post(() -> { if (valid(id)) toolOutput(callId, result); });
+            });
+            return;
+        }
         if (!backend.isBuiltin(sessionId, name) && Z0LivePhoneTools.supports(this, name)) {
             JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
             toolOutput(callId, result);
@@ -849,12 +859,33 @@ public final class Z0LiveService extends Service {
             // Hermes cannot use a stale/broadcast inbox item as fresh phone authority.
             boolean sameSession = sessionId.equals(item.optString("session_id", ""));
             JSONObject params = item.optJSONObject("params");
+            if (sameSession && params != null && Z0LivePhoneTools.supports(this, action) && Z0LivePhoneTools.blocking(action)) {
+                // Keep inboxItem set (polling stays paused) while the accessibility worker acts.
+                int id = generation;
+                phone.execute(() -> {
+                    JSONObject result = Z0LivePhoneTools.execute(this, action, params);
+                    main.post(() -> {
+                        if (!valid(id) || inboxItem != item) return;
+                        reportInboxAction(item, action, result);
+                        continueInbox(item);
+                    });
+                });
+                return;
+            }
             JSONObject result = sameSession && params != null && Z0LivePhoneTools.supports(this, action)
                     ? Z0LivePhoneTools.execute(this, action, params)
                     : object("ok", false, "error", "Unknown tool, invalid params or stale-session action");
-            event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
-            if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
+            reportInboxAction(item, action, result);
         }
+        continueInbox(item);
+    }
+
+    private void reportInboxAction(JSONObject item, String action, JSONObject result) {
+        event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
+        if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
+    }
+
+    private void continueInbox(JSONObject item) {
         // Claim the identity before sending speech: interruption/process loss must never replay it.
         inboxCursor = Math.max(inboxCursor, item.optLong("id"));
         persistCursor();
@@ -1008,6 +1039,7 @@ public final class Z0LiveService extends Service {
         } else {
             network.shutdown();
             control.shutdown();
+            phone.shutdown();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
         }

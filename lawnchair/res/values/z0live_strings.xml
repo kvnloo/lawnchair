@@ -58,9 +58,9 @@
     <string translatable="false" name="z0live_session_description">Captions, microphone and session controls. Closing the panel keeps an active session running.</string>
     <string translatable="false" name="z0live_open_ripple">Open Ripple</string>
     <string translatable="false" name="z0live_phone_tools">Optional phone tools</string>
-    <string translatable="false" name="z0live_phone_navigation">In-app control for this session</string>
-    <string translatable="false" name="z0live_phone_navigation_description">Allow text-only screen access, exact button taps, text entry, scrolling and navigation until this voice session ends. Sensitive apps and password screens are blocked.</string>
-    <string translatable="false" name="z0live_navigation_consent">Allow z0live to read a bounded text-only list of controls and dispatch taps, text entry, scrolling and navigation for the current voice session? Screen text may reach your voice provider. Never share credentials. Sensitive apps, password screens, sending and calling are blocked. Enable z0live manually in Settings > Accessibility first. This consent expires when the session ends.</string>
+    <string translatable="false" name="z0live_phone_navigation">In-app control</string>
+    <string translatable="false" name="z0live_phone_navigation_description">Let z0live read the active app\'s controls and tap, type, scroll and navigate when you ask during a voice session. Stays on until you turn it off. Sensitive apps and password fields are blocked; send, pay, delete, install and permission taps are asked out loud first.</string>
+    <string translatable="false" name="z0live_navigation_consent">Allow z0live to read the active app\'s control labels and tap, type, scroll and navigate when you ask it to during a voice session? Control labels may reach your voice provider and your z0live desktop. Never share credentials. Banking, password and messaging apps and password fields are blocked. Taps that send, pay, delete, install or grant a permission are asked out loud first. Android Accessibility must also have z0live turned on. This stays on until you turn it off here.</string>
     <string translatable="false" name="z0live_navigation_allow">Allow for this session</string>
     <string translatable="false" name="z0live_accessibility_settings">Android Accessibility settings</string>
     <string translatable="false" name="z0live_flashlight_permission">Allow flashlight</string>
@@ -68,6 +68,10 @@
     <string translatable="false" name="z0live_flashlight_granted">Camera permission allowed. Tap to manage in Android settings.</string>
     <string translatable="false" name="z0live_settings_unavailable">Android settings or this integration could not be opened.</string>
     <string translatable="false" name="z0live_accessibility_label">z0live in-app control</string>
-    <string translatable="false" name="z0live_accessibility_description">Optional text-only screen control for z0live. You must separately allow each voice session in z0live settings. Sensitive apps and password screens are blocked. No screenshots, coordinates, automatic sending or calling.</string>
-    <string translatable="false" name="z0live_control_permission_required">Enable z0live in Android Accessibility settings, start a voice session, then allow in-app control here.</string>
+    <string translatable="false" name="z0live_accessibility_description">Optional in-app control for z0live voice: reads control labels and taps, types and scrolls when you ask during a voice session. Sensitive apps and password fields are blocked; send, pay, delete, install and permission taps are confirmed out loud first.</string>
+    <string translatable="false" name="z0live_control_permission_required">In-app control is on, but Android Accessibility still has z0live off. Turn it on in Accessibility settings.</string>
+    <string translatable="false" name="z0live_accessibility_on">z0live accessibility is on</string>
+    <string translatable="false" name="z0live_accessibility_off">Off: turn on z0live under Installed apps</string>
+    <string translatable="false" name="z0live_restricted_settings">Android says the setting is restricted?</string>
+    <string translatable="false" name="z0live_restricted_settings_description">Open App info, tap the menu, choose Allow restricted settings, then turn on z0live in Accessibility.</string>
 </resources>
