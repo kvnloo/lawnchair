@@ -97,7 +97,7 @@ class Z0LiveAccessibilityService : AccessibilityService() {
             // Never read an editable field's value: its label is the hint or description only.
             val label = when {
                 password -> ""
-                editable -> hint.ifEmpty { desc }
+                editable -> hint.ifEmpty { if (desc != text) desc else "" }
                 text.isNotEmpty() -> text
                 else -> desc
             }.replace('\n', ' ').take(120)

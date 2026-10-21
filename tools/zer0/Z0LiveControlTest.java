@@ -71,7 +71,8 @@ public final class Z0LiveControlTest {
         Z0LiveScreen.Node field = new Z0LiveScreen.Node();
         field.editable = true; field.label = "Ask anything"; field.className = "android.widget.EditText";
         JSONArray json = new Z0LiveScreen("x", new ArrayList<>(Arrays.asList(secret, field))).toJson(10);
-        if (json.length() != 1 || !json.getJSONObject(0).getString("l").isEmpty()) throw new AssertionError("editable/password leaked: " + json);
+        // Capture sets an editable node's label from its hint only; password nodes never appear.
+        if (json.length() != 1 || !json.getJSONObject(0).getString("l").equals("Ask anything")) throw new AssertionError("editable/password: " + json);
         if (Z0LiveAccessibilityPolicy.consequential("Open sidebar", false, "com.openai.chatgpt", "") != null) throw new AssertionError("routine tap gated");
         if (Z0LiveAccessibilityPolicy.consequential("Continue", false, "x", "Erase all data? This cannot be undone") == null) throw new AssertionError("bland proceed on destructive screen");
         if (Z0LiveAccessibilityPolicy.consequential("Don't allow", false, "com.android.permissioncontroller", "") != null) throw new AssertionError("declining is safe");
