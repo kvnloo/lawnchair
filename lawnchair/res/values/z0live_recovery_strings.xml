@@ -1,7 +1,7 @@
 <resources>
-    <string name="z0live_control_recovery_channel">In-app control availability</string>
-    <string name="z0live_control_recovery_title">Enable z0live in-app control</string>
-    <string name="z0live_control_recovery_detail">Tap to restore the opted-in accessibility service in Android Settings.</string>
-    <string name="z0live_control_keep_enabled">Keep in-app control enabled</string>
-    <string name="z0live_control_keep_enabled_detail">Restore the accessibility service while opted in. Screen access still requires consent for each voice session. Turn this OFF to stop automatic restoration.</string>
+    <string translatable="false" name="z0live_control_recovery_channel">In-app control availability</string>
+    <string translatable="false" name="z0live_control_recovery_title">Enable z0live in-app control</string>
+    <string translatable="false" name="z0live_control_recovery_detail">Tap to restore the opted-in accessibility service in Android Settings.</string>
+    <string translatable="false" name="z0live_control_keep_enabled">Keep in-app control enabled</string>
+    <string translatable="false" name="z0live_control_keep_enabled_detail">Restore the accessibility service while opted in. Screen access still requires consent for each voice session. Turn this OFF to stop automatic restoration.</string>
 </resources>
