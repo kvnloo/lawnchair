@@ -115,6 +115,8 @@ public final class Z0LiveService extends Service {
     }
     public static void noteInactive(Context context) { Z0LiveGestureChannel.visible(context, false); }
     public static boolean standbyEnabled() { return current != null && current.standby; }
+    /** A call is live in this process; its gesture channel heartbeats presence and claims commands. */
+    static boolean callRunning() { Z0LiveService service = current; return service != null && service.running; }
     public static void standby(Activity activity) {
         if (activity.isFinishing() || activity.isDestroyed()
                 || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
@@ -135,7 +137,8 @@ public final class Z0LiveService extends Service {
     public static void gesture(Context context, String gesture) {
         Z0LiveService service = current;
         if (service != null) service.main.post(() -> {
-            Z0LiveGesturePolicy.Action action = Z0LiveGesturePolicy.decide(service.standby,
+            Z0LiveGesturePolicy.Action action = Z0LiveGesturePolicy.decide(
+                    Z0LiveGesturePolicy.accepts(service.standby, service.running),
                     service.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
                     service.running, service.ending, gesture);
             if (action == Z0LiveGesturePolicy.Action.START) service.beginSession();
@@ -230,6 +233,10 @@ public final class Z0LiveService extends Service {
         running = true;
         generation++;
         sessionId = "";
+        // Every live call takes ring commands (double = mute, triple = end) through the broker, not only
+        // Standby calls. Without this, a call started by the controls or the adb relaunch sent no
+        // presence, and every ring gesture became another relaunch that toggled the call blind.
+        if (gestures == null) { gestures = new Z0LiveGestureChannel(this); gestures.start(); }
         try {
             store = new Z0LiveStore(this);
             PairingValidation.Pairing pairing = store.pairing();

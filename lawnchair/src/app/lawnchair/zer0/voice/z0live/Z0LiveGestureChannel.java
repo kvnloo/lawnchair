@@ -71,7 +71,10 @@ final class Z0LiveGestureChannel implements AutoCloseable {
         }
     }
     private void tick() {
-        if (((assistant || presenceOnly) && Z0LiveService.standbyEnabled()) || closed || !context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false)) return;
+        // A live call admits commands even without the Standby opt-in; the visible-only presence never does.
+        boolean inCall = !presenceOnly && Z0LiveService.callRunning();
+        if (((assistant || presenceOnly) && Z0LiveService.standbyEnabled()) || closed
+                || !(inCall || context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false))) return;
         try {
             PairingValidation.Pairing pair = new Z0LiveStore(context).pairing();
             if (pair == null) return;
@@ -83,7 +86,7 @@ final class Z0LiveGestureChannel implements AutoCloseable {
                 double now = System.currentTimeMillis() / 1000.0;
                 request(pair, "/v1/gesture/activity", Z0LiveService.object("kind", "phone",
                         "activity_ts", lastActivity, "available", true,
-                        "ready", Z0LiveService.standbyEnabled() || Z0LiveAssistantService.mayStart(context)));
+                        "ready", inCall || Z0LiveService.standbyEnabled() || Z0LiveAssistantService.mayStart(context)));
             }
             // Visible-only presence can advertise ready=false after process loss, enabling the
             // separately opted-in ADB fallback. It never claims commands or starts a service.
