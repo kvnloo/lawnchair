@@ -212,6 +212,8 @@ public final class Z0LiveService extends Service {
     private void beginSession() {
         if (running || ending || closingResources) return;
         telemetry = new Z0LiveTelemetry(); turn = new Z0LiveTurnState(); bargeIn = new Z0LiveBargeIn();
+        speechGate = new Z0LiveSpeechGate(); bidiBarge = new Z0LiveBidiBarge();
+        bidi = false; bidiCaption.setLength(0); bargeProbe = () -> {};
         audio = new Z0LiveAudioState(); inboxPlayback = new Z0LiveInboxPlayback();
         pendingNetwork = false; connecting = false; inboxBusy = false; speaking = false;
         pendingTools = 0; reachabilityAttempts = 0; telemetryFailed.set(0);
@@ -936,15 +938,8 @@ public final class Z0LiveService extends Service {
                 telemetryBusy = false;
                 if (finalFlush) {
                     telemetryFailed.addAndGet(telemetry.size());
-<<<<<<< HEAD
-                    network.shutdown();
-                    control.shutdown();
-||||||| parent of 6b06ace74a (feat(z0live): opt-in idle microphone standby and authenticated gesture control)
-                    network.shutdown();
-=======
                     finalSent = true;
                     settled();
->>>>>>> 6b06ace74a (feat(z0live): opt-in idle microphone standby and authenticated gesture control)
                 } else if (ending) flush(true);
                 else if (!retryOnTick && telemetry.size() > 0) flush(false);
                 publish();
@@ -1006,6 +1001,7 @@ public final class Z0LiveService extends Service {
             publish();
         } else {
             network.shutdown();
+            control.shutdown();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
         }
