@@ -95,7 +95,8 @@ public final class Z0LiveService extends Service {
             if (!running) return;
             pollInbox();
             // Bidi phone actions arrive through the inbox: poll quickly so they feel immediate.
-            main.postDelayed(this, bidi ? 600 : 3000);
+            // An in-app step is up to two inbox round trips (phone_do, then phone_act by id).
+            main.postDelayed(this, bidi ? 250 : 3000);
         }
     };
 

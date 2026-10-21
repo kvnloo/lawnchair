@@ -181,7 +181,10 @@ class Z0LiveAccessibilityService : AccessibilityService() {
             val candidates = JSONArray()
             for (c in choice.ranked.take(CANDIDATES)) {
                 val n = captured.screen.nodes[c.index]
-                candidates.put(JSONObject().put("id", n.id).put("l", n.label).put("r", n.role).put("score", round(c.score)))
+                val entry = JSONObject().put("id", n.id).put("l", n.label).put("r", n.role).put("score", round(c.score))
+                val words = Z0LiveScreen.idWords(n.viewId)
+                if (words.isNotEmpty()) entry.put("v", words.take(40))
+                candidates.put(entry)
             }
             return merge(result("choose", true), screenJson(captured)).put("goal", goal.take(300))
                 .put("candidates", candidates).put("decision", decision)

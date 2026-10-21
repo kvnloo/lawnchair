@@ -142,6 +142,9 @@ public final class Z0LiveScreen {
                 if (node.password) continue;
                 if (node.label.isEmpty() && !node.actionable()) continue;
                 JSONObject entry = new JSONObject().put("id", node.id).put("l", node.editable ? "" : node.label).put("r", node.role);
+                // Resource-id words often name what an opaque label hides ("menu button").
+                String words = idWords(node.viewId);
+                if (!words.isEmpty() && !node.label.toLowerCase(Locale.ROOT).contains(words)) entry.put("v", words.length() > 40 ? words.substring(0, 40) : words);
                 if (node.editable) entry.put("edit", true);
                 if (node.scrollable) entry.put("scroll", true);
                 if (node.checkable) entry.put("on", node.checked);
