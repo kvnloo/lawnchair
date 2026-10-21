@@ -167,6 +167,7 @@ public final class Z0LiveService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         current = this;
+        Z0LiveAccessibilityRecovery.check(this);
         Z0LiveInboxNotifications.schedule(this);
         status = getString(R.string.z0live_service_connecting);
         NotificationChannel channel = new NotificationChannel(CHANNEL, getString(R.string.z0live_notification_channel), NotificationManager.IMPORTANCE_LOW);
@@ -211,6 +212,8 @@ public final class Z0LiveService extends Service {
     }
     private void beginSession() {
         if (running || ending || closingResources) return;
+        Z0LiveAccessibilityRecovery.check(this);
+        if (gestures == null) { gestures = new Z0LiveGestureChannel(this); gestures.start(); }
         telemetry = new Z0LiveTelemetry(); turn = new Z0LiveTurnState(); bargeIn = new Z0LiveBargeIn();
         speechGate = new Z0LiveSpeechGate(); bidiBarge = new Z0LiveBidiBarge();
         bidi = false; bidiCaption.setLength(0); bargeProbe = () -> {};

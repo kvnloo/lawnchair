@@ -41,6 +41,7 @@ final class Z0LiveGestureChannel implements AutoCloseable {
     private boolean screen;
     private final boolean assistant, presenceOnly;
     private int ticks;
+    private long lastRecovery;
     Z0LiveGestureChannel(Context context) { this(context, false); }
     private Z0LiveGestureChannel(Context context, boolean presenceOnly) {
         this.context = context.getApplicationContext();
@@ -71,7 +72,12 @@ final class Z0LiveGestureChannel implements AutoCloseable {
         }
     }
     private void tick() {
-        if (((assistant || presenceOnly) && Z0LiveService.standbyEnabled()) || closed || !context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false)) return;
+        long nowMs = android.os.SystemClock.elapsedRealtime();
+        if (!closed && nowMs - lastRecovery >= 30000) {
+            lastRecovery = nowMs;
+            Z0LiveAccessibilityRecovery.check(context);
+        }
+        if (((assistant || presenceOnly) && Z0LiveService.standbyEnabled()) || closed || (!Z0LiveService.hasActiveSession() && !context.getSharedPreferences("z0live_gestures", Context.MODE_PRIVATE).getBoolean("enabled", false))) return;
         try {
             PairingValidation.Pairing pair = new Z0LiveStore(context).pairing();
             if (pair == null) return;
@@ -83,7 +89,9 @@ final class Z0LiveGestureChannel implements AutoCloseable {
                 double now = System.currentTimeMillis() / 1000.0;
                 request(pair, "/v1/gesture/activity", Z0LiveService.object("kind", "phone",
                         "activity_ts", lastActivity, "available", true,
-                        "ready", Z0LiveService.standbyEnabled() || Z0LiveAssistantService.mayStart(context)));
+                        "ready", Z0LiveService.standbyEnabled() || Z0LiveService.hasActiveSession() || Z0LiveAssistantService.mayStart(context),
+                        "in_app_control", Z0LiveAccessibilityRecovery.optedIn(context),
+                        "a11y_enabled", Z0LiveAccessibilityRecovery.enabled(context)));
             }
             // Visible-only presence can advertise ready=false after process loss, enabling the
             // separately opted-in ADB fallback. It never claims commands or starts a service.
