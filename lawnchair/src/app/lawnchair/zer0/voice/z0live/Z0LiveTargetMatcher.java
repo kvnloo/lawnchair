@@ -166,10 +166,12 @@ public final class Z0LiveTargetMatcher {
             String words = normalize(Z0LiveScreen.idWords(node.viewId));
             double s = score(query, label, words);
             if (s <= 0) continue;
-            int target = node.editable || node.scrollable ? i : screen.clickTarget(i);
+            // Taps go to the clickable owner; a scroll container only when the goal is a scroll.
+            boolean scrollGoal = query.contains("scroll");
+            int target = node.editable || node.scrollable && scrollGoal ? i : screen.clickTarget(i);
             if (target < 0) {
                 target = i;
-                s *= 0.6; // nothing clickable owns this text: probably a static heading
+                s *= 0.6; // nothing clickable owns this text: probably a static heading or container
             }
             if (label.length() > 40) s *= 0.85;
             byTarget.merge(target, s, Math::max);

@@ -181,7 +181,7 @@ class Z0LiveAccessibilityService : AccessibilityService() {
             val candidates = JSONArray()
             for (c in choice.ranked.take(CANDIDATES)) {
                 val n = captured.screen.nodes[c.index]
-                val entry = JSONObject().put("id", n.id).put("l", n.label).put("r", n.role).put("score", round(c.score))
+                val entry = JSONObject().put("id", n.id).put("l", n.label.take(80)).put("r", n.role).put("score", round(c.score))
                 val words = Z0LiveScreen.idWords(n.viewId)
                 if (words.isNotEmpty()) entry.put("v", words.take(40))
                 candidates.put(entry)
@@ -300,7 +300,11 @@ class Z0LiveAccessibilityService : AccessibilityService() {
         return dispatchGesture(GestureDescription.Builder().addStroke(stroke).build(), null, null)
     }
 
-    /** Wait (<= VERIFY_MS) for the app's own events after an action, then let the burst settle. */
+    /**
+     * Wait (<= VERIFY_MS) for the app's first own event after an action, then let the burst
+     * settle for at most SETTLE_CAP_MS so the after-snapshot shows the result, not a frame of
+     * the animation. Animations that never go quiet are cut off at the cap.
+     */
     private fun verify(seqBefore: Long, clicksBefore: Long, action: String): String {
         val deadline = SystemClock.uptimeMillis() + VERIFY_MS
         synchronized(lock) {
@@ -310,8 +314,9 @@ class Z0LiveAccessibilityService : AccessibilityService() {
                 lock.wait(left)
             }
         }
+        val settleEnd = minOf(deadline, SystemClock.uptimeMillis() + SETTLE_CAP_MS)
         var seen = changeSeq
-        while (SystemClock.uptimeMillis() < deadline) {
+        while (SystemClock.uptimeMillis() < settleEnd) {
             synchronized(lock) { lock.wait(SETTLE_MS) }
             if (changeSeq == seen) break
             seen = changeSeq
@@ -342,8 +347,9 @@ class Z0LiveAccessibilityService : AccessibilityService() {
         private const val MAX_DEPTH = 48
         private const val TREE_LIMIT = 60
         private const val CANDIDATES = 8
-        private const val VERIFY_MS = 300L
-        private const val SETTLE_MS = 40L
+        private const val VERIFY_MS = 250L
+        private const val SETTLE_MS = 30L
+        private const val SETTLE_CAP_MS = 110L
         private const val PREFS = "z0live_control"
         private const val KEY_ALLOWED = "in_app_control"
 

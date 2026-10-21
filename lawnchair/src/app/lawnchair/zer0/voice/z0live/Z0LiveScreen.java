@@ -86,7 +86,7 @@ public final class Z0LiveScreen {
             int p = node.parent;
             if (p < 0 || p >= nodes.size() || node.label.isEmpty()) continue;
             Node parent = nodes.get(p);
-            if (parent.label.isEmpty() && parent.actionable() && !parent.editable) parent.label = node.label;
+            if (parent.label.isEmpty() && (parent.clickable || parent.longClickable) && !parent.editable) parent.label = node.label;
         }
     }
 
@@ -140,7 +140,7 @@ public final class Z0LiveScreen {
             for (Node node : nodes) {
                 if (out.length() >= limit) break;
                 if (node.password) continue;
-                if (node.label.isEmpty() && !node.actionable()) continue;
+                if (node.label.isEmpty() && !node.clickable && !node.editable && !node.scrollable) continue;
                 JSONObject entry = new JSONObject().put("id", node.id).put("l", node.editable ? "" : node.label).put("r", node.role);
                 // Resource-id words often name what an opaque label hides ("menu button").
                 String words = idWords(node.viewId);
