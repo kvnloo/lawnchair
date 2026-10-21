@@ -14,24 +14,25 @@ public class Z0LiveAccessibilityCatalogTest {
         Context context = (Context) allocator.getMethod("allocateInstance", Class.class)
                 .invoke(field.get(null), ContextWrapper.class);
         JSONArray schemas = Z0LivePhoneTools.schemas(context);
-        String[] tools = {"phone_navigation", "phone_ui_tree", "phone_tap", "phone_type_text", "phone_scroll"};
+        String[] tools = {"phone_navigation", "phone_ui_tree", "phone_do", "phone_act"};
         for (String tool : tools) {
             int found = 0;
             for (int i = 0; i < schemas.length(); i++) if (tool.equals(schemas.getJSONObject(i).getString("name"))) found++;
             if (found != 1 || !Z0LivePhoneTools.supports(context, tool)) throw new AssertionError("Disabled tool omitted: " + tool);
             JSONObject input = new JSONObject();
             if (tool.equals("phone_navigation")) input.put("action", "back");
-            if (tool.equals("phone_tap") || tool.equals("phone_type_text") || tool.equals("phone_scroll")) {
-                input.put("package", "org.example.notes").put("window_id", 7).put("snapshot", "fixture")
-                    .put("by", "id").put("target", "org.example.notes:id/title");
-            }
-            if (tool.equals("phone_type_text")) input.put("text", "Hello");
-            if (tool.equals("phone_scroll")) input.put("direction", "forward");
+            if (tool.equals("phone_do")) input.put("goal", "tap the menu button");
+            if (tool.equals("phone_act")) input.put("id", "a1b2c3").put("action", "click");
             JSONObject result = Z0LivePhoneTools.execute(context, tool, input);
-            if (result.getBoolean("ok") || !result.getString("status").equals("permission_required") || !result.getString("instruction").contains("Settings > Accessibility")) {
+            if (result.getBoolean("ok") || !result.getString("status").equals("permission_required") || !result.getString("missing").equals("service_disabled")
+                    || !result.getString("instruction").contains("Settings > Accessibility") || !result.getString("instruction").contains("Allow restricted settings")) {
                 throw new AssertionError(tool + " must return structured owner guidance: " + result);
             }
         }
-        System.out.println("PASS compiled Android catalog: all 5 accessibility tools declared while disabled, real PhoneTools dispatch returns permission_required with guidance");
+        JSONObject tree = null;
+        for (int i = 0; i < schemas.length(); i++) if (schemas.getJSONObject(i).getString("name").equals("phone_act")) tree = schemas.getJSONObject(i);
+        JSONArray required = tree.getJSONObject("parameters").getJSONArray("required");
+        if (required.length() != 1 || !required.getString(0).equals("id")) throw new AssertionError("phone_act requires only id: " + required);
+        System.out.println("PASS compiled Android catalog: all 4 accessibility tools declared while disabled, real PhoneTools dispatch returns permission_required with guidance");
     }
 }
