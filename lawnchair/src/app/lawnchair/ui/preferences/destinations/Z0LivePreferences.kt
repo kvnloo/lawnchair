@@ -55,6 +55,7 @@ fun Z0LivePreferences() {
     var rippleError by remember { mutableStateOf<Int?>(null) }
     var navigationAllowed by remember { mutableStateOf(false) }
     var navigationConsent by remember { mutableStateOf(false) }
+    var serviceEnabled by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         cameraGranted = it
@@ -62,8 +63,8 @@ fun Z0LivePreferences() {
 
     DisposableEffect(Unit) {
         val observer = Z0LiveStatus.Observer {
-            navigationAllowed = Z0LiveAccessibilityService.sessionAllowed()
-            if (!it.active) navigationConsent = false
+            navigationAllowed = Z0LiveAccessibilityService.controlAllowed(context)
+            serviceEnabled = Z0LiveAccessibilityService.enabled()
         }
         Z0LiveStatus.observe(observer)
         onDispose { Z0LiveStatus.remove(observer) }
@@ -83,7 +84,8 @@ fun Z0LivePreferences() {
             backend = store.pairing()?.backendUrl
             ripple = store.rippleUrl().orEmpty()
             transport = store.transport()
-            navigationAllowed = Z0LiveAccessibilityService.sessionAllowed()
+            navigationAllowed = Z0LiveAccessibilityService.controlAllowed(context)
+            serviceEnabled = Z0LiveAccessibilityService.enabled()
         } catch (_: RuntimeException) {
             message = R.string.z0live_storage_error
         }
@@ -157,7 +159,7 @@ fun Z0LivePreferences() {
                         navigationConsent = true
                     } else {
                         try {
-                            Z0LiveAccessibilityService.allowCurrentSession(false)
+                            Z0LiveAccessibilityService.setControlAllowed(context, false)
                             navigationAllowed = false
                         } catch (_: RuntimeException) {
                             message = R.string.z0live_save_error
@@ -169,8 +171,16 @@ fun Z0LivePreferences() {
             )
             ClickablePreference(
                 label = stringResource(R.string.z0live_accessibility_settings),
+                subtitle = stringResource(if (serviceEnabled) R.string.z0live_accessibility_on else R.string.z0live_accessibility_off),
                 onClick = { launch(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
             )
+            if (!serviceEnabled) {
+                ClickablePreference(
+                    label = stringResource(R.string.z0live_restricted_settings),
+                    subtitle = stringResource(R.string.z0live_restricted_settings_description),
+                    onClick = { launch(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}"))) },
+                )
+            }
             ClickablePreference(
                 label = stringResource(R.string.z0live_flashlight_permission),
                 subtitle = stringResource(if (cameraGranted) R.string.z0live_flashlight_granted else R.string.z0live_flashlight_description),
@@ -194,8 +204,9 @@ fun Z0LivePreferences() {
                 TextButton(onClick = {
                     navigationConsent = false
                     try {
-                        navigationAllowed = Z0LiveAccessibilityService.allowCurrentSession(true)
-                        if (!navigationAllowed) message = R.string.z0live_control_permission_required
+                        Z0LiveAccessibilityService.setControlAllowed(context, true)
+                        navigationAllowed = true
+                        if (!Z0LiveAccessibilityService.enabled()) message = R.string.z0live_control_permission_required
                     } catch (_: RuntimeException) {
                         message = R.string.z0live_save_error
                     }
