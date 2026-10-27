@@ -41,6 +41,7 @@ public final class Z0LiveService extends Service {
     private final Handler main = new Handler(Looper.getMainLooper());
     private final ExecutorService network = Executors.newSingleThreadExecutor();
     private final ExecutorService control = Executors.newSingleThreadExecutor();
+    private final ExecutorService phone = Executors.newSingleThreadExecutor();
     private final OkHttpClient http = new OkHttpClient.Builder()
             .connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
             .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
@@ -94,7 +95,8 @@ public final class Z0LiveService extends Service {
             if (!running) return;
             pollInbox();
             // Bidi phone actions arrive through the inbox: poll quickly so they feel immediate.
-            main.postDelayed(this, bidi ? 600 : 3000);
+            // An in-app step is up to two inbox round trips (phone_do, then phone_act by id).
+            main.postDelayed(this, bidi ? 250 : 3000);
         }
     };
 
@@ -113,6 +115,8 @@ public final class Z0LiveService extends Service {
     }
     public static void noteInactive(Context context) { Z0LiveGestureChannel.visible(context, false); }
     public static boolean standbyEnabled() { return current != null && current.standby; }
+    /** A call is live in this process; its gesture channel heartbeats presence and claims commands. */
+    static boolean callRunning() { Z0LiveService service = current; return service != null && service.running; }
     public static void standby(Activity activity) {
         if (activity.isFinishing() || activity.isDestroyed()
                 || activity.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED)
@@ -133,7 +137,8 @@ public final class Z0LiveService extends Service {
     public static void gesture(Context context, String gesture) {
         Z0LiveService service = current;
         if (service != null) service.main.post(() -> {
-            Z0LiveGesturePolicy.Action action = Z0LiveGesturePolicy.decide(service.standby,
+            Z0LiveGesturePolicy.Action action = Z0LiveGesturePolicy.decide(
+                    Z0LiveGesturePolicy.accepts(service.standby, service.running),
                     service.checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED,
                     service.running, service.ending, gesture);
             if (action == Z0LiveGesturePolicy.Action.START) service.beginSession();
@@ -228,6 +233,10 @@ public final class Z0LiveService extends Service {
         running = true;
         generation++;
         sessionId = "";
+        // Every live call takes ring commands (double = mute, triple = end) through the broker, not only
+        // Standby calls. Without this, a call started by the controls or the adb relaunch sent no
+        // presence, and every ring gesture became another relaunch that toggled the call blind.
+        if (gestures == null) { gestures = new Z0LiveGestureChannel(this); gestures.start(); }
         try {
             store = new Z0LiveStore(this);
             PairingValidation.Pairing pairing = store.pairing();
@@ -722,6 +731,15 @@ public final class Z0LiveService extends Service {
             interruptRealtime();
             flush(false);
         }
+        if (!backend.isBuiltin(sessionId, name) && Z0LivePhoneTools.supports(this, name) && Z0LivePhoneTools.blocking(name)) {
+            // Accessibility tools wait up to ~300 ms for the app's own events: never on main.
+            int id = generation;
+            phone.execute(() -> {
+                JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
+                main.post(() -> { if (valid(id)) toolOutput(callId, result); });
+            });
+            return;
+        }
         if (!backend.isBuiltin(sessionId, name) && Z0LivePhoneTools.supports(this, name)) {
             JSONObject result = Z0LivePhoneTools.execute(this, name, parsed);
             toolOutput(callId, result);
@@ -849,12 +867,33 @@ public final class Z0LiveService extends Service {
             // Hermes cannot use a stale/broadcast inbox item as fresh phone authority.
             boolean sameSession = sessionId.equals(item.optString("session_id", ""));
             JSONObject params = item.optJSONObject("params");
+            if (sameSession && params != null && Z0LivePhoneTools.supports(this, action) && Z0LivePhoneTools.blocking(action)) {
+                // Keep inboxItem set (polling stays paused) while the accessibility worker acts.
+                int id = generation;
+                phone.execute(() -> {
+                    JSONObject result = Z0LivePhoneTools.execute(this, action, params);
+                    main.post(() -> {
+                        if (!valid(id) || inboxItem != item) return;
+                        reportInboxAction(item, action, result);
+                        continueInbox(item);
+                    });
+                });
+                return;
+            }
             JSONObject result = sameSession && params != null && Z0LivePhoneTools.supports(this, action)
                     ? Z0LivePhoneTools.execute(this, action, params)
                     : object("ok", false, "error", "Unknown tool, invalid params or stale-session action");
-            event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
-            if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
+            reportInboxAction(item, action, result);
         }
+        continueInbox(item);
+    }
+
+    private void reportInboxAction(JSONObject item, String action, JSONObject result) {
+        event("tool_result", "", object("id", item.optLong("id"), "name", bounded(action, 80), "success", result.optBoolean("ok"), "result", result));
+        if (!result.optBoolean("ok")) { error = getString(R.string.z0live_service_inbox_action_failed) + bounded(action, 80); publish(); }
+    }
+
+    private void continueInbox(JSONObject item) {
         // Claim the identity before sending speech: interruption/process loss must never replay it.
         inboxCursor = Math.max(inboxCursor, item.optLong("id"));
         persistCursor();
@@ -1008,6 +1047,7 @@ public final class Z0LiveService extends Service {
         } else {
             network.shutdown();
             control.shutdown();
+            phone.shutdown();
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
         }

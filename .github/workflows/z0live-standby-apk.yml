@@ -1,7 +1,7 @@
 name: z0live Standby APK
 on:
   push:
-    branches: [feat/z0live-gesture-standby, feat/z0live-standby-realtime]
+    branches: [feat/z0live-gesture-standby, feat/z0live-standby-realtime, feat/z0live-fast-a11y]
   workflow_dispatch:
 permissions:
   contents: read
@@ -38,6 +38,8 @@ jobs:
           bash tools/zer0/test-z0live-backend-contract.sh
           bash tools/zer0/test-z0live-audio.sh
           bash tools/zer0/test-z0live-gesture-policy.sh
+          bash tools/zer0/test-z0live-control.sh
+          bash tools/zer0/test-z0live-accessibility.sh
       - name: Pinned inherited lint debt
         run: |
           git fetch --no-tags --depth=1 origin ba091219e2d7c4cac8f173754d0c234f9ff866f0

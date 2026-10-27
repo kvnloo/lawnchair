@@ -39,7 +39,7 @@ object Z0LivePhoneTools {
 
     @JvmStatic
     fun schemas(context: Context): JSONArray = JSONArray().apply {
-        fun tool(name: String, description: String, vararg properties: Pair<String, JSONObject>) {
+        fun tool(name: String, description: String, vararg properties: Pair<String, JSONObject>, optional: Set<String> = emptySet()) {
             val fields = JSONObject()
             properties.forEach { (key, value) -> fields.put(key, value) }
             put(
@@ -50,7 +50,7 @@ object Z0LivePhoneTools {
                     "parameters" to obj(
                         "type" to "object",
                         "properties" to fields,
-                        "required" to JSONArray(properties.map { it.first }),
+                        "required" to JSONArray(properties.map { it.first }.filter { it !in optional }),
                         "additionalProperties" to false,
                     ),
                 ),
@@ -77,19 +77,15 @@ object Z0LivePhoneTools {
         tool("ripple", "Open/close the configured trusted HTTPS Ripple panel. Not a screen-reading or automation tool.", "action" to choice("open", "close"))
         tool("z0live_mute", "Set microphone mute. Does not end the voice session.", "muted" to obj("type" to "boolean"))
         tool("z0live_end", "End the voice session after submitting its summary. No always-on restart.")
-        tool("phone_navigation", "Back, home, recents or notifications. Requires owner accessibility enablement and consent for this voice session. Success means dispatched, not verified.", "action" to choice("back", "home", "recents", "notifications"))
-        tool("phone_ui_tree", "Read a bounded text-only list of safe controls in the active app after owner consent. Returns package, window_id and snapshot needed for exact selection. Sensitive apps and password windows are blocked. Never request credentials.")
-        fun targetProperties() = arrayOf(
-            "package" to text(),
-            "window_id" to obj("type" to "integer", "minimum" to 0),
-            "snapshot" to text(),
-            "by" to choice("text", "id"),
-            "target" to text(),
-        )
-        tool("phone_tap", "Tap one exact text or resource id from a fresh phone_ui_tree in that package/window/snapshot. Ambiguity is rejected. Never send, call, purchase, confirm or grant permission; the owner must do those. Success means dispatched only.", *targetProperties())
-        tool("phone_type_text", "Replace an editable field using ACTION_SET_TEXT, selected by exact id from a fresh phone_ui_tree. Never enter credentials or submit. Success means dispatched only.", *targetProperties(), "text" to text())
-        tool("phone_scroll", "Scroll a single exact text/id target from a fresh phone_ui_tree. No coordinate fallback. Success means dispatched only.", *targetProperties(), "direction" to choice("forward", "backward"))
+        tool("phone_navigation", "Back, home, recents or notifications through Android accessibility. Result says landed true/false from the screen's own change events.", "action" to choice("back", "home", "recents", "notifications"))
+        tool("phone_ui_tree", "Read the active app's controls as a compact list [{id, l: label, r: role}] with a snapshot hash. Pass since=<last snapshot> to get unchanged:true instead of the list. Password fields and blocked apps are never read.", "since" to obj("type" to "string", "maxLength" to 64), optional = setOf("since"))
+        tool("phone_do", "Do one in-app step from the owner's words, e.g. goal 'tap the menu button'. The phone picks the control itself and acts when sure, returning landed true/false. When unsure it returns status choose with candidates; then call phone_act with one candidate id. Taps that send, pay, delete, install or grant return confirm_required: ask the owner out loud, then repeat with confirm true.", "goal" to text(), "confirm" to obj("type" to "boolean"), optional = setOf("confirm"))
+        tool("phone_act", "Act on one control by id from phone_ui_tree or phone_do candidates. action: click (default), long_click, set_text (with text; never secrets), scroll_forward, scroll_backward. Returns landed true/false. confirm true only after the owner said yes out loud.", "id" to obj("type" to "string", "minLength" to 1, "maxLength" to 32), "action" to choice("click", "long_click", "set_text", "scroll_forward", "scroll_backward"), "text" to text(), "confirm" to obj("type" to "boolean"), optional = setOf("action", "text", "confirm"))
     }
+
+    /** Accessibility tools wait for the app's own events: run them off the main thread. */
+    @JvmStatic
+    fun blocking(name: String): Boolean = name == "phone_navigation" || name == "phone_ui_tree" || name == "phone_do" || name == "phone_act"
 
     @JvmStatic
     fun supports(context: Context, name: String): Boolean = (0 until schemas(context).length()).any {
@@ -246,16 +242,13 @@ object Z0LivePhoneTools {
 
             "z0live_end" -> obj("ok" to true, "status" to "ending")
 
-            "phone_navigation", "phone_ui_tree", "phone_tap", "phone_type_text", "phone_scroll" -> {
-                if (name != "phone_ui_tree" && name != "phone_navigation") {
-                    string(args, "package")
-                    integer(args, "window_id", 0..Int.MAX_VALUE)
-                    string(args, "snapshot")
-                    string(args, "by")
-                    string(args, "target")
-                    if (name == "phone_type_text") string(args, "text")
-                }
-                Z0LiveAccessibilityService.execute(name, args)
+            "phone_navigation", "phone_ui_tree", "phone_do", "phone_act" -> {
+                if (args.has("since")) string(args, "since", true)
+                if (name == "phone_do") string(args, "goal")
+                if (name == "phone_act") string(args, "id")
+                if (args.has("text")) string(args, "text")
+                if (args.has("confirm")) require(args.get("confirm") is Boolean) { "confirm must be boolean" }
+                Z0LiveAccessibilityService.execute(context, name, args)
             }
 
             else -> error("Unknown tool")
