@@ -102,6 +102,7 @@
             android:launchMode="singleTop" android:label="@string/z0live_title"
             android:theme="@style/Theme.Z0LiveGlass" />
         <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity$LinkActivity"
+            android:label="@string/z0live_title"
             android:noHistory="true" android:excludeFromRecents="true"
             android:theme="@style/Theme.Z0LiveGlass" android:exported="true">
             <intent-filter>
