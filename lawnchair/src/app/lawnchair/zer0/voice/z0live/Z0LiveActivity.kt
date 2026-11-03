@@ -374,7 +374,6 @@ class Z0LiveActivity :
         localMessage = getString(resource)
     }
 
-    @OptIn(ExperimentalMaterial3Api::class)
     /** One tap to another voice assistant. A live z0live call ends first so the microphone is free. */
     @OptIn(ExperimentalLayoutApi::class)
     @Composable
@@ -400,6 +399,7 @@ class Z0LiveActivity :
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun SessionSheet() {
         ModalBottomSheet(
