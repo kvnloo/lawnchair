@@ -380,21 +380,26 @@ class Z0LiveActivity :
     private fun OtherAssistants() {
         val others = remember { Z0LiveAssistants.others(this@Z0LiveActivity) }
         if (others.isEmpty()) return
-        Text(stringResource(R.string.z0live_other_assistants), style = MaterialTheme.typography.labelLarge)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            others.forEach { a ->
-                OutlinedButton(onClick = {
-                    if (snapshot.active) {
-                        wantsStart = false
-                        autoStart = false
-                        Z0LiveService.end(this@Z0LiveActivity)
-                    }
-                    if (Z0LiveAssistants.open(this@Z0LiveActivity, a.pkg)) finish()
-                    else showMessage(R.string.z0live_assistant_failed)
-                }) { Text(a.label) }
-            }
-            TextButton(onClick = { Z0LiveAssistants.openDefaultSetting(this@Z0LiveActivity) }) {
-                Text(stringResource(R.string.z0live_default_assistant))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.z0live_other_assistants), style = MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                others.forEach { a ->
+                    OutlinedButton(onClick = {
+                        if (snapshot.active) {
+                            wantsStart = false
+                            autoStart = false
+                            Z0LiveService.end(this@Z0LiveActivity)
+                        }
+                        if (Z0LiveAssistants.open(this@Z0LiveActivity, a.pkg)) {
+                            finish()
+                        } else {
+                            showMessage(R.string.z0live_assistant_failed)
+                        }
+                    }) { Text(a.label) }
+                }
+                TextButton(onClick = { Z0LiveAssistants.openDefaultSetting(this@Z0LiveActivity) }) {
+                    Text(stringResource(R.string.z0live_default_assistant))
+                }
             }
         }
     }
