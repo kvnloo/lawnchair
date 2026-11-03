@@ -18,7 +18,8 @@ public final class Z0LiveAssistantSessionService extends VoiceInteractionSession
             public void onShow(Bundle args, int flags) {
                 super.onShow(args, flags);
                 try {
-                    startAssistantActivity(Z0LiveActivity.intent(getContext(), false));
+                    // The assistant gesture means "talk now": start a call unless one is already live.
+                    startAssistantActivity(Z0LiveActivity.intent(getContext(), true));
                 } finally {
                     hide();
                 }

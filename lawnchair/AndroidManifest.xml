@@ -57,6 +57,10 @@
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>
+        <!-- z0live lists the other assistants so the owner can switch for a moment. -->
+        <intent>
+            <action android:name="android.intent.action.ASSIST" />
+        </intent>
     </queries>
 
     <!-- Support non-cellular enabled devices -->
@@ -98,6 +102,7 @@
             android:launchMode="singleTop" android:label="@string/z0live_title"
             android:theme="@style/Theme.Z0LiveGlass" />
         <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity$LinkActivity"
+            android:label="@string/z0live_title"
             android:noHistory="true" android:excludeFromRecents="true"
             android:theme="@style/Theme.Z0LiveGlass" android:exported="true">
             <intent-filter>
@@ -143,6 +148,14 @@
         </service>
         <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveAssistantSessionService"
             android:exported="true" android:permission="android.permission.BIND_VOICE_INTERACTION" />
+        <!-- Required by Android for an assistant; forwards to the phone's own recognizer. -->
+        <service android:name="app.lawnchair.zer0.voice.z0live.Z0LiveRecognitionService"
+            android:exported="true" android:label="@string/z0live_title">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </service>
         <!-- Downstream zer0: explicit user-initiated voice input, not exported or always listening. -->
         <activity
             android:name="app.lawnchair.zer0.voice.VoiceCommandActivity"

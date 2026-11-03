@@ -15,6 +15,8 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -43,6 +45,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +99,9 @@ class Z0LiveActivity :
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             val incoming = intent
             val data = incoming.data
-            val clean = intent(this, false).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // ACTION_ASSIST (Detent's voice button, other launchers) means talk now, like the assistant gesture.
+            val assist = incoming.action == Intent.ACTION_ASSIST && incoming.data == null && savedInstanceState == null
+            val clean = intent(this, assist).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             try {
                 when {
                     savedInstanceState != null -> clean.putExtra(EXTRA_BAD_LINK, true)
@@ -369,6 +374,36 @@ class Z0LiveActivity :
         localMessage = getString(resource)
     }
 
+    /** One tap to another voice assistant. A live z0live call ends first so the microphone is free. */
+    @OptIn(ExperimentalLayoutApi::class)
+    @Composable
+    private fun OtherAssistants() {
+        val others = remember { Z0LiveAssistants.others(this@Z0LiveActivity) }
+        if (others.isEmpty()) return
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.z0live_other_assistants), style = MaterialTheme.typography.labelLarge)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                others.forEach { a ->
+                    OutlinedButton(onClick = {
+                        if (snapshot.active) {
+                            wantsStart = false
+                            autoStart = false
+                            Z0LiveService.end(this@Z0LiveActivity)
+                        }
+                        if (Z0LiveAssistants.open(this@Z0LiveActivity, a.pkg)) {
+                            finish()
+                        } else {
+                            showMessage(R.string.z0live_assistant_failed)
+                        }
+                    }) { Text(a.label) }
+                }
+                TextButton(onClick = { Z0LiveAssistants.openDefaultSetting(this@Z0LiveActivity) }) {
+                    Text(stringResource(R.string.z0live_default_assistant))
+                }
+            }
+        }
+    }
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     private fun SessionSheet() {
@@ -415,6 +450,7 @@ class Z0LiveActivity :
                     if (snapshot.telemetryFailed > 0) {
                         Text(stringResource(R.string.z0live_telemetry_failed, snapshot.telemetryFailed), style = MaterialTheme.typography.bodySmall)
                     }
+                    OtherAssistants()
                     OutlinedButton(onClick = { Z0LiveGestureChannel.pin(this@Z0LiveActivity) }) { Text(stringResource(R.string.z0live_voice_here)) }
                     OutlinedButton(onClick = {
                         // NOOP's ring gesture setup has no launcher entry; open its exported Activity explicitly.
