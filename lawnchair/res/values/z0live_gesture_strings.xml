@@ -6,4 +6,7 @@
     <string translatable="false" name="z0live_voice_here">Voice here (5 minutes)</string>
     <string translatable="false" name="z0live_oura_setup">Oura ring setup (NOOP)</string>
     <string translatable="false" name="z0live_oura_missing">Install the NOOP Oura APK first.</string>
+    <string translatable="false" name="z0live_other_assistants">Use another assistant</string>
+    <string translatable="false" name="z0live_default_assistant">Change default</string>
+    <string translatable="false" name="z0live_assistant_failed">That assistant didn\'t open.</string>
 </resources>
