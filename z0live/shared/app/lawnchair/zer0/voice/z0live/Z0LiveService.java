@@ -19,7 +19,6 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
-import com.android.launcher3.R;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
@@ -465,13 +464,13 @@ public final class Z0LiveService extends Service {
     }
     public static boolean debugReady() {
         Z0LiveService service = current;
-        return com.android.launcher3.BuildConfig.DEBUG && service != null && service.running
+        return BuildConfig.DEBUG && service != null && service.running
                 && service.peer != null && service.audio.isConnected() && service.inboxItem == null
                 && service.pendingInbox == null && service.pendingTools == 0 && service.turn.canSpeakInbox();
     }
     public static void debugMute(boolean muted) {
         Z0LiveService service = current;
-        if (com.android.launcher3.BuildConfig.DEBUG && service != null && service.running && service.audio.isMuted() != muted) service.mute();
+        if (BuildConfig.DEBUG && service != null && service.running && service.audio.isMuted() != muted) service.mute();
     }
     public static boolean injectDebugText(String text) {
         Z0LiveService service = current;

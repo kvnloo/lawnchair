@@ -19,7 +19,11 @@ json = Path(os.environ.get('XDG_CACHE_HOME', str(Path.home() / '.cache'))) / 'la
 classes = root / 'build/intermediates/compile_app_classes_jar/lawnWithQuickstepPlayDebug/bundleLawnWithQuickstepPlayDebugClassesToCompileJar/classes.jar'
 if not classes.is_file() or not json.is_file():
     raise SystemExit('Run the variant unit or assembly task and test-z0live-protocol.sh first.')
-classpath = ':'.join(map(str, [json, android, classes, stdlib, work]))
+# Launcher-free z0live classes (policy, screen, matcher) now live in the :z0live-core library.
+core = sorted((root / 'z0live/core/build/intermediates').glob('compile_library_classes_jar/debug/*/classes.jar'))
+if not core:
+    raise SystemExit('Build :z0live-core (the Lawnchair assembly does) before the catalog test.')
+classpath = ':'.join(map(str, [json, android, classes, core[-1], stdlib, work]))
 subprocess.run(['javac', '-cp', classpath, '-d', str(work), str(root / 'tools/zer0/Z0LiveAccessibilityCatalogTest.java')], check=True)
 subprocess.run(['java', '-cp', classpath, 'Z0LiveAccessibilityCatalogTest'], check=True)
 PY

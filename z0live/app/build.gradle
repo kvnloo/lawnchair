@@ -1,0 +1,25 @@
+// Standalone z0live companion: owns the mic service, accessibility service, assistant role and pairing.
+// Launchers (Lawnchair, Detent) only send it z0live.action.START / MUTE / END.
+plugins {
+    alias(libs.plugins.android.application)
+}
+
+android {
+    namespace "app.zer0.z0live"
+    defaultConfig {
+        applicationId "app.zer0.z0live"
+        versionCode 1
+        versionName "0.1.0"
+    }
+    sourceSets {
+        main {
+            java.srcDirs = ['src', '../shared']
+            kotlin.directories.addAll('src', '../shared')
+            manifest.srcFile 'AndroidManifest.xml'
+        }
+    }
+}
+
+dependencies {
+    implementation project(':z0live-core')
+}

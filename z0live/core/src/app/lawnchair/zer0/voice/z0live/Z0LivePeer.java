@@ -190,7 +190,7 @@ final class Z0LivePeer {
         });
     }
     void logDebugAudioStats() {
-        if (!com.android.launcher3.BuildConfig.DEBUG) return;
+        if (!BuildConfig.DEBUG) return;
         handler.post(() -> {
             if (closed.get() || peer == null) return;
             peer.getStats(report -> {

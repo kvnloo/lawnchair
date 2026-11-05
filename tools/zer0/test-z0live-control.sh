@@ -12,7 +12,7 @@ if [[ ! -s "$json" ]]; then
     "https://repo.maven.apache.org/maven2/org/json/json/20240303/json-20240303.jar" -o "$work/json.jar"
   mv "$work/json.jar" "$json"
 fi
-src="$root/lawnchair/src/app/lawnchair/zer0/voice/z0live"
+src="$root/z0live/core/src/app/lawnchair/zer0/voice/z0live"
 javac --release 17 -encoding UTF-8 -cp "$json" -d "$work" \
   "$src/Z0LiveScreen.java" "$src/Z0LiveTargetMatcher.java" "$src/Z0LiveAccessibilityPolicy.java" \
   "$root/tools/zer0/Z0LiveControlTest.java"

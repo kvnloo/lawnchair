@@ -118,3 +118,9 @@ include ':concurrent'
 //include ':compose'
 include ':modules:widgetpicker'
 
+
+// z0live: shared core library plus the standalone companion app.
+include ':z0live-core'
+project(':z0live-core').projectDir = new File(rootDir, 'z0live/core')
+include ':z0live-app'
+project(':z0live-app').projectDir = new File(rootDir, 'z0live/app')

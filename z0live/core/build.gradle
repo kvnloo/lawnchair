@@ -1,0 +1,26 @@
+// z0live core: the launcher-free protocol, broker session, transport, speech gate and resources.
+// Lawnchair and the standalone companion app (:z0live-app) both build on it.
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace "app.lawnchair.zer0.voice.z0live"
+    buildFeatures {
+        buildConfig true
+    }
+    sourceSets {
+        main {
+            java.srcDirs = ['src']
+            kotlin.directories.add('src')
+            res.srcDirs = ['res']
+            manifest.srcFile 'AndroidManifest.xml'
+        }
+    }
+}
+
+dependencies {
+    api libs.stream.webrtc
+    api libs.okhttp
+    api libs.androidx.security.crypto
+}

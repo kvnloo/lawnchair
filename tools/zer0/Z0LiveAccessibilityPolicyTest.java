@@ -15,6 +15,9 @@ public final class Z0LiveAccessibilityPolicyTest {
         check("blocked_app", admission.invoke(null, true, true, "com.bank.mobile", 7, "com.bank.mobile", 7));
         check("blocked_app", admission.invoke(null, true, true, "com.chase.sig.android", 7, "com.chase.sig.android", 7));
         check("blocked_app", admission.invoke(null, true, true, "com.android.phone", 7, "com.android.phone", 7));
+        // In-app control never drives z0live's own UI, embedded in Lawnchair or as the companion app.
+        check("blocked_app", admission.invoke(null, true, true, "app.lawnchair.play.debug", 7, "app.lawnchair.play.debug", 7));
+        check("blocked_app", admission.invoke(null, true, true, "app.zer0.z0live", 7, "app.zer0.z0live", 7));
         check("stale_window", admission.invoke(null, true, true, "org.example.notes", 7, "org.example.browser", 7));
         check("stale_window", admission.invoke(null, true, true, "org.example.notes", 7, "org.example.notes", 8));
         check("allowed", admission.invoke(null, true, true, "org.example.notes", 7, "org.example.notes", 7));

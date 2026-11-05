@@ -14,7 +14,6 @@ import android.os.Process
 import android.provider.AlarmClock
 import android.provider.Settings
 import android.view.KeyEvent
-import app.lawnchair.zer0.voice.VoiceAppVisibility
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -112,7 +111,7 @@ object Z0LivePhoneTools {
 
     private fun apps(context: Context): List<LauncherActivityInfo> {
         val launcher = context.getSystemService(LauncherApps::class.java)
-        return VoiceAppVisibility.visibleApps(context, launcher.getActivityList(null, Process.myUserHandle()))
+        return Z0LiveHost.visibleApps(context, launcher.getActivityList(null, Process.myUserHandle()))
     }
 
     private fun candidates(context: Context, query: String): List<LauncherActivityInfo> {
@@ -223,7 +222,7 @@ object Z0LivePhoneTools {
             "ripple" -> when (string(args, "action")) {
                 "open" -> {
                     require(Z0LiveStore(context).rippleUrl() != null) { "Configure a trusted Ripple HTTPS URL first" }
-                    launch(context, Intent(context, RippleActivity::class.java))
+                    launch(context, requireNotNull(Z0LiveHost.ripple(context)) { "Ripple is not available in this app" })
                 }
 
                 "close" -> {

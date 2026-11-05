@@ -114,6 +114,6 @@ public final class Z0LiveAccessibilityPolicy {
         }
         return value.equals("com.android.settings") || value.equals("com.android.systemui")
                 || value.equals("com.android.phone") || value.equals("com.google.android.gms")
-                || value.startsWith("app.lawnchair") || value.equals("com.samsung.android.app.telephonyui");
+                || value.startsWith("app.lawnchair") || value.startsWith("app.zer0.z0live") || value.equals("com.samsung.android.app.telephonyui");
     }
 }

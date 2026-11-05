@@ -311,10 +311,11 @@ android {
         }
 
         lawn {
-            java.srcDirs = ['src_flags', 'src_shortcuts_overrides', 'lawnchair/src', 'tests/shared']
-            kotlin.directories.addAll('src_flags', 'src_shortcuts_overrides', 'lawnchair/src', 'tests/shared')
+            java.srcDirs = ['src_flags', 'src_shortcuts_overrides', 'lawnchair/src', 'z0live/shared', 'tests/shared']
+            kotlin.directories.addAll('src_flags', 'src_shortcuts_overrides', 'lawnchair/src', 'z0live/shared', 'tests/shared')
             aidl.srcDirs = ['lawnchair/aidl']
-            res.srcDirs = ['lawnchair/res', 'platform_frameworks_libs_systemui/animationlib/res']
+            // z0live/core/res is also merged by the :z0live-core dependency; listing it keeps com.android.launcher3.R.z0live_* for launcher UI.
+            res.srcDirs = ['lawnchair/res', 'z0live/core/res', 'platform_frameworks_libs_systemui/animationlib/res']
             manifest.srcFile "lawnchair/AndroidManifest.xml"
             assets {
                 srcDirs 'lawnchair/assets'
@@ -477,6 +478,7 @@ dependencies {
     implementation libs.androidx.datastore.preferences
 
     lawnImplementation libs.stream.webrtc
+    lawnImplementation project(':z0live-core')
     lawnImplementation libs.androidx.security.crypto
     lawnImplementation "com.google.android.gms:play-services-code-scanner:16.1.0"
 

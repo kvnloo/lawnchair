@@ -4,7 +4,6 @@ import android.app.PendingIntent;
 import android.os.Build;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
-import com.android.launcher3.R;
 
 public final class Z0LiveTile extends TileService implements Z0LiveStatus.Observer {
     @Override

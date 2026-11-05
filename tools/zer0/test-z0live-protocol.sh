@@ -27,29 +27,31 @@ for artifact in "${artifacts[@]}"; do
 done
 
 javac --release 17 --add-modules jdk.httpserver -encoding UTF-8 -cp "$classpath" -d "$work" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/PairingValidation.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/PendingPairing.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveProtocol.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveTelemetry.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveEvents.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/PairingValidation.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/PendingPairing.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveProtocol.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveTelemetry.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveEvents.java" \
   "$root/tools/zer0/Z0LiveProtocolTest.java" \
   "$root/tools/zer0/Z0LiveTelemetryTest.java" \
   "$root/tools/zer0/Z0LiveBackendContractTest.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveAppMatcher.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveAppMatcher.java" \
   "$root/tools/zer0/Z0LiveAppMatcherTest.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxDelivery.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxPlayback.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveBargeIn.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveSpeechGate.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveTurnState.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxDelivery.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveInboxPlayback.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveBargeIn.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveSpeechGate.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveTurnState.java" \
   "$root/tools/zer0/Z0LiveSpeechGateTest.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveBidiBarge.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveBidiBarge.java" \
   "$root/tools/zer0/Z0LiveBidiBargeTest.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveTransport.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveTransport.java" \
   "$root/tools/zer0/Z0LiveTransportTest.java" \
-  "$root/lawnchair/src/app/lawnchair/zer0/voice/z0live/Z0LiveBrokerSession.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveBrokerSession.java" \
   "$root/tools/zer0/Z0LiveMultiAgentContractTest.java" \
-  "$root/tools/zer0/Z0LiveInboxDeliveryTest.java"
+  "$root/tools/zer0/Z0LiveInboxDeliveryTest.java" \
+  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveCommands.java" \
+  "$root/tools/zer0/Z0LiveCommandsTest.java"
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveMultiAgentContractTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveInboxDeliveryTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveSpeechGateTest
@@ -59,3 +61,4 @@ java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveAppMatcherTest
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveProtocolTest
 java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveTelemetryTest
 java --add-modules jdk.httpserver -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveBackendContractTest
+java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveCommandsTest
