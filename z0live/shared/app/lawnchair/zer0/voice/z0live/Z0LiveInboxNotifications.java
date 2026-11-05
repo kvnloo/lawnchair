@@ -37,18 +37,19 @@ public final class Z0LiveInboxNotifications extends JobService {
         if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) return;
         NotificationManager manager = context.getSystemService(NotificationManager.class);
         if (!manager.areNotificationsEnabled()) return;
+        // IMPORTANCE_LOW keeps these silent; Notification.Builder.setSilent is hidden in the public SDK.
         manager.createNotificationChannel(new NotificationChannel(CHANNEL, context.getString(R.string.z0live_inbox_notification_channel), NotificationManager.IMPORTANCE_LOW));
         PendingIntent open = PendingIntent.getActivity(context, 8794, Z0LiveActivity.intent(context, false),
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification publicVersion = new Notification.Builder(context, CHANNEL).setSmallIcon(R.drawable.z0live_mic)
-                .setContentTitle(context.getString(R.string.z0live_inbox_notification_title)).setSilent(true).build();
+                .setContentTitle(context.getString(R.string.z0live_inbox_notification_title)).build();
         String say = item.optString("say", "");
         if (say.length() > 4000) say = say.substring(0, 4000);
         Notification reply = new Notification.Builder(context, CHANNEL).setSmallIcon(R.drawable.z0live_mic)
                 .setContentTitle(context.getString(R.string.z0live_inbox_notification_title)).setContentText(say)
                 .setStyle(new Notification.BigTextStyle().bigText(say)).setContentIntent(open)
                 .setVisibility(Notification.VISIBILITY_PRIVATE).setPublicVersion(publicVersion)
-                .setAutoCancel(true).setOnlyAlertOnce(true).setSilent(true).build();
+                .setAutoCancel(true).setOnlyAlertOnce(true).build();
         manager.notify("z0live_inbox", (int) (item.optLong("id") % Integer.MAX_VALUE), reply);
     }
 
