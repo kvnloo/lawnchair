@@ -10,13 +10,19 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
-    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+    <!-- The flashlight tool needs the camera permission; the app still installs on camera-less devices. -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <queries>
         <package android:name="com.tailscale.ipn" />
         <package android:name="com.noop.whoop.debug" />
         <intent><action android:name="android.speech.RecognitionService" /></intent>
         <intent><action android:name="android.intent.action.ASSIST" /></intent>
+        <!-- LauncherApps.getActivityList for the open-app tool: launcher activities only, not QUERY_ALL_PACKAGES. -->
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
     </queries>
 
     <application
