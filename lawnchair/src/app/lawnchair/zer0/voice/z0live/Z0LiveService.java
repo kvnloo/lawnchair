@@ -65,7 +65,7 @@ public final class Z0LiveService extends Service {
     private AudioManager audioManager;
     private AudioFocusRequest focusRequest;
     private boolean running, pendingNetwork, connecting, telemetryBusy, inboxBusy;
-    private boolean speaking, ending, closingResources, standby, finalSent;
+    private boolean speaking, ending, closingResources, standby, finalSent, idleEnded;
     private Z0LiveGestureChannel gestures;
     /** True while connected through the broker-signaled Frameless Bidi call (OMP /live architecture). */
     private boolean bidi;
@@ -85,6 +85,11 @@ public final class Z0LiveService extends Service {
     private final Runnable telemetryTick = new Runnable() {
         public void run() {
             if (!running) return;
+            if (broker.idle(Z0LiveBrokerSession.IDLE_END_MS)) {
+                idleEnded = true;
+                finishSession("", true);
+                return;
+            }
             broker.heartbeat();
             flush(false);
             main.postDelayed(this, 2500);
@@ -229,7 +234,7 @@ public final class Z0LiveService extends Service {
         pendingNetwork = false; connecting = false; inboxBusy = false; speaking = false;
         pendingTools = 0; reachabilityAttempts = 0; telemetryFailed.set(0);
         toolCalls.clear(); toolNames.clear(); pendingInbox = null; brokerSessionToEnd = "";
-        caption = ""; error = ""; finalSent = false;
+        caption = ""; error = ""; finalSent = false; idleEnded = false;
         running = true;
         generation++;
         sessionId = "";
@@ -501,7 +506,10 @@ public final class Z0LiveService extends Service {
 
     /** Frameless Bidi events seen on the phone's own data channel: captions and failures only. */
     private void bidiEvent(JSONObject message) {
-        switch (message.optString("type")) {
+        String type = message.optString("type");
+        if (type.equals("input_transcript.added") || type.equals("output_transcript.added")
+                || type.equals("turn.created") || type.equals("turn.done")) broker.touch();
+        switch (type) {
             case "input_transcript.added":
                 if (!caption.startsWith("You: ")) { bidiCaption.setLength(0); caption = "You: "; }
                 JSONObject heard = message.optJSONObject("item");
@@ -1021,7 +1029,7 @@ public final class Z0LiveService extends Service {
             audioManager.abandonAudioFocusRequest(focusRequest);
             audioManager.setMode(AudioManager.MODE_NORMAL);
         }
-        if (wasRunning) event("session_end", "", object("reason", userEnd ? "user" : "error", "telemetry_failed", telemetryFailed.get()));
+        if (wasRunning) event("session_end", "", object("reason", userEnd ? (idleEnded ? "idle" : "user") : "error", "telemetry_failed", telemetryFailed.get()));
         status = getString(closingResources ? R.string.z0live_service_ending : (reason.isEmpty() ? R.string.z0live_service_ended : R.string.z0live_service_error));
         error = reason;
         publish();

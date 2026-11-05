@@ -11,6 +11,8 @@ import org.json.JSONObject;
 /** Main-thread desktop contract: actual audio floor, cancellation generations and scoped L0 usage. */
 public final class Z0LiveBrokerSession {
     public static final long HEARTBEAT_MS = 20000;
+    /** A call with no speech, tool or pending work for this long is ended: an open call bills and listens. */
+    public static final long IDLE_END_MS = 10 * 60 * 1000;
     private final Consumer<JSONObject> events;
     private final LongSupplier clock;
     private final Set<String> outstanding = new HashSet<>(), cancelled = new HashSet<>(), usageSent = new HashSet<>(), pendingCalls = new HashSet<>();
@@ -19,7 +21,7 @@ public final class Z0LiveBrokerSession {
     private final Map<String, JSONObject> usage = new HashMap<>();
     private String sessionId = "", responseId = "", utteranceTurn = "";
     private boolean user, response, playback;
-    private long lastHeartbeat;
+    private long lastHeartbeat, lastActivity;
     private int epoch;
 
     public Z0LiveBrokerSession(Consumer<JSONObject> events, LongSupplier clock) {
@@ -34,12 +36,19 @@ public final class Z0LiveBrokerSession {
         responseId = ""; utteranceTurn = "";
         user = response = playback = false;
         epoch = 0;
-        lastHeartbeat = clock.getAsLong();
+        lastHeartbeat = lastActivity = clock.getAsLong();
         emit("floor", obj("state", "quiet"));
         emit("active_session_heartbeat", obj("active", true, "floor", floor()));
     }
 
     public void end() { sessionId = ""; usage.clear(); }
+    /** Speech, captions, tool traffic or inbox delivery happened now. */
+    public void touch() { lastActivity = clock.getAsLong(); }
+    /** True when a started call has been silent with nothing outstanding for {@code idleMs}. */
+    public boolean idle(long idleMs) {
+        return !sessionId.isEmpty() && "quiet".equals(floor()) && outstanding.isEmpty() && pendingCalls.isEmpty()
+                && clock.getAsLong() - lastActivity >= idleMs;
+    }
     public String floor() { return user ? "user" : response || playback ? "assistant" : "quiet"; }
     public void heartbeat() {
         if (!sessionId.isEmpty() && clock.getAsLong() - lastHeartbeat >= HEARTBEAT_MS) {
@@ -90,6 +99,7 @@ public final class Z0LiveBrokerSession {
             case "output_audio_buffer.cleared": playback = false; break;
             default: return false;
         }
+        touch();
         if (!before.equals(floor())) emit("floor", obj("state", floor()));
         return interrupted;
     }
@@ -101,6 +111,7 @@ public final class Z0LiveBrokerSession {
     }
 
     public boolean transcript(String text) {
+        touch();
         if (!text.matches("(?i)\\s*(?:never\\s?mind|cancel(?: that)?|stop(?: that)?)[.!? ]*")) return false;
         cancel("cancel", true);
         return true;
@@ -115,6 +126,7 @@ public final class Z0LiveBrokerSession {
     }
 
     public void toolCalled(String callId, JSONObject call) {
+        touch();
         pendingCalls.add(callId);
         String id = call.optString("response_id", responseId);
         callResponses.put(callId, id);
@@ -123,6 +135,7 @@ public final class Z0LiveBrokerSession {
 
     /** Returns a late-admitted turn requiring exact-turn cancellation, never a new session-wide cancel. */
     public String toolResult(String callId, JSONObject result) {
+        touch();
         pendingCalls.remove(callId);
         String turnId = result.optString("turn_id");
         if (turnId.isEmpty()) return "";
@@ -156,11 +169,13 @@ public final class Z0LiveBrokerSession {
     }
 
     public void speakingInbox(JSONObject item) {
+        touch();
         JSONObject params = item.optJSONObject("params");
         utteranceTurn = params == null ? "" : params.optString("turn_id");
     }
 
     public void deliveredInbox(JSONObject item, boolean success) {
+        touch();
         JSONObject params = item.optJSONObject("params");
         if (params == null || !success) return;
         String event = params.optString("event");
