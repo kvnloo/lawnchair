@@ -31,7 +31,8 @@ object Z0LivePhoneTools {
         "apps" to Settings.ACTION_APPLICATION_SETTINGS,
         "battery" to Settings.ACTION_BATTERY_SAVER_SETTINGS,
         "accessibility" to Settings.ACTION_ACCESSIBILITY_SETTINGS,
-        "notifications" to Settings.ACTION_NOTIFICATION_SETTINGS,
+        // Settings.ACTION_NOTIFICATION_SETTINGS is hidden in the public SDK the companion app builds against.
+        "notifications" to "android.settings.NOTIFICATION_SETTINGS",
         "location" to Settings.ACTION_LOCATION_SOURCE_SETTINGS,
         "general" to Settings.ACTION_SETTINGS,
     )
