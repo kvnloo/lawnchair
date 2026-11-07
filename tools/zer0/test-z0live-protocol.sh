@@ -67,7 +67,7 @@ java -cp "$classpath" app.lawnchair.zer0.voice.z0live.Z0LiveCommandsTest
 sdk="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-$HOME/android/sdk}}"
 android_jar="$(ls -d "$sdk"/platforms/android-*/android.jar | sort -V | tail -1)"
 javac --release 17 -encoding UTF-8 -cp "$android_jar" -d "$work" \
-  "$root/z0live/core/src/app/lawnchair/zer0/voice/z0live/Z0LiveLaunch.java" \
+  "$root/z0live/app/src/app/lawnchair/zer0/voice/z0live/Z0LiveLaunch.java" \
   "$root/tools/zer0/Z0LiveRecentsTest.java"
 java -cp "$work" app.lawnchair.zer0.voice.z0live.Z0LiveRecentsTest \
   "$root/z0live/app/AndroidManifest.xml" "$root/lawnchair/AndroidManifest.xml"
