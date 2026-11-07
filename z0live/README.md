@@ -22,6 +22,9 @@ Anything else, or MUTE/END with no call, does nothing (`Z0LiveCommands`, pinned 
 
     adb shell am start -a z0live.action.START -p app.zer0.z0live
 
+Lawnchair sends them from Settings > z0live > z0live app (`Z0LiveCompanion`, shown only when the companion is
+installed). Senders use `Z0LiveCommands.PACKAGE` and `SEND_FLAGS` (NEW_TASK | EXCLUDE_FROM_RECENTS).
+
 `android.intent.action.ASSIST` with package `app.zer0.z0live` also starts a call, so Detent's existing
 assistant picker reaches the companion with no Detent change. Lawnchair keeps its embedded copy until the
 companion passes S1; then Lawnchair's gestures send these intents and its copy is removed.

@@ -26,4 +26,9 @@
     <string name="zer0_assistant_on_device_failed">Recognition failed. Check your offline language pack.</string>
     <string name="zer0_assistant_on_device_timeout">Listening timed out. Microphone stopped.</string>
     <string name="zer0_assistant_on_device_no_match">No speech recognized.</string>
+    <string name="z0live_companion">z0live app</string>
+    <string name="z0live_companion_description">Controls the call in the separate z0live app.</string>
+    <string name="z0live_companion_start">Start call</string>
+    <string name="z0live_companion_mute">Mute or unmute</string>
+    <string name="z0live_companion_end">End call</string>
 </resources>

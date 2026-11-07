@@ -9,6 +9,9 @@ public final class Z0LiveCommandsTest {
         check("z0live.action.START".equals(Z0LiveCommands.START), "START action name is the published contract");
         check("z0live.action.MUTE".equals(Z0LiveCommands.MUTE), "MUTE action name is the published contract");
         check("z0live.action.END".equals(Z0LiveCommands.END), "END action name is the published contract");
+        check("app.zer0.z0live".equals(Z0LiveCommands.PACKAGE), "launchers address the companion by explicit package");
+        check(Z0LiveCommands.SEND_FLAGS == (0x10000000 | 0x00800000),
+                "launcher sends are FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS (0x10800000)");
 
         check(Z0LiveCommands.decide(Z0LiveCommands.START, false) == Z0LiveCommands.Effect.OPEN_AND_START,
                 "START with no call opens the visible controls, which start the call");

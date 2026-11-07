@@ -3,6 +3,10 @@ package app.lawnchair.zer0.voice.z0live;
 /** The only calls a launcher makes into the z0live companion. Each launcher sends the same intent. */
 public final class Z0LiveCommands {
     public static final String START = "z0live.action.START", MUTE = "z0live.action.MUTE", END = "z0live.action.END";
+    /** Senders address the companion by package and keep its command task out of Recents. */
+    public static final String PACKAGE = "app.zer0.z0live";
+    /** FLAG_ACTIVITY_NEW_TASK | FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS, literal so this class stays plain JVM. */
+    public static final int SEND_FLAGS = 0x10000000 | 0x00800000;
 
     public enum Effect { OPEN_AND_START, TOGGLE_MUTE, END, NONE }
 

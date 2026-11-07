@@ -53,6 +53,8 @@
     <queries>
         <package android:name="com.tailscale.ipn" />
         <package android:name="com.noop.whoop.debug" />
+        <!-- The z0live companion app; Lawnchair sends it z0live.action.START / MUTE / END. -->
+        <package android:name="app.zer0.z0live" />
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
         <intent>
             <action android:name="android.speech.RecognitionService" />

@@ -36,6 +36,7 @@ import app.lawnchair.ui.preferences.components.layout.PreferenceLayout
 import app.lawnchair.zer0.voice.z0live.RippleActivity
 import app.lawnchair.zer0.voice.z0live.Z0LiveAccessibilityService
 import app.lawnchair.zer0.voice.z0live.Z0LiveActivity
+import app.lawnchair.zer0.voice.z0live.Z0LiveCompanion
 import app.lawnchair.zer0.voice.z0live.Z0LiveStatus
 import app.lawnchair.zer0.voice.z0live.Z0LiveStore
 import app.lawnchair.zer0.voice.z0live.Z0LiveTransport
@@ -57,6 +58,7 @@ fun Z0LivePreferences() {
     var navigationConsent by remember { mutableStateOf(false) }
     var serviceEnabled by remember { mutableStateOf(false) }
     var cameraGranted by remember { mutableStateOf(false) }
+    var companion by remember { mutableStateOf(false) }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         cameraGranted = it
     }
@@ -89,6 +91,7 @@ fun Z0LivePreferences() {
         } catch (_: RuntimeException) {
             message = R.string.z0live_storage_error
         }
+        companion = Z0LiveCompanion.installed(context)
         cameraGranted = context.checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
         onPauseOrDispose {
             // Do not retain unsaved URL input across backgrounding.
@@ -124,6 +127,25 @@ fun Z0LivePreferences() {
                 },
                 label = stringResource(R.string.z0live_transport),
             )
+        }
+        if (companion) {
+            PreferenceGroup(
+                heading = stringResource(R.string.z0live_companion),
+                description = stringResource(R.string.z0live_companion_description),
+            ) {
+                ClickablePreference(
+                    label = stringResource(R.string.z0live_companion_start),
+                    onClick = { if (!Z0LiveCompanion.start(context)) message = R.string.z0live_settings_unavailable },
+                )
+                ClickablePreference(
+                    label = stringResource(R.string.z0live_companion_mute),
+                    onClick = { if (!Z0LiveCompanion.mute(context)) message = R.string.z0live_settings_unavailable },
+                )
+                ClickablePreference(
+                    label = stringResource(R.string.z0live_companion_end),
+                    onClick = { if (!Z0LiveCompanion.end(context)) message = R.string.z0live_settings_unavailable },
+                )
+            }
         }
         PreferenceGroup(
             heading = stringResource(R.string.z0live_pairing),
