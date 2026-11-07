@@ -40,7 +40,7 @@ class Z0LiveActivity : Activity(), Z0LiveStatus.Observer {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             val data = intent.data
             val assist = intent.action == Intent.ACTION_ASSIST && data == null && savedInstanceState == null
-            val clean = intent(this, assist).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            val clean = intent(this, assist).addFlags(Z0LiveLaunch.RELAUNCH_FLAGS)
             try {
                 when {
                     savedInstanceState != null -> clean.putExtra(EXTRA_BAD_LINK, true)
@@ -265,6 +265,6 @@ class Z0LiveActivity : Activity(), Z0LiveStatus.Observer {
 
         @JvmStatic
         fun intent(context: Context, startNow: Boolean): Intent = Intent(context, Z0LiveActivity::class.java)
-            .setAction(INTERNAL_ACTION).putExtra(EXTRA_START_NOW, startNow)
+            .setAction(INTERNAL_ACTION).putExtra(EXTRA_START_NOW, startNow).addFlags(Z0LiveLaunch.CALL_FLAGS)
     }
 }

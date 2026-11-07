@@ -31,8 +31,10 @@
         android:allowBackup="false"
         android:dataExtractionRules="@xml/z0live_data_extraction_rules"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <!-- Calls never appear in Recents (an owner quick-switch once landed in one): own task, excluded. -->
         <activity android:name="app.lawnchair.zer0.voice.z0live.Z0LiveActivity"
-            android:exported="true" android:launchMode="singleTop" android:label="@string/z0live_title">
+            android:exported="true" android:launchMode="singleTop" android:label="@string/z0live_title"
+            android:taskAffinity="app.zer0.z0live.call" android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
